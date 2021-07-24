@@ -9,11 +9,10 @@ make_valid_layername <- function(string)
   
 }
 
-tib_layer = function(units, use_bias = FALSE, la, ...) {
+tib_layer = function(units, la, ...) {
   python_path <- system.file("python", package = "deepregression")
   layers <- reticulate::import_from_path("layers", path = python_path)
-  layers$TibLinearLasso(num_outputs = units, use_bias = use_bias, 
-                        la = la, ...)
+  layers$TibLinearLasso(num_outputs = units, la = la, ...)
 }
 
 # tp and ttp have different positioning internally (b,a instead of a,b)

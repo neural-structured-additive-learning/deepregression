@@ -70,10 +70,12 @@ tfmult <- function(x,y) tf$math$multiply(x,y)
 #' returned; else (FALSE) the \code{dist_fun} required in \code{deepregression}
 #' @param trafo_list list of transformations for each distribution parameter.
 #' Per default the transformation listed in details is applied.
+#' @param output_dim number of output dimensions of the response (larger 1 for
+#' multivariate case)
 #'
 #' @export
 #' @rdname dr_families
-make_tfd_dist <- function(family, add_const = 1e-8,
+make_tfd_dist <- function(family, add_const = 1e-8, output_dim = 1L,
                           return_nrparams = FALSE, trafo_list = NULL)
 {
 
@@ -244,10 +246,12 @@ make_tfd_dist <- function(family, add_const = 1e-8,
     stop("Family not implemented.")
   
   ret_fun <- function(x) do.call(tfd_dist,
-                                 lapply(1:x$shape[[2]],
+                                 lapply(1:(x$shape[[2]]/output_dim),
                                         function(i)
                                           trafo_list[[i]](
-                                            tf_stride_cols(x,i))))
+                                            tf_stride_cols(x,(i-1L)*output_dim+1L,
+                                                           (i-1L)*output_dim+output_dim)))
+  )
 
   if(family=="multinomial"){
 

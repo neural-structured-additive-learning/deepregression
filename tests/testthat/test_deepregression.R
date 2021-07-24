@@ -99,39 +99,6 @@ test_that("generalized additive model", {
 })
 
 
-# @FLO: redundant?
-# test_that("generalized additive model", {
-#   n <- 1500
-#   deep_model <- function(x) x %>%
-#     layer_dense(units = 2L, activation = "relu", use_bias = FALSE) %>%
-#     layer_dense(units = 1L, activation = "linear")
-# 
-#   x <- runif(n) %>% as.matrix()
-#   true_mean_fun <- function(xx) sin(10 * apply(xx, 1, mean) + 1)
-# 
-#   # 2 deep 1 spline + intercept
-#   data = data.frame(matrix(x, ncol=3))
-#   y <- true_mean_fun(data)
-#   mod <- deepregression(
-#     y = y,
-#     data = data,
-#     list_of_formulae = list(loc = ~ s(X3, bs = "ts") + s(X1, bs = "cr") + g(X2), scale = ~1),
-#     list_of_deep_models = list(d = deep_model, g = deep_model)
-#   )
-#   suppressWarnings(expect_object_dims(mod, data, 19, 1))
-# 
-# 
-#   # 2 deep 1 structured no intercept
-#   data = cbind(data, X2 = runif(n), X3 = runif(n))
-#   mod <- deepregression(
-#     y = y,
-#     data = data,
-#     list_of_formulae = list(loc = ~ X1 + d(X1) + g(X2), scale = ~ -1 + s(X3, "tp")),
-#     list_of_deep_models = list(d = deep_model, g = deep_model)
-#   )
-#   expect_object_dims(mod, data, 2, 9)
-# })
-
 test_that("deep generalized additive model with LSS", {
   set.seed(24)
   # generate the data
@@ -163,4 +130,24 @@ test_that("deep generalized additive model with LSS", {
   )
   suppressWarnings(expect_object_dims(mod, data, 10,2))
 
+})
+
+test_that("multivariate response", {
+  
+  n <- 100
+  p <- 10
+  
+  x <- matrix(runif(n*p), ncol=p)
+  
+  data <- data.frame(x = x)
+  
+  y <- matrix(rnorm(n*3), ncol=3)
+  mod <- deepregression(
+    y = y,
+    data = data,
+    list_of_formulas = list(loc = ~ x.1 + x.2, scale = ~1)
+  )
+  
+  mod %>% fit(epochs = 3L)
+  
 })

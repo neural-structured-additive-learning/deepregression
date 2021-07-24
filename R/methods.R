@@ -181,7 +181,7 @@ fit <- function (object, ...) {
 #'
 fit.deepregression <- function(
   object,
-  batch_size = NULL,
+  batch_size = 32,
   epochs = 10,
   early_stopping = FALSE,
   verbose = TRUE,
@@ -227,6 +227,8 @@ fit.deepregression <- function(
   
   input_list_model <-
     list(object = object$model,
+         epochs = epochs,
+         batch_size = batch_size,
          validation_split = validation_split,
          validation_data = validation_data,
          callbacks = callbacks,
@@ -277,10 +279,13 @@ coef.deepregression <- function(
   to_return <- linear * ("linear" %in% type) + smooth * ("smooth" %in% type)
   
   names <- get_names_pfc(pfc)[as.logical(to_return)]
+  pfc <- pfc[as.logical(to_return)]
   check_names <- names
   check_names[check_names=="(Intercept)"] <- "1"
   
-  coefs <- lapply(check_names, function(n) get_weight_by_name(object, n, which_param))
+  coefs <- lapply(1:length(check_names), function(i) 
+    pfc[[i]]$coef(get_weight_by_name(object, check_names[i], which_param)))
+  
   names(coefs) <- names
   
   return(coefs)

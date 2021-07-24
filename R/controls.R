@@ -159,4 +159,3 @@ orthog_control <- function(split_fun = split_model,
               deep_top = deep_top))
   
 }
-

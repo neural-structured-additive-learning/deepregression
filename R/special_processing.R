@@ -31,11 +31,12 @@ processor <- function(
   
   dots <- list(...)
   
-  if(is.null(names(dots)))
+  if(!(is.null(dots) | (is.list(dots) && is.null(dots[[1]]))) && is.null(names(dots)))
     stop("Please provide named arguments.")
   
   procs <- c(defaults, dots)
   specials <- names(procs)
+  specials <- specials[sapply(specials, nchar)>0]
   
   list_terms <- separate_define_relation(form = form, 
                                          specials = specials, 
@@ -112,7 +113,7 @@ lin_processor <- function(term, data, output_dim, param_nr){
           use_bias = FALSE,
           name = makelayername(term, param_nr),
           ...)(x)),
-    coef = function(weights) weights
+    coef = function(weights)  as.matrix(weights)
   )
   
 }
@@ -173,7 +174,7 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
     predict_trafo = function(newdata) predict_gam_handler(evaluated_gam_term, newdata = newdata) %*% Z,
     input_dim = ncol(evaluated_gam_term[[1]]$X %*% Z),
     layer = layer,
-    coef = function(weights) weights,
+    coef = function(weights)  as.matrix(weights),
     partial_effect = function(weights, newdata=NULL){
       if(is.null(newdata))
         return(evaluated_gam_term[[1]]$X %*% Z %*% weights)
@@ -200,7 +201,7 @@ fac_processor <- function(term, data, output_dim, param_nr){
                              param_nr),
         ...
         )),
-    coef = function(weights) weights
+    coef = function(weights) as.matrix(weights)
   )
 }
   
@@ -243,7 +244,7 @@ vc_processor <- function(term, data, output_dim, param_nr, controls){
       as.integer(data[byt]))),
     input_dim = ncolNum + length(nlev),
     layer = layer,
-    coef = function(weights) weights
+    coef = function(weights) as.matrix(weights)
   )
 }
 
@@ -280,7 +281,7 @@ l2_processor <- function(term, data, output_dim, param_nr){
                                    name = makelayername(term, 
                                                         param_nr),
                                    ...)(x)),
-    coef = function(weights) weights
+    coef = function(weights)  as.matrix(weights)
   )
   
 }
@@ -334,11 +335,11 @@ dnn_placeholder_processor <- function(dnn){
 
 #### helper functions ####
 
-makelayername <- function(term, param_nr)
+makelayername <- function(term, param_nr, truncate = 30)
 {
   
   if(class(term)=="formula") term <- form2text(term)
-  return(paste0(make_valid_layername(term), "_", param_nr))
+  return(paste0(strtrim(make_valid_layername(term), truncate), "_", param_nr))
   
 }
 
@@ -356,7 +357,7 @@ extractval <- function(term, name)
   inputs <- as.list(as.list(term)[[2]])[-1]
   if(name %in% names(inputs)) return(inputs[[name]])
   warning("Argument ", name, " not found. Setting it to some default.")
-  if(name=="df") return(NULL) else if(name=="la") return(0.1) else return(1)
+  if(name=="df") return(NULL) else if(name=="la") return(0.1) else return(NULL)
 
 }
 

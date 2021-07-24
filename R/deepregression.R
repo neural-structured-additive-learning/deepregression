@@ -12,14 +12,14 @@
 #' where my_deep_mod is the name of the neural net specified in
 #' \code{list_of_deep_models} and \code{a,b,c} are features modeled via
 #' this network.
-#' @param list_of_deep_models a named list of functions
-#' specifying a keras model.
+#' @param list_of_deep_models a named list of functions specifying a keras model.
 #' See the examples for more details.
 #' @param family a character specifying the distribution. For information on
 #' possible distribution and parameters, see \code{\link{make_tfd_dist}}. Can also 
 #' be a custom distribution
 #' @param data data.frame or named list with input features
 #' @param tf_seed a seed for tensorflow (only works with R version >= 2.2.0)
+#' @param additional_processors a named list with additional processors to convert the formula(s)
 #' @param return_prepoc logical; if TRUE only the pre-processed data and layers are returned (default FALSE).
 #' @param subnetwork_builder function to build each subnetwork (network for each distribution parameter;
 #' per default \code{subnetwork_init})
@@ -81,7 +81,7 @@
 deepregression <- function(
   y,
   list_of_formulas,
-  list_of_deep_models,
+  list_of_deep_models = NULL,
   family = "normal",
   data,
   tf_seed = as.integer(1991-5-4),
@@ -89,6 +89,7 @@ deepregression <- function(
   subnetwork_builder = subnetwork_init,
   model_builder = keras_dr,
   fitting_function = utils::getFromNamespace("fit.keras.engine.training.Model", "keras"),
+  additional_processors = list(),
   smooth_options = smooth_control(),
   orthog_options = orthog_control(),
   ...
@@ -120,16 +121,16 @@ deepregression <- function(
   # for convenience transform NULL to list(NULL) for list_of_deep_models
   if(missing(list_of_deep_models) | is.null(list_of_deep_models)){
     list_of_deep_models <- list(NULL)
-
-  }else if(!is.list(list_of_deep_models)) stop("list_of_deep_models must be a list.")
-
-  # get names of networks
-  netnames <- names(list_of_deep_models)
-
-  if(is.null(netnames) & length(list_of_deep_models) == 1)
-    netnames <- "d"
-  if(!is.null(list_of_deep_models) && is.null(names(list_of_deep_models)))
-    stop("Please provide a named list of deep models.")
+    netnames <- NULL
+  }else{
+    # get names of networks
+    netnames <- names(list_of_deep_models)
+    
+    if(is.null(netnames) & length(list_of_deep_models) == 1)
+      netnames <- "d"
+    if(!is.null(list_of_deep_models) && is.null(names(list_of_deep_models)))
+      stop("Please provide a named list of deep models.")
+  }
   
   if(length(netnames)>0){
     list_of_deep_models <- lapply(list_of_deep_models, dnn_placeholder_processor)
@@ -185,7 +186,8 @@ deepregression <- function(
                                                            automatic_oz_check = 
                                                              automatic_oz_check
                                                            ),
-                                                        list_of_deep_models))
+                                                        list_of_deep_models,
+                                                        additional_processors))
                                        
                                        return(res) 
                                      })
@@ -209,7 +211,7 @@ deepregression <- function(
   
   
   # initialize model
-  model <- model_builder(additive_predictors, family, ...)
+  model <- model_builder(additive_predictors, family, output_dim=output_dim, ...)
 
   ret <- list(model = model,
               init_params = 
@@ -238,6 +240,7 @@ deepregression <- function(
 #' @param list_pred_param list of input-output(-lists) generated from
 #' \code{subnetwork_init}
 #' @param family see \code{?deepregression}
+#' @param output_dim dimension of the output
 #' @param mapping a list of integers. The i-th list item defines which element
 #' elements of \code{list_pred_param} are used for the i-th parameter.
 #' For example, \code{map = list(1,2,1:2)} means that \code{list_pred_param[[1]]}
@@ -253,6 +256,7 @@ deepregression <- function(
 from_preds_to_dist <- function(
   list_pred_param,
   family,
+  output_dim = 1L,
   mapping = NULL,
   add_layer_shared_pred = function(x, units) layer_dense(x, units = units, 
                                                          use_bias = FALSE)
@@ -273,8 +277,8 @@ from_preds_to_dist <- function(
       for(ind in multiple_param){
         # add units
         lpp[[ind]] <- tf$split(
-          lpp[[ind]] %>% add_layer_shared_pred(units = len_map[ind]),
-          len_map[ind],
+          lpp[[ind]] %>% add_layer_shared_pred(units = len_map[ind]*output_dim),
+          len_map[ind]/output_dim,
           axis=1L
           )
         
@@ -299,7 +303,7 @@ from_preds_to_dist <- function(
   
   # check family
   if(is.character(family)){
-    dist_fun <- make_tfd_dist(family)
+    dist_fun <- make_tfd_dist(family, output_dim = output_dim)
   }else{ # assuming that family is a dist_fun already
     dist_fun <- family
   }
@@ -343,6 +347,7 @@ from_preds_to_dist <- function(
 #' @param list_pred_param list of input-output(-lists) generated from
 #' \code{subnetwork_init}
 #' @param family see \code{?deepregression}
+#' @param output_dim output dimension
 #' @param weights vector of positive values; optional (default = 1 for all observations)
 #' @param ind_fun function applied to the model output before calculating the
 #' log-likelihood. Per default independence is assumed by applying \code{tfd_independent}.
@@ -357,6 +362,7 @@ from_preds_to_dist <- function(
 keras_dr <- function(
   list_pred_param,
   family,
+  output_dim = 1L,
   weights = NULL,
   ind_fun = function(x) tfd_independent(x),
   optimizer = tf$keras$optimizers$Adam(),
@@ -368,7 +374,7 @@ keras_dr <- function(
 
   inputs <- lapply(list_pred_param, function(x) x[1:(length(x)-1)])
   outputs <- lapply(list_pred_param, function(x) x[[length(x)]])
-  out <- from_preds_to_dist(outputs, family, list(...)$mapping)
+  out <- from_preds_to_dist(outputs, family, list(...)$mapping, output_dim = output_dim)
 
   ############################################################
   ################# Define and Compile Model #################
