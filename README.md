@@ -5,6 +5,8 @@
 [![Codecov test coverage](https://codecov.io/gh/davidruegamer/deepregression/branch/master/graph/badge.svg)](https://codecov.io/gh/davidruegamer/deepregression?branch=master)
 [![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)
 
+This is a refactored version of the old [deepregression](https://github.com/davidruegamer/deepregression) package.
+
 # Installation
 
 To install the package, use the following command:
@@ -25,7 +27,7 @@ The requirements are given in the `DESCRIPTION`. If you load the package manuall
   - tensorflow
   - tfprobability
 
-If you set up a Python environment for the first time, install `reticulate` and run the `check_and_install` function from the `deepregression` package. This tries to install miniconda, TF 2.1, TFP 0.9 and keras 2.4.3, which seems to be the most reliable setup for `deepregression` at the moment.
+If you set up a Python environment for the first time, install `reticulate` and run the `check_and_install` function from the `deepregression` package. This tries to install miniconda, TF 2.5.0rc0, TFP 1.2 and keras 2.5.0rc0, which seems to be the most reliable setup for `deepregression` at the moment.
 
 # How to cite this?
 
@@ -51,7 +53,7 @@ For the software, please cite:
 
 # How to use this?
 
-See [the tutorial](https://arxiv.org/pdf/2104.02705.pdf) for a detailed introduction.
+New tutorial coming soon.
 
 # Python version
 
