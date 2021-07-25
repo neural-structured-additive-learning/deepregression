@@ -17,7 +17,7 @@ subnetwork_init <- function(pp, deep_top = NULL,
   
   inputs <- lapply(pp, function(ap) tf$keras$Input(
     shape = list(as.integer(ap$input_dim)),
-    name = paste0("input_", make_valid_layername(ap$term),
+    name = paste0("input_", strtrim(make_valid_layername(ap$term), 30),
                   "_", param_nr))
   )
   

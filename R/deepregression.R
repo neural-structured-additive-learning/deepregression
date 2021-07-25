@@ -159,8 +159,7 @@ deepregression <- function(
   }
   
   # check list of formulas is always one-sided
-  if(any(sapply(list_of_formulas, function(x)
-    attr( terms(x, data = data[!sapply(data, is.null)]) , "response" ) != 0 ))){
+  if(any(sapply(list_of_formulas, length)>2)){
     stop("Only one-sided formulas are allowed in list_of_formulas.")
   }
   
@@ -234,7 +233,7 @@ deepregression <- function(
 
 }
 
-#' @title Define a Deep Distributional Regression Model
+#' @title Define Predictor of a Deep Distributional Regression Model
 #'
 #'
 #' @param list_pred_param list of input-output(-lists) generated from

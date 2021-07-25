@@ -312,6 +312,16 @@ print.deepregression <- function(
   invisible(sapply(1:length(fae), function(i){ cat(names(fae)[i],":\n"); print(fae[[i]])}))
 }
 
+#' Generic cv function
+#'
+#' @param x model to do cv on
+#' @param ... further arguments passed to the class-specific function
+#'
+#' @export
+cv <- function (x, ...) {
+  UseMethod("cv", x)
+}
+
 #' @title Cross-validation for deepgression objects
 #' @param ... further arguments passed to
 #' \code{keras:::fit.keras.engine.training.Model}
