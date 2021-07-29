@@ -210,7 +210,7 @@ deepregression <- function(
   
   
   # initialize model
-  model <- model_builder(additive_predictors, family, output_dim=output_dim, ...)
+  model <- model_builder(additive_predictors, family, output_dim = output_dim, ...)
 
   ret <- list(model = model,
               init_params = 
@@ -238,7 +238,8 @@ deepregression <- function(
 #'
 #' @param list_pred_param list of input-output(-lists) generated from
 #' \code{subnetwork_init}
-#' @param family see \code{?deepregression}
+#' @param family see \code{?deepregression}; if NULL, concatenated
+#' \code{list_pred_param} entries are returned (after applying mapping if provided)
 #' @param output_dim dimension of the output
 #' @param mapping a list of integers. The i-th list item defines which element
 #' elements of \code{list_pred_param} are used for the i-th parameter.
@@ -254,7 +255,7 @@ deepregression <- function(
 #' @export
 from_preds_to_dist <- function(
   list_pred_param,
-  family,
+  family = NULL,
   output_dim = 1L,
   mapping = NULL,
   add_layer_shared_pred = function(x, units) layer_dense(x, units = units, 
@@ -301,10 +302,14 @@ from_preds_to_dist <- function(
   }
   
   # check family
-  if(is.character(family)){
-    dist_fun <- make_tfd_dist(family, output_dim = output_dim)
-  }else{ # assuming that family is a dist_fun already
+  if(!is.null(family)){
+    if(is.character(family)){
+      dist_fun <- make_tfd_dist(family, output_dim = output_dim)
+    }else{ # assuming that family is a dist_fun already
     dist_fun <- family
+    }
+  }else{
+    return(layer_concatenate_identity(unname(list_pred_param)))
   }
   nrparams_dist <- attr(dist_fun, "nrparams_dist")
   
@@ -353,7 +358,13 @@ from_preds_to_dist <- function(
 #' @param optimizer optimizer used. Per default Adam
 #' @param model_instance which class of model to use (default \code{keras_model})
 #' @param monitor_metrics Further metrics to monitor
-#' @param arguments passed to other functions
+#' @param from_preds_to_output function taking the list_pred_param outputs
+#' and transforms it into a single network output
+#' @param loss the model's loss function; per default evaluated based on
+#' the arguments \code{family} and \code{weights} using \code{from_dist_to_loss}
+#' @param additional_penalty a penalty that is added to the negative log-likelihood;
+#' must be a function of model$trainable_weights with suitable subsetting
+#' @param ... arguments passed to other functions
 #' @return a list with input tensors and output tensors that can be passed
 #' to, e.g., \code{keras_model}
 #'
@@ -367,40 +378,66 @@ keras_dr <- function(
   optimizer = tf$keras$optimizers$Adam(),
   model_fun = keras_model,
   monitor_metrics = list(),
+  from_preds_to_output = from_preds_to_dist,
+  loss = from_dist_to_loss(family, weights),
+  additional_penalty = NULL,
   ...
 )
 {
 
+  # extract predictor inputs
   inputs <- lapply(list_pred_param, function(x) x[1:(length(x)-1)])
+  # extract predictor outputs
   outputs <- lapply(list_pred_param, function(x) x[[length(x)]])
-  out <- from_preds_to_dist(outputs, family, list(...)$mapping, output_dim = output_dim)
-
-  ############################################################
-  ################# Define and Compile Model #################
-  
-  # the final model is defined by its inputs
-  # and outputs
-
+  # define single output of network
+  out <- from_preds_to_output(outputs, family, list(...)$mapping, 
+                              output_dim = output_dim)
+  # define model
   model <- model_fun(inputs = unlist(inputs, recursive = TRUE),
                      outputs = out)
-
-  # define weights to be equal to 1 if not given
-  if(is.null(weights)) weights <- 1
-
-  # the negative log-likelihood is given by the negative weighted
-  # log probability of the model
-  if(family!="pareto_ls"){  
-    negloglik <- function(y, model) 
-      - weights * (model %>% ind_fun() %>% tfd_log_prob(y)) 
-  }else{
-    negloglik <- function(y, model)
-      - weights * (model %>% ind_fun() %>% tfd_log_prob(y + model$scale))
+  # additional loss
+  if(!is.null(additional_penalty)){
+    
+    add_loss <- function(x) additional_penalty(
+      model$trainable_weights
+    )
+    model$add_loss(add_loss)
+    
   }
-
+  # compile model
   model %>% compile(optimizer = optimizer,
-                    loss = negloglik,
+                    loss = loss,
                     metrics = monitor_metrics)
   
   return(model)
 
+}
+
+#' Function to transform a distritbution layer output into a loss function
+#' 
+#' @param family see \code{?deepregression}
+#' @param weights sample weights
+#' 
+#' @return loss function
+#' 
+from_dist_to_loss <- function(
+  family,
+  weights = NULL
+){
+  
+  # define weights to be equal to 1 if not given
+  if(is.null(weights)) weights <- 1
+  
+  # the negative log-likelihood is given by the negative weighted
+  # log probability of the dist
+  if(family!="pareto_ls"){  
+    negloglik <- function(y, dist) 
+      - weights * (dist %>% ind_fun() %>% tfd_log_prob(y)) 
+  }else{
+    negloglik <- function(y, dist)
+      - weights * (dist %>% ind_fun() %>% tfd_log_prob(y + dist$scale))
+  }
+  
+  return(negloglik)
+  
 }

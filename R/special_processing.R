@@ -262,8 +262,13 @@ l1_processor <- function(term, data, output_dim, param_nr){
                              param_nr),
         ...
       )(x)),
-    coef = function(weights) weights[[1]] * matrix(rep(weights[[2]], each=ncol(weights[[1]])), 
+    coef = function(weights){ 
+      weights <- lapply(weights, as.matrix)
+      return(
+      weights[[1]] * matrix(rep(weights[[2]], each=ncol(weights[[1]])), 
                                                    ncol=ncol(weights[[1]]), byrow = TRUE)
+      )
+    }
   )
   
 }
