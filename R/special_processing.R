@@ -21,6 +21,7 @@ processor <- function(
     list(s = gam_processor,
          te = gam_processor,
          ti = gam_processor,
+         int = int_processor,
          lin = lin_processor,
          vc = vc_processor,
          lasso = l1_processor,
@@ -68,9 +69,9 @@ processor <- function(
     spec <- get_special(list_terms[[i]]$term, specials = specials)
     args$controls <- NULL 
     if(is.null(spec)){
-      #args$param_nr <- paste0(args$param_nr, ".", lin_counter)
-      result[[i]] <- c(list_terms[[i]], do.call(lin_processor,
-                                                args))
+      if(args$term=="(Intercept)")
+        result[[i]] <- c(list_terms[[i]], do.call(int_processor, args)) else
+          result[[i]] <- c(list_terms[[i]], do.call(lin_processor, args))
       lin_counter <- lin_counter+1
     }else{
       if(spec %in% c("s", "te", "ti", "vc")) args$controls <- controls
@@ -83,28 +84,49 @@ processor <- function(
   
 }
 
-lin_processor <- function(term, data, output_dim, param_nr){
+int_processor <- function(term, data, output_dim, param_nr){
   
-  # for all non-specials
   if(term=="(Intercept)") term <- "1"
-  if(grepl("lin(.*)", term)) term <- paste0("-1 + ", paste(extractvar(term),
-                                                           collapse = " + "))
-  
-  # model.matrix cannot deal with lists in the case if ...
-  if(term=="1" & !is.data.frame(data)) 
-    data <- as.data.frame(data[[1]])
+  data <- as.data.frame(data[[1]])
   
   list(
-    data_trafo = function() model.matrix(object = as.formula(paste0("~", term)), 
+    data_trafo = function() matrix(rep(1, nrow(data)), ncol=1),
+    predict_trafo = function(newdata){ 
+      return(
+        matrix(rep(1, nrow(as.data.frame(newdata[[1]]))), ncol=1)
+      )
+    },
+    input_dim = 1,
+    layer = function(x, ...)
+      return(
+        tf$keras$layers$Dense(
+          units = output_dim,
+          use_bias = FALSE,
+          name = makelayername(term, param_nr),
+          ...)(x)),
+    coef = function(weights)  as.matrix(weights)
+  )
+  
+  
+}
+
+lin_processor <- function(term, data, output_dim, param_nr){
+  
+
+  if(grepl("lin(.*)", term)) term <- paste0(paste(extractvar(term),
+                                                  collapse = " + "),
+                                            "+ 0 ")
+  
+  list(
+    data_trafo = function() model.matrix(object = as.formula(paste0("~ -1 + ", term)), 
                                          data = data),
     predict_trafo = function(newdata){ 
-      if(term==1) newdata <- as.data.frame(newdata[[1]])
       return(
-        model.matrix(object = as.formula(paste0("~", term)),
+        model.matrix(object = as.formula(paste0("~ -1 + ", term)),
                      data = as.data.frame(newdata))
       )
       },
-    input_dim = ncol(model.matrix(object = as.formula(paste0("~", term)), 
+    input_dim = ncol(model.matrix(object = as.formula(paste0("~ -1 +", term)), 
                                   data = data)),
     layer = function(x, ...)
       return(
