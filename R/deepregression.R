@@ -353,8 +353,6 @@ from_preds_to_dist <- function(
 #' @param family see \code{?deepregression}
 #' @param output_dim output dimension
 #' @param weights vector of positive values; optional (default = 1 for all observations)
-#' @param ind_fun function applied to the model output before calculating the
-#' log-likelihood. Per default independence is assumed by applying \code{tfd_independent}.
 #' @param optimizer optimizer used. Per default Adam
 #' @param model_instance which class of model to use (default \code{keras_model})
 #' @param monitor_metrics Further metrics to monitor
@@ -374,12 +372,11 @@ keras_dr <- function(
   family,
   output_dim = 1L,
   weights = NULL,
-  ind_fun = function(x) tfd_independent(x),
   optimizer = tf$keras$optimizers$Adam(),
   model_fun = keras_model,
   monitor_metrics = list(),
   from_preds_to_output = from_preds_to_dist,
-  loss = from_dist_to_loss(family, weights),
+  loss = from_dist_to_loss(family = family, weights = weights),
   additional_penalty = NULL,
   ...
 )
@@ -416,12 +413,15 @@ keras_dr <- function(
 #' Function to transform a distritbution layer output into a loss function
 #' 
 #' @param family see \code{?deepregression}
+#' @param ind_fun function applied to the model output before calculating the
+#' log-likelihood. Per default independence is assumed by applying \code{tfd_independent}.
 #' @param weights sample weights
 #' 
 #' @return loss function
 #' 
 from_dist_to_loss <- function(
   family,
+  ind_fun = function(x) tfd_independent(x), 
   weights = NULL
 ){
   

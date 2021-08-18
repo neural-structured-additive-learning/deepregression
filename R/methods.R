@@ -335,6 +335,8 @@ cv <- function (x, ...) {
 #' @param cv_folds an integer if list with train and test data sets
 #' @param stop_if_nan logical; whether to stop CV if NaN values occur
 #' @param callbacks a list of callbacks used for fitting
+#' @param save_fun function applied to the model in each fold to be stored in
+#' the final result
 #' @export
 #' @rdname methodDR
 #'
@@ -343,7 +345,7 @@ cv <- function (x, ...) {
 #'
 #'
 #'
-cv <- function(
+cv.deepregression <- function(
   x,
   verbose = FALSE,
   patience = 20,
@@ -354,6 +356,7 @@ cv <- function(
   mylapply = lapply,
   save_weights = FALSE,
   callbacks = list(),
+  save_fun = NULL,
   ...
 )
 {
@@ -420,7 +423,9 @@ cv <- function(
 
     ret <- do.call(x$fit_fun, args)
     if(save_weights) ret$weighthistory <- weighthistory$weights_last_layer
-
+    if(!is.null(save_fun))
+      ret$save_fun_result <- save_fun(this_mod)
+    
     if(stop_if_nan && any(is.nan(ret$metrics$validloss)))
       stop("Fold ", folds_iter, " with NaN's in ")
 
