@@ -1,26 +1,5 @@
 context("main entry: deepregression")
 
-# helper function to check object dims
-expect_object_dims = function(mod, data, loc = NULL, scale = NULL) {
-  dims = lapply(coef(mod), length)
-  expect_equal(dims[[1]], loc)
-  expect_equal(dims[[2]], scale)
-
-  mod %>% fit(epochs=2L, verbose = FALSE, view_metrics = FALSE)
-
-  dims = lapply(coef(mod), length)
-  expect_equal(dims[[1]], loc)
-  expect_equal(dims[[2]], scale)
-
-  mean <- mod %>% fitted()
-  expect_true(length(mean) == nrow(data))
-  expect_true(is.numeric(mean))
-
-  mean <- mod %>% sd(data)
-  expect_true(length(mean) == nrow(data))
-  expect_true(is.numeric(mean))
-}
-
 test_that("simple additive model", {
   n <- 1500
   deep_model <- function(x) x %>%
@@ -37,10 +16,15 @@ test_that("simple additive model", {
     mod <- deepregression(
       y = y,
       data = data,
-      list_of_formulae = list(loc = ~ 1 + d(X1), scale = ~1),
+      list_of_formulas = list(loc = ~ 1 + d(X1), scale = ~1),
       list_of_deep_models = list(d = deep_model)
     )
-    expect_object_dims(mod, data, 1, 1)
+    expect_is(mod, "deepregression")
+    expect_length(mod, 3)
+    expect_true(length(setdiff(names(mod), 
+                               c("model", "init_params", "fit_fun")
+                               )
+                       )==0)
   }
 
   # 2 deep 1 structured + intercept
@@ -49,20 +33,40 @@ test_that("simple additive model", {
   mod <- deepregression(
     y = y,
     data = data,
-    list_of_formulae = list(loc = ~ X3 + d(X1) + g(X2), scale = ~1),
+    list_of_formulas = list(loc = ~ X3 + d(X1) + g(X2), scale = ~1),
     list_of_deep_models = list(d = deep_model, g = deep_model)
   )
-  expect_object_dims(mod, data, 2, 1)
+  
+  expect_is(mod, "deepregression")
+  expect_length(mod, 3)
+  expect_true(length(setdiff(names(mod), 
+                             c("model", "init_params", "fit_fun")
+  )
+  )==0)
 
 
   # 2 deep 1 structured no intercept
   mod <- deepregression(
     y = y,
     data = data,
-    list_of_formulae = list(loc = ~ -1 + X3 + d(X1) + g(X2), scale = ~1),
+    list_of_formulas = list(loc = ~ -1 + X3 + d(X1) + g(X2), scale = ~1),
     list_of_deep_models = list(d = deep_model, g = deep_model)
   )
-  expect_object_dims(mod, data, 1, 1)
+  expect_is(mod, "deepregression")
+  expect_length(mod, 3)
+  expect_true(length(setdiff(names(mod), 
+                             c("model", "init_params", "fit_fun")
+  )
+  )==0)
+  
+  # shared deep
+  mod <- deepregression(
+    y = y,
+    data = data,
+    list_of_formulas = list(loc = ~ -1 + X3 + d(X1) + g(X2), scale = ~1 + d(X1)),
+    list_of_deep_models = list(d = deep_model, g = deep_model)
+  )
+  
 })
 
 

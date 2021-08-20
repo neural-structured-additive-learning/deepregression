@@ -52,12 +52,21 @@ plot.deepregression <- function(
     
     if(dims==1){
       
-      if(plot) suppressWarnings(plot(partial_effect[order(value),1] ~ sort(value),
-                    data = plotData[[name]][c("value", "partial_effect")],
-                    main = name,
-                    xlab = extractvar(name),
-                    ylab = "partial effect",
-                    ...))
+      if(plot){ 
+       
+        # necessary for multivariate outcomes
+        for(i in 1:NCOL(plotData[[name]]$partial_effect)){ 
+          
+          suppressWarnings(plot(partial_effect[order(value),i] ~ sort(value),
+                                data = plotData[[name]][c("value", "partial_effect")],
+                                main = name,
+                                xlab = extractvar(name),
+                                ylab = "partial effect",
+                                ...))
+          
+        }
+        
+      }
       
     }else if(dims==2){
       
