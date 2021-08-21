@@ -26,6 +26,12 @@ combine_generators = function(genList) {
   generators$CombinedGenerator(genList)
 }
 
+combine_generators_wo_y = function(genList) {
+  python_path <- system.file("python", package = "deepregression")
+  generators <- reticulate::import_from_path("generators", path = python_path)
+  generators$CombinedGeneratorWoY(genList)
+}
+
 ######################
 
 #' creates a generator for training
@@ -39,7 +45,7 @@ combine_generators = function(genList) {
 #' @return generator for all x and y
 make_generator <- function(
   input_x,
-  input_y,
+  input_y = NULL,
   batch_size,
   sizes,
   shuffle = TRUE,
@@ -82,17 +88,25 @@ make_generator <- function(
     
   }
   
-  generators_y <- make_generator_from_matrix(
-    x = input_y,
-    y = NULL,
-    batch_size = batch_size, 
-    shuffle = shuffle, 
-    seed = seed
-  )
+  if(!is.null(input_y)){
+    
+    generators_y <- make_generator_from_matrix(
+      x = input_y,
+      y = NULL,
+      batch_size = batch_size, 
+      shuffle = shuffle, 
+      seed = seed
+    )
   
-  combined_gen <- combine_generators(c(generators_x, list(generators_y)))
-  
-  # str(combined_gen$`__getitem__`(1L),1)
+    combined_gen <- combine_generators(c(generators_x, list(generators_y)))
+    
+    # str(combined_gen$`__getitem__`(1L),1)
+    
+  }else{
+    
+    combined_gen <- combine_generators_wo_y(generators_x)
+    
+  }
   
   return(combined_gen)
   
@@ -180,6 +194,7 @@ prepare_generator_deepregression <- function(
   args <- c(args, list(
     object = x,
     x = generator,
+    epochs = epochs,
     steps_per_epoch = as.integer(steps_per_epoch),
     validation_data = validation_data,
     validation_steps = as.integer(validation_steps),
@@ -189,5 +204,38 @@ prepare_generator_deepregression <- function(
   ))
   
   return(args)
+  
+}
+
+predict_generator <- function(
+  object,
+  newdata = NULL,
+  batch_size = NULL,
+  apply_fun = tfd_mean,
+  convert_fun = as.matrix
+)
+{
+  
+  if(!is.null(newdata)){
+    newdata_processed <- prepare_newdata(object$init_params$parsed_formulas_contents, 
+                                         newdata)
+  }else{
+    newdata_processed <- prepare_data(object$init_params$parsed_formulas_contents)
+  }
+  # prepare generator
+  max_data <- NROW(newdata_processed[[1]])
+  if(is.null(batch_size)) batch_size <- 20
+  steps_per_epoch <- ceiling(max_data/batch_size)
+  
+  generator <- make_generator(input_x = newdata_processed,
+                              input_y = NULL,
+                              batch_size = batch_size,
+                              sizes = object$init_params$image_var)
+  
+  if(is.null(apply_fun)) apply_fun <- function(x){x}
+  return(sapply(1:steps_per_epoch, function(i) 
+    convert_fun(apply_fun(suppressWarnings(
+      object$model(generator$`__getitem__`(as.integer(i-1)))))))
+  )
   
 }

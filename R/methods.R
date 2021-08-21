@@ -105,7 +105,6 @@ plot.deepregression <- function(
 #' per default \code{tfd_mean}, i.e., predict the mean of the distribution
 #' @param convert_fun how should the resulting tensor be converted,
 #' per default \code{as.matrix}
-#' @param dtype string for conversion 
 #'
 #' @export
 #' @rdname methodDR
@@ -116,25 +115,27 @@ predict.deepregression <- function(
   batch_size = NULL,
   apply_fun = tfd_mean,
   convert_fun = as.matrix,
-  dtype = "float32",
   ...
 )
 {
 
-    if(is.null(newdata)){
-      yhat <- object$model(prepare_data(object$init_params$parsed_formulas_contents))
-    }else{
-      # preprocess data
-      if(is.data.frame(newdata)) newdata <- as.list(newdata)
-      newdata_processed <- prepare_newdata(object$init_params$parsed_formulas_contents, 
-                                           newdata)
-      yhat <- object$model(newdata_processed)
-    }
-   
-    if(!is.null(apply_fun))
-      return(convert_fun(apply_fun(yhat))) else
-        return(convert_fun(yhat))
-
+  if(length(object$init_params$image_var)>0)
+    return(predict_generator(object, newdata, batch_size, apply_fun, convert_fun))
+  
+  if(is.null(newdata)){
+    yhat <- object$model(prepare_data(object$init_params$parsed_formulas_contents))
+  }else{
+    # preprocess data
+    if(is.data.frame(newdata)) newdata <- as.list(newdata)
+    newdata_processed <- prepare_newdata(object$init_params$parsed_formulas_contents, 
+                                         newdata)
+    yhat <- object$model(newdata_processed)
+  }
+  
+  if(!is.null(apply_fun))
+    return(convert_fun(apply_fun(yhat))) else
+      return(convert_fun(yhat))
+  
 }
 
 #' Function to extract fitted distribution
@@ -267,7 +268,7 @@ fit.deepregression <- function(
     
   }
 
-  ret <- do.call(object$fit_fun, args)
+  ret <- suppressWarnings(do.call(object$fit_fun, args))
   if(save_weights) ret$weighthistory <- weighthistory$weights_last_layer
   invisible(ret)
 }

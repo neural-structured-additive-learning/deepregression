@@ -177,3 +177,31 @@ class CombinedGenerator(Sequence):
         X_batch = [x.__getitem__(index) for x in self.genList[:-1]]
         Y_batch = self.genList[-1].__getitem__(index)
         return X_batch, Y_batch
+
+class CombinedGeneratorWoY(Sequence):
+    """Wraps 2 DataGenerators"""
+
+    seed=None,
+    batch_size=None,
+
+    def __init__(self, genList):
+
+        # Real time multiple input data augmentation
+        if len(genList)>1:
+            assert all_equal([x.batch_size for x in genList])
+        self.batch_size = genList[0].batch_size
+
+        if len(genList)>1 and not all_equal([x.seed for x in genList]):
+            Warning("Generator seeds do not match!")
+        self.seed = genList[0].seed
+
+        self.genList = genList
+
+    def __len__(self):
+        """It is mandatory to implement it on Keras Sequence"""
+        return self.genList[0].__len__()
+
+    def __getitem__(self, index):
+        """Getting items from the generators and packing them, dropping first target"""
+        X_batch = [x.__getitem__(index) for x in self.genList]
+        return X_batch, 
