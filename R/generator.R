@@ -1,135 +1,3 @@
-#' creates a generator for training
-#'
-#' @param data_image data.frame with image location as character
-#' @param data_tab  tabular data as given by \code{prepare_data}
-#' @param batch_size integer
-#' @param target_size size of the image without sample and colour channel
-#' @param color_mode character; \code{'rgb'} or \code{'grayscale'}
-#' @param is_trafo logical; indicating whether model is a trafo model
-#' @param x_col name of image column in \code{data_image}
-#' @param shuffle logical for shuffling data
-#' @param seed seed for shuffling in generators
-#'  
-make_generator <- function(data_image, data_tab, batch_size, 
-                           target_size, color_mode, is_trafo = FALSE,
-                           x_col, shuffle = TRUE, seed = 42L)
-{
-  
-  gen_images <- flow_images_from_dataframe(data_image, 
-                                           x_col = x_col, 
-                                           class_mode = NULL,
-                                           target_size = target_size,
-                                           color_mode = color_mode,
-                                           batch_size = batch_size, 
-                                           shuffle = shuffle, 
-                                           seed = seed)
-  
-  # str(gen_images$`__next__`())
-  
-  if(is.logical(data_tab[[1]][[1]]) || is.na(data_tab[[1]][[1]][[1]]))
-      data_tab[[1]] <- data_tab[[1]][-1]
-  
-  ldt <- length(data_tab[[1]])
-  
-  if(ldt>2)
-  {
-    
-    this_ind <- 0
-    i <- 1
-    
-    while(all(this_ind<ldt)){
-      
-      this_ind <- unique(pmin((i-1)*2 + 1:2, ldt))
-      
-      if(length(this_ind)>1 & i==1){
-
-        gen_images <- combine_generators_list_unlist(
-          gen_images, 
-          make_generator_from_matrix(
-            x = data_tab[[1]][this_ind], y = NULL, 
-            batch_size = batch_size, shuffle = shuffle, seed = seed
-          ) 
-        )
-      #   
-      # }else if(length(this_ind)==1 & i>1){
-      # 
-      #     gen_images <- combine_generators_list(
-      #       gen_images, 
-      #       make_generator_from_matrix(
-      #         x = data_tab[[1]][[this_ind]], y = NULL, 
-      #         batch_size = batch_size, shuffle = shuffle, seed = seed
-      #       ) 
-      #     )
-          
-      }else if(length(this_ind)==1){
-        
-        gen_images <- combine_generators_unlist_list(
-          gen_images, 
-          make_generator_from_matrix(
-            x = data_tab[[1]][[this_ind]], y = NULL, 
-            batch_size = batch_size, shuffle = shuffle, seed = seed
-          ) 
-        )
-        
-      }else{
-        
-        gen_images <- combine_generators_unlist_unlist(
-          gen_images, 
-          make_generator_from_matrix(
-            x = data_tab[[1]][this_ind], y = NULL, 
-            batch_size = batch_size, shuffle = shuffle, seed = seed
-          ) 
-        )
-        
-      }
-      
-      i <- i + 1
-      
-    }
-    
-    # str(gen_images$`__getitem__`(1L))
-    
-  }
-  
-  if(length(data_tab)==1) this_y <- NULL else this_y <- data_tab[[2]]
-  gen_tab <- make_generator_from_matrix(
-    x = data_tab[[1]][(ldt-1):ldt], y = this_y, 
-    batch_size = batch_size, shuffle = shuffle, seed = seed
-  ) 
-    
-  # str(gen_tab$`__next__`())
-
-  if(is.null(this_y)){
-    
-    if(ldt>2)
-      gen <- combine_generators_twolists(gen_images, gen_tab) else
-        gen <- combine_generators_list_yless(gen_images, gen_tab)
-    
-  }else{
-    
-    if(ldt>2){
-      
-      gen <- combine_generators_xy( 
-        gen_images, gen_tab
-      )
-      
-    }else{
-      
-      gen <- combine_generators_x( 
-        gen_images, gen_tab
-      )
-      
-    }
-    
-  }
-    
-  # str(gen$`__getitem__`(1L))
-
-  return(gen)
-  
-}
-
-
 # from mlr3keras
 
 #' Make a DataGenerator from a data.frame or matrix
@@ -152,56 +20,174 @@ make_generator_from_matrix = function(x, y = NULL, generator=image_data_generato
 }
 
 
-combine_generators = function(gen1, gen2) {
+combine_generators = function(genList) {
   python_path <- system.file("python", package = "deepregression")
   generators <- reticulate::import_from_path("generators", path = python_path)
-  generators$CombinedGenerator(gen1, gen2)
+  generators$CombinedGenerator(genList)
 }
 
-combine_generators_x = function(gen1, gen2) {
-  python_path <- system.file("python", package = "deepregression")
-  generators <- reticulate::import_from_path("generators", path = python_path)
-  generators$CombinedGeneratorX(gen1, gen2)
+######################
+
+#' creates a generator for training
+#'
+#' @param input_x list of matrices
+#' @param input_y list of matrix
+#' @param batch_size integer
+#' @param sizes sizes of the image including colour channel
+#' @param shuffle logical for shuffling data
+#' @param seed seed for shuffling in generators
+#' @return generator for all x and y
+make_generator <- function(
+  input_x,
+  input_y,
+  batch_size,
+  sizes,
+  shuffle = TRUE,
+  seed = 42L
+)
+{
+  
+  generators_x <- list()
+  j <- 1
+  
+  for(i in 1:length(input_x)){
+    
+    if(is.character(input_x[[i]])){
+
+      input_x[[i]] <- as.data.frame(input_x[[i]])
+      
+      generators_x[[i]] <- flow_images_from_dataframe(input_x[[i]], 
+                                                      x_col = colnames(input_x[[i]]), 
+                                                      class_mode = NULL,
+                                                      target_size = sizes[[j]][1:2],
+                                                      color_mode = ifelse(sizes[[j]][3]==3, 
+                                                                          "rgb", "grayscale"),
+                                                      batch_size = batch_size, 
+                                                      shuffle = shuffle, 
+                                                      seed = seed)
+      
+      j <- j + 1
+      
+    }else{
+      
+      generators_x[[i]] <- make_generator_from_matrix(
+        x = input_x[[i]], 
+        y = NULL, 
+        batch_size = batch_size, 
+        shuffle = shuffle, 
+        seed = seed
+      ) 
+      
+    }
+    
+  }
+  
+  generators_y <- make_generator_from_matrix(
+    x = input_y,
+    y = NULL,
+    batch_size = batch_size, 
+    shuffle = shuffle, 
+    seed = seed
+  )
+  
+  combined_gen <- combine_generators(c(generators_x, list(generators_y)))
+  
+  # str(combined_gen$`__getitem__`(1L),1)
+  
+  return(combined_gen)
+  
 }
 
-combine_generators_xy = function(gen1, gen2) {
-  python_path <- system.file("python", package = "deepregression")
-  generators <- reticulate::import_from_path("generators", path = python_path)
-  generators$CombinedGeneratorXY(gen1, gen2)
-}
+prepare_generator_deepregression <- function(
+  x, 
+  input_x,
+  input_y,
+  sizes,
+  batch_size = 32,
+  epochs = 10,
+  verbose = TRUE,
+  view_metrics = FALSE,
+  validation_data = NULL,
+  validation_split = 0.1,
+  callbacks = list(),
+  ...
+)
+{
+  
 
-combine_generators_list = function(gen1, gen2) {
-  python_path <- system.file("python", package = "deepregression")
-  generators <- reticulate::import_from_path("generators", path = python_path)
-  generators$CombinedGeneratorList(gen1, gen2)
-}
+  if(validation_split==0 | is.null(validation_split) | !is.null(validation_data))
+  {
+    
+    # only fit generator
+    max_data <- NROW(input_x[[1]])
+    steps_per_epoch <- ceiling(max_data/batch_size)
+    
+    generator <- make_generator(input_x,
+                                input_y,
+                                batch_size, 
+                                sizes = sizes)
+    
+    if(!is.null(validation_data)){
 
-combine_generators_list_unlist = function(gen1, gen2) {
-  python_path <- system.file("python", package = "deepregression")
-  generators <- reticulate::import_from_path("generators", path = python_path)
-  generators$CombinedGeneratorListUnlist(gen1, gen2)
-}
+      max_data <- NROW(validation_data[[1]][[1]])
 
-combine_generators_unlist_list = function(gen1, gen2) {
-  python_path <- system.file("python", package = "deepregression")
-  generators <- reticulate::import_from_path("generators", path = python_path)
-  generators$CombinedGeneratorUnlistList(gen1, gen2)
-}
+      validation_data <- make_generator(validation_data[[1]],
+                                        validation_data[[2]],
+                                        batch_size, 
+                                        sizes = sizes)
+      
+      validation_steps <- ceiling(max_data/batch_size)
+      
+    }else{
+      
+      validation_data <- NULL
+      validation_steps <- NULL
+      
+    }
+    
+    
+  }else{
+    
+    input_x <- lapply(input_x, as.matrix)
+    
+    ind_val <- sample(1:NROW(input_y), round(NROW(input_y)*validation_split))
+    ind_train <- setdiff(1:NROW(input_y), ind_val)
+    input_x_train <- subset_input_cov(input_x, ind_train)
+    input_x_val <- subset_input_cov(input_x, ind_val)
+    input_y_train <- matrix(subset_array(input_y, ind_train), ncol=1)
+    input_y_val <- matrix(subset_array(input_y, ind_val), ncol=1)
+    
+    max_data_train <- NROW(input_x_train[[1]])
+    steps_per_epoch <- ceiling(max_data_train/batch_size)
+    
+    generator <- make_generator(input_x_train,
+                                input_y_train,
+                                batch_size = batch_size, 
+                                sizes = sizes)
+    
+    max_data_val <- NROW(input_x_val[[1]])
+    validation_steps <- ceiling(max_data_val/batch_size)
 
-combine_generators_unlist_unlist = function(gen1, gen2) {
-  python_path <- system.file("python", package = "deepregression")
-  generators <- reticulate::import_from_path("generators", path = python_path)
-  generators$CombinedGeneratorUnListUnlist(gen1, gen2)
-}
-
-combine_generators_twolists = function(gen1, gen2) {
-  python_path <- system.file("python", package = "deepregression")
-  generators <- reticulate::import_from_path("generators", path = python_path)
-  generators$CombinedGeneratorTwoLists(gen1, gen2)
-}
-
-combine_generators_list_yless = function(gen1, gen2) {
-  python_path <- system.file("python", package = "deepregression")
-  generators <- reticulate::import_from_path("generators", path = python_path)
-  generators$CombinedGeneratorListYless(gen1, gen2)
+    validation_data <- make_generator(input_x_val,
+                                      input_y_val,
+                                      batch_size = batch_size, 
+                                      sizes = sizes
+                                      )
+    
+  }
+  
+  args <- list(...)
+  args <- c(args, list(
+    object = x,
+    x = generator,
+    steps_per_epoch = as.integer(steps_per_epoch),
+    validation_data = validation_data,
+    validation_steps = as.integer(validation_steps),
+    callbacks = callbacks,
+    verbose = verbose,
+    view_metrics = view_metrics
+  ))
+  
+  return(args)
+  
 }

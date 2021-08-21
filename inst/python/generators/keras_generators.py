@@ -1,9 +1,13 @@
 import os
 import warnings
 import numpy as np
-
+from itertools import groupby
 from tensorflow.python.keras.preprocessing.image import Iterator, ImageDataGenerator
 from tensorflow.python.keras.utils.data_utils import Sequence
+
+def all_equal(iterable):
+    g = groupby(iterable)
+    return next(g, True) and not next(g, False)
 
 class Numpy2DArrayIterator(Iterator):
     """Iterator yielding data from a Numpy array.
@@ -145,285 +149,31 @@ class Numpy2DArrayIterator(Iterator):
         return output
 
 
-
-
-class CombinedGeneratorX(Sequence):
-    """Wraps 2 DataGenerators"""
-
-    seed=None,
-    batch_size=None,
-
-    def __init__(self, gen1, gen2):
-
-        # Real time multiple input data augmentation
-        assert gen1.batch_size == gen2.batch_size
-        self.batch_size = gen1.batch_size
-
-        if gen1.seed != gen2.seed:
-            Warning("Generator seeds do not match!")
-        self.seed = gen1.seed
-
-        self.gen1 = gen1
-        self.gen2 = gen2
-	# self.shape = [gen1.shape, gen2.shape]
-
-    def __len__(self):
-        """It is mandatory to implement it on Keras Sequence"""
-        return self.gen1.__len__()
-
-    def __getitem__(self, index):
-        """Getting items from the 2 generators and packing them, dropping first target"""
-        X1_batch = self.gen1.__getitem__(index)
-        X2_batch, Y2_batch = self.gen2.__getitem__(index)
-        X_batch = X1_batch, *X2_batch #[val for sublist in [[X1_batch], X2_batch] for val in sublist]
-        return X_batch, Y2_batch
-
-class CombinedGeneratorXY(Sequence):
-    """Wraps 2 DataGenerators"""
-
-    seed=None,
-    batch_size=None,
-
-    def __init__(self, gen1, gen2):
-
-        # Real time multiple input data augmentation
-        assert gen1.batch_size == gen2.batch_size
-        self.batch_size = gen1.batch_size
-
-        if gen1.seed != gen2.seed:
-            Warning("Generator seeds do not match!")
-        self.seed = gen1.seed
-
-        self.gen1 = gen1
-        self.gen2 = gen2
-	# self.shape = [gen1.shape, gen2.shape]
-
-    def __len__(self):
-        """It is mandatory to implement it on Keras Sequence"""
-        return self.gen1.__len__()
-
-    def __getitem__(self, index):
-        """Getting items from the 2 generators and packing them, dropping first target"""
-        X1_batch = self.gen1.__getitem__(index)
-        X2_batch, Y2_batch = self.gen2.__getitem__(index)
-        X_batch = *X1_batch, *X2_batch #[val for sublist in [[X1_batch], X2_batch] for val in sublist]
-        return X_batch, Y2_batch
-
-class CombinedGeneratorList(Sequence):
-    """Wraps 2 DataGenerators"""
-
-    seed=None,
-    batch_size=None,
-
-    def __init__(self, gen1, gen2):
-
-        # Real time multiple input data augmentation
-        assert gen1.batch_size == gen2.batch_size
-        self.batch_size = gen1.batch_size
-
-        if gen1.seed != gen2.seed:
-            Warning("Generator seeds do not match!")
-        self.seed = gen1.seed
-
-        self.gen1 = gen1
-        self.gen2 = gen2
-	# self.shape = [gen1.shape, gen2.shape]
-
-    def __len__(self):
-        """It is mandatory to implement it on Keras Sequence"""
-        return self.gen2.__len__()
-
-    def __getitem__(self, index):
-        """Getting items from the 2 generators and packing them, dropping first target"""
-        X_batch = self.gen1.__getitem__(index)
-        Y_batch = self.gen2.__getitem__(index)
-        XY_batch = X_batch, Y_batch
-        return XY_batch
-
-class CombinedGeneratorListUnlist(Sequence):
-    """Wraps 2 DataGenerators"""
-
-    seed=None,
-    batch_size=None,
-
-    def __init__(self, gen1, gen2):
-
-        # Real time multiple input data augmentation
-        assert gen1.batch_size == gen2.batch_size
-        self.batch_size = gen1.batch_size
-
-        if gen1.seed != gen2.seed:
-            Warning("Generator seeds do not match!")
-        self.seed = gen1.seed
-
-        self.gen1 = gen1
-        self.gen2 = gen2
-	# self.shape = [gen1.shape, gen2.shape]
-
-    def __len__(self):
-        """It is mandatory to implement it on Keras Sequence"""
-        return self.gen2.__len__()
-
-    def __getitem__(self, index):
-        """Getting items from the 2 generators and packing them, dropping first target"""
-        X_batch = self.gen1.__getitem__(index)
-        Y_batch = self.gen2.__getitem__(index)
-        XY_batch = X_batch, *Y_batch
-        return XY_batch
-
-class CombinedGeneratorUnlistList(Sequence):
-    """Wraps 2 DataGenerators"""
-
-    seed=None,
-    batch_size=None,
-
-    def __init__(self, gen1, gen2):
-
-        # Real time multiple input data augmentation
-        assert gen1.batch_size == gen2.batch_size
-        self.batch_size = gen1.batch_size
-
-        if gen1.seed != gen2.seed:
-            Warning("Generator seeds do not match!")
-        self.seed = gen1.seed
-
-        self.gen1 = gen1
-        self.gen2 = gen2
-	# self.shape = [gen1.shape, gen2.shape]
-
-    def __len__(self):
-        """It is mandatory to implement it on Keras Sequence"""
-        return self.gen2.__len__()
-
-    def __getitem__(self, index):
-        """Getting items from the 2 generators and packing them, dropping first target"""
-        X_batch = self.gen1.__getitem__(index)
-        Y_batch = self.gen2.__getitem__(index)
-        XY_batch = *X_batch, Y_batch
-        return XY_batch
-
-
-
-class CombinedGeneratorListYless(Sequence):
-    """Wraps 2 DataGenerators"""
-
-    seed=None,
-    batch_size=None,
-
-    def __init__(self, gen1, gen2):
-
-        # Real time multiple input data augmentation
-        assert gen1.batch_size == gen2.batch_size
-        self.batch_size = gen1.batch_size
-
-        if gen1.seed != gen2.seed:
-            Warning("Generator seeds do not match!")
-        self.seed = gen1.seed
-
-        self.gen1 = gen1
-        self.gen2 = gen2
-	# self.shape = [gen1.shape, gen2.shape]
-
-    def __len__(self):
-        """It is mandatory to implement it on Keras Sequence"""
-        return self.gen2.__len__()
-
-    def __getitem__(self, index):
-        """Getting items from the 2 generators and packing them, dropping first target"""
-        X_batch = self.gen1.__getitem__(index)
-        Y_batch = self.gen2.__getitem__(index)
-        XY_batch = [X_batch, *Y_batch]
-        return XY_batch, 
-
-class CombinedGeneratorTwoLists(Sequence):
-    """Wraps 2 DataGenerators"""
-
-    seed=None,
-    batch_size=None,
-
-    def __init__(self, gen1, gen2):
-
-        # Real time multiple input data augmentation
-        assert gen1.batch_size == gen2.batch_size
-        self.batch_size = gen1.batch_size
-
-        if gen1.seed != gen2.seed:
-            Warning("Generator seeds do not match!")
-        self.seed = gen1.seed
-
-        self.gen1 = gen1
-        self.gen2 = gen2
-	# self.shape = [gen1.shape, gen2.shape]
-
-    def __len__(self):
-        """It is mandatory to implement it on Keras Sequence"""
-        return self.gen2.__len__()
-
-    def __getitem__(self, index):
-        """Getting items from the 2 generators and packing them, dropping first target"""
-        X_batch = self.gen1.__getitem__(index)
-        Y_batch = self.gen2.__getitem__(index)
-        XY_batch = *X_batch, *Y_batch
-        return XY_batch, 
-
-class CombinedGeneratorUnListUnlist(Sequence):
-    """Wraps 2 DataGenerators"""
-
-    seed=None,
-    batch_size=None,
-
-    def __init__(self, gen1, gen2):
-
-        # Real time multiple input data augmentation
-        assert gen1.batch_size == gen2.batch_size
-        self.batch_size = gen1.batch_size
-
-        if gen1.seed != gen2.seed:
-            Warning("Generator seeds do not match!")
-        self.seed = gen1.seed
-
-        self.gen1 = gen1
-        self.gen2 = gen2
-	# self.shape = [gen1.shape, gen2.shape]
-
-    def __len__(self):
-        """It is mandatory to implement it on Keras Sequence"""
-        return self.gen2.__len__()
-
-    def __getitem__(self, index):
-        """Getting items from the 2 generators and packing them, dropping first target"""
-        X_batch = self.gen1.__getitem__(index)
-        Y_batch = self.gen2.__getitem__(index)
-        XY_batch = *X_batch, *Y_batch
-        return XY_batch
-
 class CombinedGenerator(Sequence):
     """Wraps 2 DataGenerators"""
 
     seed=None,
     batch_size=None,
 
-    def __init__(self, gen1, gen2):
+    def __init__(self, genList):
 
         # Real time multiple input data augmentation
-        assert gen1.batch_size == gen2.batch_size
-        self.batch_size = gen1.batch_size
+        if len(genList)>1:
+            assert all_equal([x.batch_size for x in genList])
+        self.batch_size = genList[0].batch_size
 
-        if gen1.seed != gen2.seed:
+        if len(genList)>1 and not all_equal([x.seed for x in genList]):
             Warning("Generator seeds do not match!")
-        self.seed = gen1.seed
+        self.seed = genList[0].seed
 
-        self.gen1 = gen1
-        self.gen2 = gen2
-	# self.shape = [gen1.shape, gen2.shape]
+        self.genList = genList
 
     def __len__(self):
         """It is mandatory to implement it on Keras Sequence"""
-        return self.gen1.__len__()
+        return self.genList[0].__len__()
 
     def __getitem__(self, index):
-        """Getting items from the 2 generators and packing them, dropping first target"""
-        X1_batch, Y_batch = self.gen1.__getitem__(index)
-        X2_batch, Y2_batch = self.gen2.__getitem__(index)
-        X_batch = [X1_batch, X2_batch]
+        """Getting items from the generators and packing them, dropping first target"""
+        X_batch = [x.__getitem__(index) for x in self.genList[:-1]]
+        Y_batch = self.genList[-1].__getitem__(index)
         return X_batch, Y_batch

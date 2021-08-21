@@ -111,7 +111,7 @@ deepregression <- function(
   {
     message("Tensorflow not available. Use install_tensorflow().")
     invisible(return(NULL))
-  } # nocov end
+  }
 
   # convert data.frame to list
   if(is.data.frame(data)){
@@ -133,8 +133,23 @@ deepregression <- function(
   }
   
   if(length(netnames)>0){
-    list_of_deep_models <- lapply(list_of_deep_models, dnn_placeholder_processor)
+    
+    len_dnns <- sapply(list_of_deep_models, length)
+    
+    # check for image dnns
+    if(any(len_dnns>1)){
+      
+      image_var <- lapply(list_of_deep_models[len_dnns>1],
+                          "[[", 2)
+      
+    }
+    
+    names(image_var) <- netnames[len_dnns>1]
+    list_of_deep_models <- lapply(list_of_deep_models, dnn_processor)
     names(list_of_deep_models) <- netnames
+    
+  }else{
+    image_var <- list()
   }
   
   # check if user wants automatic orthogonalization
@@ -222,7 +237,8 @@ deepregression <- function(
                   ellipsis = list(...),
                   family = family,
                   smooth_options = smooth_options,
-                  orthog_options = orthog_options
+                  orthog_options = orthog_options,
+                  image_var = image_var
                 ),
               fit_fun = fitting_function)
 
@@ -276,11 +292,25 @@ from_preds_to_dist <- function(
       
       for(ind in multiple_param){
         # add units
-        lpp[[ind]] <- tf$split(
-          lpp[[ind]] %>% add_layer_shared_pred(units = len_map[ind]*output_dim),
-          len_map[ind]/output_dim,
-          axis=1L
+        if(lpp[[ind]]$shape[[2]] < len_map[ind]){
+          # less units than needed => add layer and then split
+          lpp[[ind]] <- tf$split(
+            lpp[[ind]] %>% add_layer_shared_pred(units = len_map[ind]*output_dim),
+            as.integer(len_map[ind]/output_dim),
+            axis=1L
           )
+        }else if(lpp[[ind]]$shape[[2]] == len_map[ind]){
+          # units match number needed = just split
+          lpp[[ind]] <- tf$split(
+            lpp[[ind]],
+            as.integer(len_map[ind]/output_dim),
+            axis=1L
+          )
+        }else{
+          # more units than needed
+          stop("Node ", lpp[[ind]]$name, " has more units than defined by the mapping.\n",
+               "  Does your deep neural network has the correct output dimensions?")
+        }
         
       }
       

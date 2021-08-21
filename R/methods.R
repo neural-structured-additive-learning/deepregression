@@ -222,37 +222,50 @@ fit.deepregression <- function(
   if(!is.null(validation_data))
     validation_data <- 
     list(
-      x = prepare_newdata(object$init_params$parsed_formulas_content, validation_data[[1]]),
+      x = prepare_newdata(object$init_params$parsed_formulas_content, 
+                          validation_data[[1]]),
       y = as.matrix(validation_data[[2]], ncol=1)
     )
 
-  condition_for_images <- FALSE
-  if(condition_for_images){
-    ret <- fit_generator_deepregression
-    return(invisible(ret))
-  }
-
-
-  
-  input_list_model <-
-    list(object = object$model,
-         epochs = epochs,
-         batch_size = batch_size,
-         validation_split = validation_split,
-         validation_data = validation_data,
-         callbacks = callbacks,
-         verbose = verbose,
-         view_metrics = ifelse(view_metrics, getOption("keras.view_metrics", default = "auto"), FALSE)
+  if(length(object$init_params$image_var)>0){
+    
+    args <- prepare_generator_deepregression(
+      x = object$model,
+      input_x = input_x,
+      input_y = input_y,
+      sizes = object$init_params$image_var,
+      validation_data = validation_data,
+      batch_size = batch_size,
+      epochs = epochs,
+      verbose = verbose,
+      validation_split = validation_split,
+      callbacks = callbacks,
+      ...
     )
-  
-  input_list_model <- c(input_list_model,
-                        list(x = input_x,
-                             y = input_y
-                        ))
- 
-  args <- append(args,
-                 input_list_model[!names(input_list_model) %in%
-                                    names(args)])
+
+  }else{
+    
+    input_list_model <-
+      list(object = object$model,
+           epochs = epochs,
+           batch_size = batch_size,
+           validation_split = validation_split,
+           validation_data = validation_data,
+           callbacks = callbacks,
+           verbose = verbose,
+           view_metrics = ifelse(view_metrics, getOption("keras.view_metrics", default = "auto"), FALSE)
+      )
+    
+    input_list_model <- c(input_list_model,
+                          list(x = input_x,
+                               y = input_y
+                          ))
+    
+    args <- append(args,
+                   input_list_model[!names(input_list_model) %in%
+                                      names(args)])
+    
+  }
 
   ret <- do.call(object$fit_fun, args)
   if(save_weights) ret$weighthistory <- weighthistory$weights_last_layer

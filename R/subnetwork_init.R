@@ -15,10 +15,19 @@ subnetwork_init <- function(pp, deep_top = NULL,
 {
   
   
-  inputs <- lapply(pp, function(ap) tf$keras$Input(
-    shape = list(as.integer(ap$input_dim)),
-    name = paste0("input_", strtrim(make_valid_layername(ap$term), 30),
-                  "_", param_nr))
+  inputs <- lapply(pp, function(ap){ 
+    
+    if(length(ap$input_dim)>1)
+      inp <- as.list(as.integer(ap$input_dim)) else
+        inp <- list(as.integer(ap$input_dim))
+      
+      return(
+        tf$keras$Input(
+          shape = inp,
+          name = paste0("input_", strtrim(make_valid_layername(ap$term), 30),
+                        "_", param_nr))
+      )
+  }
   )
   
   if(all(sapply(pp, function(x) is.null(x$right_from_oz)))){ # if there is no term to orthogonalize

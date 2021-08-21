@@ -151,15 +151,24 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
   trainable_smooth <- is.null(evaluated_gam_term[[1]]$sp)
   # get sp and S
   sp_and_S <- extract_sp_S(evaluated_gam_term)
+  # get default Z matrix, which is possibly overwritten afterwards
+  Z <- diag(rep(1,ncol(evaluated_gam_term[[1]]$X)))
   # constraint
   if(controls$zero_constraint_for_smooths & 
      length(evaluated_gam_term)==1 & 
-     !controls$variational){
+     !controls$variational & 
+     !evaluated_gam_term[[1]]$dim>1){
     Z <- orthog_structured_smooths_Z(
       evaluated_gam_term[[1]]$X,
       matrix(rep(1,NROW(evaluated_gam_term[[1]]$X)), ncol=1)
     )
     sp_and_S[[2]][[1]] <- orthog_P(sp_and_S[[2]][[1]],Z)
+  }else if(evaluated_gam_term[[1]]$dim>1 & 
+           length(evaluated_gam_term)==1){
+    # tensor product -> merge and keep dummy
+    sp_and_S <- list(sp = 1, 
+                     S = list(do.call("+", lapply(1:length(sp_and_S[[2]]), function(i)
+                       sp_and_S[[1]][[1]][i] * sp_and_S[[2]][[i]]))))
   }
   # define layer  
   if(trainable_smooth){
@@ -349,12 +358,32 @@ vi_processor <- function(term, data, output_dim, param_nr){
   )
 }
 
+dnn_processor <- function(dnn){
+  
+  if(is.list(dnn) & length(dnn)==2){
+    do.call("dnn_image_placeholder_processor", dnn)
+  }else{
+    dnn_placeholder_processor(dnn)
+  }
+}
+
 dnn_placeholder_processor <- function(dnn){
   function(term, data, output_dim, param_nr){
     list(
       data_trafo = function() data[extractvar(term)],
       predict_trafo = function(newdata) newdata[extractvar(term)],
       input_dim = extractlen(term, data),
+      layer = dnn
+    )
+  }
+}
+
+dnn_image_placeholder_processor <- function(dnn, size){
+  function(term, data, output_dim, param_nr){
+    list(
+      data_trafo = function() as.data.frame(data[extractvar(term)]),
+      predict_trafo = function(newdata) as.data.frame(newdata[extractvar(term)]),
+      input_dim = size,
       layer = dnn
     )
   }
@@ -396,12 +425,7 @@ extractlen <- function(term, data)
   
 }
 
-evalarg <- function(term)
-{
-  
-  
-  
-}
+extract_size <- 
 
 get_gam_part <- function(term, specials = c("s", "te", "ti"))
 {
