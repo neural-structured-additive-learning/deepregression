@@ -28,6 +28,8 @@
 #' like a keras model
 #' @param fitting_function function to fit the instantiated model when calling \code{fit}. Per default
 #' the keras \code{fit} function.
+#' @param smooth_options options for smoothing terms defined by \code{smooth_control}
+#' @param orthog_options options for the orthgonalization defined by \code{orthog_control}
 #' @param ... further arguments passed to the \code{model_builder} function
 #'
 #' @import tensorflow tfprobability keras mgcv dplyr R6 reticulate Matrix
@@ -132,6 +134,10 @@ deepregression <- function(
       stop("Please provide a named list of deep models.")
   }
   
+  # create list for image variables
+  # (and overwrite it potentially later)
+  image_var <- list()
+  
   if(length(netnames)>0){
     
     len_dnns <- sapply(list_of_deep_models, length)
@@ -148,8 +154,6 @@ deepregression <- function(
     list_of_deep_models <- lapply(list_of_deep_models, dnn_processor)
     names(list_of_deep_models) <- netnames
     
-  }else{
-    image_var <- list()
   }
   
   # check if user wants automatic orthogonalization

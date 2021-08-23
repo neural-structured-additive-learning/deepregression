@@ -7,7 +7,7 @@
 deepregression(
   y,
   list_of_formulas,
-  list_of_deep_models,
+  list_of_deep_models = NULL,
   family = "normal",
   data,
   tf_seed = as.integer(1991 - 5 - 4),
@@ -16,6 +16,7 @@ deepregression(
   model_builder = keras_dr,
   fitting_function = utils::getFromNamespace("fit.keras.engine.training.Model",
     "keras"),
+  additional_processors = list(),
   smooth_options = smooth_control(),
   orthog_options = orthog_control(),
   ...
@@ -36,8 +37,7 @@ where my_deep_mod is the name of the neural net specified in
 \code{list_of_deep_models} and \code{a,b,c} are features modeled via
 this network.}
 
-\item{list_of_deep_models}{a named list of functions
-specifying a keras model.
+\item{list_of_deep_models}{a named list of functions specifying a keras model.
 See the examples for more details.}
 
 \item{family}{a character specifying the distribution. For information on
@@ -59,6 +59,8 @@ like a keras model}
 
 \item{fitting_function}{function to fit the instantiated model when calling \code{fit}. Per default
 the keras \code{fit} function.}
+
+\item{additional_processors}{a named list with additional processors to convert the formula(s)}
 
 \item{...}{further arguments passed to the \code{model_builder} function}
 }

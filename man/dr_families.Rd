@@ -7,6 +7,7 @@
 make_tfd_dist(
   family,
   add_const = 1e-08,
+  output_dim = 1L,
   return_nrparams = FALSE,
   trafo_list = NULL
 )
@@ -15,6 +16,9 @@ make_tfd_dist(
 \item{family}{character vector}
 
 \item{add_const}{small positive constant to stabilize calculations}
+
+\item{output_dim}{number of output dimensions of the response (larger 1 for
+multivariate case)}
 
 \item{return_nrparams}{logical, if TRUE, only the number of distribution parameters is
 returned; else (FALSE) the \code{dist_fun} required in \code{deepregression}}

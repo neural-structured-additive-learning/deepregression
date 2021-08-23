@@ -7,10 +7,10 @@
 \alias{fit.deepregression}
 \alias{coef.deepregression}
 \alias{print.deepregression}
-\alias{cv}
+\alias{cv.deepregression}
 \alias{mean.deepregression}
-\alias{sd.deepregression}
-\alias{quantile.deepregression}
+\alias{stddev.deepregression}
+\alias{quant.deepregression}
 \title{Generic functions for deepregression models}
 \usage{
 \method{plot}{deepregression}(x, which = NULL, which_param = 1, plot = TRUE, grid_length = 40, ...)
@@ -21,7 +21,6 @@
   batch_size = NULL,
   apply_fun = tfd_mean,
   convert_fun = as.matrix,
-  dtype = "float32",
   ...
 )
 
@@ -29,7 +28,7 @@
 
 \method{fit}{deepregression}(
   object,
-  batch_size = NULL,
+  batch_size = 32,
   epochs = 10,
   early_stopping = FALSE,
   verbose = TRUE,
@@ -47,7 +46,7 @@
 
 \method{print}{deepregression}(x, ...)
 
-cv(
+\method{cv}{deepregression}(
   x,
   verbose = FALSE,
   patience = 20,
@@ -58,14 +57,15 @@ cv(
   mylapply = lapply,
   save_weights = FALSE,
   callbacks = list(),
+  save_fun = NULL,
   ...
 )
 
 \method{mean}{deepregression}(x, data = NULL, ...)
 
-\method{sd}{deepregression}(x, data = NULL, ...)
+\method{stddev}{deepregression}(x, data = NULL, ...)
 
-\method{quantile}{deepregression}(x, data = NULL, probs, ...)
+\method{quant}{deepregression}(x, data = NULL, probs, ...)
 }
 \arguments{
 \item{x}{a deepregression object}
@@ -91,8 +91,6 @@ per default \code{tfd_mean}}
 
 \item{convert_fun}{how should the resulting tensor be converted,
 per default \code{as.matrix}}
-
-\item{dtype}{string for conversion}
 
 \item{early_stopping}{logical, whether early stopping should be user.}
 
@@ -121,6 +119,9 @@ smooth terms}
 \item{stop_if_nan}{logical; whether to stop CV if NaN values occur}
 
 \item{mylapply}{lapply function to be used; defaults to \code{lapply}}
+
+\item{save_fun}{function applied to the model in each fold to be stored in
+the final result}
 
 \item{data}{either \code{NULL} or a new data set}
 

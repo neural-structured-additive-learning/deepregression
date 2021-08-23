@@ -26,8 +26,7 @@ processor <- function(
          vc = vc_processor,
          lasso = l1_processor,
          ridge = l2_processor,
-         offset = offset_processor,
-         vi = vi_processor
+         offset = offset_processor
     )
   
   dots <- list(...)
@@ -52,7 +51,7 @@ processor <- function(
   
   args <- list(data = data, output_dim = output_dim, param_nr = param_nr)
   result <- list()
-
+  
   # add intercept terms
   if(attr(terms.formula(form), "intercept") & !"(Intercept)" %in% 
      sapply(list_terms, "[[", "term"))
@@ -63,7 +62,7 @@ processor <- function(
          right_from_oz = NULL)
   
   for(i in 1:length(list_terms)){
-   
+    
     lin_counter <- 1
     args$term = list_terms[[i]]$term
     spec <- get_special(list_terms[[i]]$term, specials = specials)
@@ -72,7 +71,7 @@ processor <- function(
       if(args$term=="(Intercept)")
         result[[i]] <- c(list_terms[[i]], do.call(int_processor, args)) else
           result[[i]] <- c(list_terms[[i]], do.call(lin_processor, args))
-      lin_counter <- lin_counter+1
+        lin_counter <- lin_counter+1
     }else{
       if(spec %in% c("s", "te", "ti", "vc")) args$controls <- controls
       result[[i]] <- c(list_terms[[i]], do.call(procs[[spec]], args))
@@ -112,7 +111,7 @@ int_processor <- function(term, data, output_dim, param_nr){
 
 lin_processor <- function(term, data, output_dim, param_nr){
   
-
+  
   if(grepl("lin(.*)", term)) term <- paste0(paste(extractvar(term),
                                                   collapse = " + "),
                                             "+ 0 ")
@@ -125,7 +124,7 @@ lin_processor <- function(term, data, output_dim, param_nr){
         model.matrix(object = as.formula(paste0("~ -1 + ", term)),
                      data = as.data.frame(newdata))
       )
-      },
+    },
     input_dim = ncol(model.matrix(object = as.formula(paste0("~ -1 +", term)), 
                                   data = data)),
     layer = function(x, ...)
@@ -156,7 +155,6 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
   # constraint
   if(controls$zero_constraint_for_smooths & 
      length(evaluated_gam_term)==1 & 
-     !controls$variational & 
      !evaluated_gam_term[[1]]$dim>1){
     Z <- orthog_structured_smooths_Z(
       evaluated_gam_term[[1]]$X,
@@ -181,23 +179,14 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
                                name = makelayername(term, 
                                                     param_nr),
                                ...)(x))
-  }else if(!controls$variational){
+  }else{
     layer <- function(x, ...)
       return(layer_spline(
-                   name = makelayername(term, 
-                                        param_nr),
-                   P = as.matrix(bdiag(lapply(1:length(sp_and_S[[1]]), function(i) 
-                     sp_and_S[[1]][[i]] * sp_and_S[[2]][[i]]))),
-                   units = output_dim)(x))
-  }else{ # TODO: move this to a dedicated processor
-    layer <- function(x, ...)
-      return(tfp$layer$DenseVariational(
-        make_posterior_fn = controls$make_posterior_fn,
-        make_prior_fn = prior_pspline(
-          kernel_size = output_dim,
-          P = bdiag(lapply(1:length(sp_and_S), function(i) sp_and_S[[1]][[i]] * sp_and_S[[2]][[i]]))
-        )
-      )(x))
+        name = makelayername(term, 
+                             param_nr),
+        P = as.matrix(bdiag(lapply(1:length(sp_and_S[[1]]), function(i) 
+          controls$sp_scale(data) * sp_and_S[[1]][[i]] * sp_and_S[[2]][[i]]))),
+        units = output_dim)(x))
   }
   
   list(
@@ -224,18 +213,18 @@ fac_processor <- function(term, data, output_dim, param_nr){
     input_dim = extractlen(term, data),
     layer = function(x, ...)
       return(tf$one_hot(tf$cast(x, dtype="int32"), 
-                 depth = nlevels(data[[extractvar(term)]])) %>% 
-      tf$keras$layers$Dense(
-        units = output_dim,
-        kernel_regularizer = tf$keras$regularizers$l2(l = extractval(term, "la")),
-        name = makelayername(term, 
-                             param_nr),
-        ...
-        )),
+                        depth = nlevels(data[[extractvar(term)]])) %>% 
+               tf$keras$layers$Dense(
+                 units = output_dim,
+                 kernel_regularizer = tf$keras$regularizers$l2(l = extractval(term, "la")),
+                 name = makelayername(term, 
+                                      param_nr),
+                 ...
+               )),
     coef = function(weights) as.matrix(weights)
   )
 }
-  
+
 vc_processor <- function(term, data, output_dim, param_nr, controls){
   # vc (old: vc, vcc)
   vars <- extractvar(term)
@@ -266,7 +255,7 @@ vc_processor <- function(term, data, output_dim, param_nr, controls){
   }else{
     stop("vc terms with more than 2 factors currently not supported.")
   }
-
+  
   list(
     data_trafo = function() do.call("cbind", c(evaluated_gam_term[[1]]$X, 
                                                as.integer(data[byt]))),
@@ -296,8 +285,8 @@ l1_processor <- function(term, data, output_dim, param_nr){
     coef = function(weights){ 
       weights <- lapply(weights, as.matrix)
       return(
-      weights[[1]] * matrix(rep(weights[[2]], each=ncol(weights[[1]])), 
-                                                   ncol=ncol(weights[[1]]), byrow = TRUE)
+        weights[[1]] * matrix(rep(weights[[2]], each=ncol(weights[[1]])), 
+                              ncol=ncol(weights[[1]]), byrow = TRUE)
       )
     }
   )
@@ -321,7 +310,7 @@ l2_processor <- function(term, data, output_dim, param_nr){
   )
   
 }
-  
+
 offset_processor <- function(term, data, output_dim, param_nr){
   # offset
   list(
@@ -335,26 +324,6 @@ offset_processor <- function(term, data, output_dim, param_nr){
                                    name = makelayername(term, 
                                                         param_nr),
                                    ...)(x))
-  )
-}
-
-vi_processor <- function(term, data, output_dim, param_nr){
-  # vi_layer
-  list(
-    data_trafo = function() data[extractvar(term)],
-    predict_trafo = function(newdata) newdata[extractvar(term)],
-    input_dim = extractlen(term, data),
-    layer = function(x, ...) 
-      return(
-        tfp$layers$DenseVariational(
-          input_dim = extractlen(term),
-          units = as.integer(output_dim),
-          name = makelayername(term, 
-                               param_nr),
-          make_posterior_fn = evalarg(term, "posterior"),
-          make_prior_fn = evalarg(term, "prior"),
-          kl_weight = evalarg(term, "kl_weight"),
-          ...)(x))
   )
 }
 
@@ -389,73 +358,3 @@ dnn_image_placeholder_processor <- function(dnn, size){
   }
 }
 
-#### helper functions ####
-
-makelayername <- function(term, param_nr, truncate = 30)
-{
-  
-  if(class(term)=="formula") term <- form2text(term)
-  return(paste0(strtrim(make_valid_layername(term), truncate), "_", param_nr))
-  
-}
-
-extractvar <- function(term)
-{
-  
-  all.vars(as.formula(paste0("~", term)))
-  
-}
-
-extractval <- function(term, name)
-{
-  
-  if(is.character(term)) term <- as.formula(paste0("~", term))
-  inputs <- as.list(as.list(term)[[2]])[-1]
-  if(name %in% names(inputs)) return(inputs[[name]])
-  warning("Argument ", name, " not found. Setting it to some default.")
-  if(name=="df") return(NULL) else if(name=="la") return(0.1) else return(NULL)
-
-}
-
-extractlen <- function(term, data)
-{
-  
-  vars <- extractvar(term)
-  sum(sapply(vars, function(v) NCOL(data[v])))
-  
-}
-
-extract_size <- 
-
-get_gam_part <- function(term, specials = c("s", "te", "ti"))
-{
-  
-  gsub("vc\\(((s|te|ti)\\(.*\\))\\,\\sby=.*\\)","\\1", term)
-  
-}
-
-form2text <- function(form)
-{
-  
-  return(gsub(" ","", (Reduce(paste, deparse(form)))))
-  
-}
-
-get_special <- function(term, specials)
-{
-  
-  sp <- attr(terms.formula(as.formula(paste0("~",term)), 
-                           specials = specials), "specials")
-  names(unlist(sp))
-  
-}
-
-predict_gam_handler <- function(object, newdata)
-{
-
-  if(is.list(object) && length(object)==1) return(PredictMat(object[[1]], as.data.frame(newdata)))
-  return(lapply(object, function(obj) PredictMat(obj, newdata)))  
-  
-}
-
-get_names_pfc <- function(pfc) sapply(pfc, "[[", "term")

@@ -199,7 +199,7 @@ fit.deepregression <- function(
   patience = 20,
   save_weights = FALSE,
   validation_data = NULL,
-  validation_split = 0.1,
+  validation_split = ifelse(is.null(validation_data), 0.1, 0),
   callbacks = list(),
   convertfun = function(x) tf$constant(x, dtype="float32"),
   ...
@@ -294,7 +294,8 @@ coef.deepregression <- function(
 {
   
   pfc <- object$init_params$parsed_formulas_contents[[which_param]]
-  linear <- sapply(pfc, function(x) is.null(x$partial_effect) & !is.null(x$coef))
+  linear <- sapply(pfc, function(x) is.null(x$partial_effect) & !is.null(x$coef) & 
+                     !(!x$left_from_oz & !is.null(x$right_from_oz)))
   smooth <- sapply(pfc, function(x) !is.null(x$partial_effect) & !is.null(x$coef))
   
   if(is.null(type)) type <- c("linear", "smooth") else 
@@ -500,7 +501,7 @@ mean.deepregression <- function(
 #' @param ... further arguments passed to the class-specific function
 #'
 #' @export
-sd <- function (x, ...) {
+stddev <- function (x, ...) {
   UseMethod("sd", x)
 }
 
@@ -513,7 +514,7 @@ sd <- function (x, ...) {
 #' @export
 #' @rdname methodDR
 #'
-sd.deepregression <- function(
+stddev.deepregression <- function(
   x,
   data = NULL,
   ...
@@ -528,8 +529,8 @@ sd.deepregression <- function(
 #' @param ... further arguments passed to the class-specific function
 #'
 #' @export
-quantile <- function (x, ...) {
-  UseMethod("quantile", x)
+quant <- function (x, ...) {
+  UseMethod("quant", x)
 }
 
 #' Calculate the distribution quantiles
@@ -542,7 +543,7 @@ quantile <- function (x, ...) {
 #' @export
 #' @rdname methodDR
 #'
-quantile.deepregression <- function(
+quant.deepregression <- function(
   x,
   data = NULL,
   probs,

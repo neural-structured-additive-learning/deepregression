@@ -5,35 +5,29 @@
 \title{creates a generator for training}
 \usage{
 make_generator(
-  data_image,
-  data_tab,
+  input_x,
+  input_y = NULL,
   batch_size,
-  target_size,
-  color_mode,
-  is_trafo = FALSE,
-  x_col,
+  sizes,
   shuffle = TRUE,
   seed = 42L
 )
 }
 \arguments{
-\item{data_image}{data.frame with image location as character}
+\item{input_x}{list of matrices}
 
-\item{data_tab}{tabular data as given by \code{prepare_data}}
+\item{input_y}{list of matrix}
 
 \item{batch_size}{integer}
 
-\item{target_size}{size of the image without sample and colour channel}
-
-\item{color_mode}{character; \code{'rgb'} or \code{'grayscale'}}
-
-\item{is_trafo}{logical; indicating whether model is a trafo model}
-
-\item{x_col}{name of image column in \code{data_image}}
+\item{sizes}{sizes of the image including colour channel}
 
 \item{shuffle}{logical for shuffling data}
 
 \item{seed}{seed for shuffling in generators}
+}
+\value{
+generator for all x and y
 }
 \description{
 creates a generator for training

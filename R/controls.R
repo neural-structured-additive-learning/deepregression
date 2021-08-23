@@ -18,8 +18,6 @@
 #' @param hat1 logical; if TRUE, the smoothing parameter is defined by the trace of the hat
 #' matrix sum(diag(H)), else sum(diag(2*H-HH))
 #' @param sp_scale function of response; for scaling the DRO calculated penalty (1/n per default)
-#' @param penalty_summary tensorflow function; summary function for the penalty in the spline layer;
-#' default is \code{k_sum}. Another option could be \code{k_mean}.
 #' 
 #' @return Returns a list with options
 #' @export
@@ -31,10 +29,7 @@ smooth_control <- function(defaultSmoothing = NULL,
                            anisotropic = TRUE,
                            zero_constraint_for_smooths = TRUE,
                            hat1 = FALSE,
-                           sp_scale = function(x) dim(x)[1],
-                           penalty_summary = tf$keras$backend$sum,
-                           variational_options = bayes_control(),
-                           variational = FALSE
+                           sp_scale = function(x) 1/NROW(x)
                            )
 {
   
@@ -54,10 +49,7 @@ smooth_control <- function(defaultSmoothing = NULL,
               anisotropic = anisotropic,
               zero_constraint_for_smooths = zero_constraint_for_smooths,
               hat1 = hat1,
-              sp_scale = sp_scale,
-              penalty_summary = penalty_summary,
-              variational_options = variational_options,
-              variational = variational))
+              sp_scale = sp_scale))
   
 }
 
@@ -93,28 +85,6 @@ fsbatch_control <- function(factor = 0.01,
               constantdiv = constantdiv,
               constantinv = constantinv,
               constinv_scheduler = constinv_scheduler))
-  
-}
-
-
-#' Options for Bayesian deepregression
-#' 
-#' @param posterior_fun function defining the posterior function for the variational
-#' verison of the network
-#' @param prior_fun function defining the prior function for the variational
-#' verison of the network
-#' @param kl_weight KL weights for variational networks
-#' @return Returns a list with options
-#' @export
-#'
-bayes_control <- function(posterior_fun = posterior_mean_field,
-                          prior_fun = prior_trainable,
-                          kl_weight = function() 1 / n_obs)
-{
-  
-  return(list(posterior_fun = posterior_fun,
-              prior_fun = prior_fun,
-              kl_weight = kl_weight))
   
 }
 

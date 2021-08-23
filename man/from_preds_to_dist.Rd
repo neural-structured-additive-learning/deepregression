@@ -2,11 +2,12 @@
 % Please edit documentation in R/deepregression.R
 \name{from_preds_to_dist}
 \alias{from_preds_to_dist}
-\title{Define a Deep Distributional Regression Model}
+\title{Define Predictor of a Deep Distributional Regression Model}
 \usage{
 from_preds_to_dist(
   list_pred_param,
-  family,
+  family = NULL,
+  output_dim = 1L,
   mapping = NULL,
   add_layer_shared_pred = function(x, units) layer_dense(x, units = units, use_bias =
     FALSE)
@@ -16,7 +17,10 @@ from_preds_to_dist(
 \item{list_pred_param}{list of input-output(-lists) generated from
 \code{subnetwork_init}}
 
-\item{family}{see \code{?deepregression}}
+\item{family}{see \code{?deepregression}; if NULL, concatenated
+\code{list_pred_param} entries are returned (after applying mapping if provided)}
+
+\item{output_dim}{dimension of the output}
 
 \item{mapping}{a list of integers. The i-th list item defines which element
 elements of \code{list_pred_param} are used for the i-th parameter.
@@ -33,5 +37,5 @@ a list with input tensors and output tensors that can be passed
 to, e.g., \code{keras_model}
 }
 \description{
-Define a Deep Distributional Regression Model
+Define Predictor of a Deep Distributional Regression Model
 }

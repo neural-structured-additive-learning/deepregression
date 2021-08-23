@@ -7,11 +7,14 @@
 keras_dr(
   list_pred_param,
   family,
+  output_dim = 1L,
   weights = NULL,
-  ind_fun = function(x) tfd_independent(x),
   optimizer = tf$keras$optimizers$Adam(),
   model_fun = keras_model,
   monitor_metrics = list(),
+  from_preds_to_output = from_preds_to_dist,
+  loss = from_dist_to_loss(family = family, weights = weights),
+  additional_penalty = NULL,
   ...
 )
 }
@@ -21,18 +24,26 @@ keras_dr(
 
 \item{family}{see \code{?deepregression}}
 
-\item{weights}{vector of positive values; optional (default = 1 for all observations)}
+\item{output_dim}{output dimension}
 
-\item{ind_fun}{function applied to the model output before calculating the
-log-likelihood. Per default independence is assumed by applying \code{tfd_independent}.}
+\item{weights}{vector of positive values; optional (default = 1 for all observations)}
 
 \item{optimizer}{optimizer used. Per default Adam}
 
 \item{monitor_metrics}{Further metrics to monitor}
 
-\item{model_instance}{which class of model to use (default \code{keras_model})}
+\item{from_preds_to_output}{function taking the list_pred_param outputs
+and transforms it into a single network output}
 
-\item{arguments}{passed to other functions}
+\item{loss}{the model's loss function; per default evaluated based on
+the arguments \code{family} and \code{weights} using \code{from_dist_to_loss}}
+
+\item{additional_penalty}{a penalty that is added to the negative log-likelihood;
+must be a function of model$trainable_weights with suitable subsetting}
+
+\item{...}{arguments passed to other functions}
+
+\item{model_instance}{which class of model to use (default \code{keras_model})}
 }
 \value{
 a list with input tensors and output tensors that can be passed

@@ -27,6 +27,7 @@ orthog_structured_smooths <- function(S,P,L)
 
 }
 
+# needed by gam_processor
 orthog_structured_smooths_Z <- function(S,L)
 {
   
@@ -43,6 +44,7 @@ orthog_structured_smooths_Z <- function(S,L)
   
 }
 
+# needed by gam_processor
 orthog_P <- function(P,Z)
 {
   return(crossprod(Z,P) %*% Z)

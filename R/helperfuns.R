@@ -1362,3 +1362,58 @@ reduce_one_list <- function(x)
   if(is.list(x)) return(x[[1]]) else return(x)
   
 }
+
+
+#### helper functions for processors
+
+makelayername <- function(term, param_nr, truncate = 30)
+{
+  
+  if(class(term)=="formula") term <- form2text(term)
+  return(paste0(strtrim(make_valid_layername(term), truncate), "_", param_nr))
+  
+}
+
+extractvar <- function(term)
+{
+  
+  all.vars(as.formula(paste0("~", term)))
+  
+}
+
+extractval <- function(term, name)
+{
+  
+  if(is.character(term)) term <- as.formula(paste0("~", term))
+  inputs <- as.list(as.list(term)[[2]])[-1]
+  if(name %in% names(inputs)) return(inputs[[name]])
+  warning("Argument ", name, " not found. Setting it to some default.")
+  if(name=="df") return(NULL) else if(name=="la") return(0.1) else return(NULL)
+  
+}
+
+extractlen <- function(term, data)
+{
+  
+  vars <- extractvar(term)
+  sum(sapply(vars, function(v) NCOL(data[v])))
+  
+}
+
+form2text <- function(form)
+{
+  
+  return(gsub(" ","", (Reduce(paste, deparse(form)))))
+  
+}
+
+get_special <- function(term, specials)
+{
+  
+  sp <- attr(terms.formula(as.formula(paste0("~",term)), 
+                           specials = specials), "specials")
+  names(unlist(sp))
+  
+}
+
+get_names_pfc <- function(pfc) sapply(pfc, "[[", "term")
