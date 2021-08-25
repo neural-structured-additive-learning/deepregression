@@ -75,10 +75,12 @@ Many thanks to following people for helpful comments, issues, suggestions for im
 
 * Andreas Bender
 * Christina Bukas
-* Christian Mueller
+* Patrick Kaiser
 * Nadja Klein
 * Chris Kolb
 * Philipp Kopper
+* Christian Mueller
+* Julian Raith
 * Fabian Scheipl
 * Max Schneider
 * Ruolin Shen
