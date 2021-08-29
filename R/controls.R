@@ -1,7 +1,8 @@
 #' Options for smooths setup in the pre-processing
 #'
 #' @param defaultSmoothing function applied to all s-terms, per default (NULL)
-#' the minimum df of all possible terms is used.
+#' the minimum df of all possible terms is used. Must be a function the smooth term
+#' from mgcv's smoothCon and an argument \code{df}.
 #' @param df degrees of freedom for all non-linear structural terms (default = 7);
 #' either one common value or a list of the same length as number of parameters;
 #' if different df values need to be assigned to different smooth terms,
@@ -53,42 +54,6 @@ smooth_control <- function(defaultSmoothing = NULL,
   
 }
 
-
-#' Options for Fellner-Schall algorithm
-#'
-#' @param factor a factor defining how much of the past is used for the Fellner-Schall
-#' algorithm; defaults to 0.01. 
-#' @param lr_scheduler a scheduler adapting
-#' \code{factor} in each step; defaults to \code{NULL}.
-#' @param avg_over_past logical, whether the beta coefficients should be averaged 
-#' over the past values to stabilize estimation; defaults to \code{FALSE}
-#' @param constantdiv small positive constant to stabilize training
-#' in small batch regimes; defaults to 0.0.
-#' @param constantinv small positive constant to stabilize training
-#' in small batch regimes; defaults to 0.0.
-#' @param constinv_scheduler scheduler for \code{constantinv}; per default 
-#' NULL which results in an exponential decay with rate 1 
-#' @return Returns a list with options
-#' @export
-#'
-fsbatch_control <- function(factor = 0.01,
-                            lr_scheduler = NULL,
-                            avg_over_past = FALSE,
-                            constantdiv = 0,
-                            constantinv = 0,
-                            constinv_scheduler = NULL)
-{
-  
-  return(list(factor = factor,
-              lr_scheduler = lr_scheduler,
-              avg_over_past = avg_over_past,
-              constantdiv = constantdiv,
-              constantinv = constantinv,
-              constinv_scheduler = constinv_scheduler))
-  
-}
-
-
 #' Options for orthogonalization
 #' 
 #' @param split_fun a function separating the deep neural network in two parts
@@ -118,7 +83,6 @@ orthog_control <- function(split_fun = split_model,
   
   # define orthogonalization function
   orthog_fun <- switch(orthog_type,
-                       col = orthog_ncol,
                        tf = orthog_tf,
                        manual = orthog)
   

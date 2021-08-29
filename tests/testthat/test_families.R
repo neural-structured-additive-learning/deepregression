@@ -89,33 +89,6 @@ test_that("tfd families can be fitted", {
   }
 })
 
-test_that("mixdists", {
-  mxdist = mix_dist_maker()
-  expect_is(mxdist, "function")
-  mkd = mxdist(matrix(rep(0.33, 12), ncol=12))
-  expect_is(mkd, "python.builtin.object")
-  expect_is(mkd$cdf, "python.builtin.method")
-  expect_true(as.numeric(mkd$log_prob(1)) < 0)
-})
-
-
-test_that("multinorm", {
-  mxdist = multinorm_maker()
-  expect_is(mxdist, "function")
-  mkd = mxdist(matrix(rep(0.33, 12), ncol=12))
-  expect_is(mkd, "python.builtin.object")
-  expect_is(mkd$cdf, "python.builtin.method")
-  expect_true(as.numeric(mkd$log_prob(1:2)) < 0)
-})
-
-test_that("multinorm - no_cov", {
-  mxdist = multinorm_maker(with_cov=FALSE)
-  expect_is(mxdist, "function")
-  mkd = mxdist(matrix(rep(1,4), nrow=1L))
-  expect_is(mkd, "python.builtin.object")
-  expect_is(mkd$cdf, "python.builtin.method")
-  expect_true(as.numeric(mkd$log_prob(1:2)) < 0)
-})
 
 test_that("tfd_zip", {
   zipfun = tfd_zip(probs=c(0.1, 0.9), lambda=2)

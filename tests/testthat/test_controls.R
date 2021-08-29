@@ -1,79 +1,41 @@
-context("Processors")
+context("Controls")
 
-test_that("lin_processor", {
+test_that("smooth_control", {
   
-  data = data.frame(a=rnorm(2), b=rnorm(2), c=rnorm(2))
-  term="lin(a + b + c)"
-  expect_equal(lin_processor(term, data, 1, 1)$input_dim, 3)
-  term="lin(1 + b + c)"
-  expect_equal(lin_processor(term, data, 1, 1)$input_dim, 3)
-  term="lin(a, b, c)"
-  expect_equal(lin_processor(term, data, 1, 1)$input_dim, 3)
-  term="lin(1, b, c)" # intercept is treated separately
-  expect_equal(lin_processor(term, data, 1, 1)$input_dim, 2)
+  sc = smooth_control()
+  data = data.frame(x = rnorm(100), y = rnorm(100))
+  expect_equal(sc$sp_scale(data), 1/nrow(data))
+  expect_false(sc$null_space_penalty)
+  expect_false(sc$hat1)
+  expect_true(sc$anisotropic)
+  expect_true(sc$zero_constraint_for_smooths)
+  expect_is(sc$df, "numeric")
+  
+  evaluated_smooth <- sc$defaultSmoothing(
+    smoothCon(s(x),
+              data=data,
+              absorb.cons = sc$absorb_cons,
+              null.space.penalty = sc$null_space_penalty
+    ), df=5)
+  expect_is(evaluated_smooth, "list")
+  expect_is(evaluated_smooth[[1]], "mgcv.smooth")
   
 })
 
-test_that("vc_processor", {
+test_that("orthog_control", {
   
-  n <- 40
-  data = data.frame(a=rnorm(n), b=rnorm(n), c=rnorm(n), d=rnorm(n))
-  term="vc(te(a,b), by=c(c,d))"
-  expect_equal(vc_processor(term, data, 1, 1)$input_dim, 3)
-  term="vc(te(a,b), by=c)"
-  expect_equal(vc_processor(term, data, 1, 1)$input_dim, 3)
-  term="vc(s(a), by=c(c,d))"
-  expect_equal(vc_processor(term, data, 1, 1)$input_dim, 3)
-  term="vc(s(a), by=c)" 
-  expect_equal(vc_processor(term, data, 1, 1)$input_dim, 2)
+  oc = orthog_control()
+  expect_true(oc$orthogonalize)
+  expect_identical(oc$orthog_type, "tf")
   
-})
-
-
-test_that("processor", {
+  dummy_fun <- function(x) x %>% layer_dense(5) %>% layer_dense(1)
+  splitted_fun <- oc$split_fun(dummy_fun)
+  expect_equal(as.character(body(splitted_fun[[1]])), 
+               c("%>%", "x", "layer_dense(5)"))
+  expect_equal(as.character(body(splitted_fun[[2]])), 
+               c("%>%", "x", "layer_dense(1)"))
   
-  form = ~ 1 + d(x) + s(x) + lasso(z) + ridge(z) + te(y) %OZ% (y + s(x)) + d(z) %OZ% s(x) + u
-  data = data.frame(x = rnorm(100), y = rnorm(100), z = rnorm(100), u = rnorm(100))
-  controls = smooth_control()
-  output_dim = 1L
-  param_nr = 1L
-  d = dnn_placeholder_processor(function(x) layer_dense(x, units=1L))
-  specials = c("s", "te", "ti", "vc", "lasso", "ridge", "offset", "vi", "fm", "vfm")
-  specials_to_oz = c("d")
-  
-
-  res1 <- processor(form = form, 
-                    d = dnn_placeholder_processor(function(x) layer_dense(x, units=1L)),
-                    specials_to_oz = specials_to_oz, 
-                    data = data,
-                    output_dim = output_dim,
-                    automatic_oz_check = TRUE,
-                    param_nr = 1,
-                    controls = controls)
-  expect_is(res1, "list")
-  expect_equal(length(res1), 9)
-  expect_equal(sapply(res1, "[[", "nr"), 1:9)
-  expect_type(sapply(res1, "[[", "input_dim"), "integer")
-  
-})
-
-test_that("extractlen", {
-  
-  expect_equal(extractlen("a + b", data=list(a=rnorm(3), b=rnorm(3))),2)
-  expect_equal(extractlen("something(a, b)", data=list(a=rnorm(3), b=rnorm(3))),2)
-  expect_equal(extractlen("a + b + c", data=data.frame(a=rnorm(3), 
-                                                       b=rnorm(3),
-                                                       c=rnorm(3))),3)
-  expect_equal(extractlen("s(a + b)", data=list(a=rnorm(3), b=rnorm(3))),2)
-  
-})
-
-test_that("extractval", {
-  
-  expect_equal(extractval("lasso(x, la=1)", "la"), 1)
-  expect_equal(extractval("lasso(x, abcd=1000)", "abcd"), 1000)
-  expect_equal(extractval("lasso(x, y, z, u, abcd=1000)", "abcd"), 1000)
-  expect_equal(extractval("lasso(x, y=1, z=2, u=3, abcd=1000)", "abcd"), 1000)
-  expect_equal(extractval("lasso(x + y + z, abcd=1000)", "abcd"), 1000)
+  expect_true(is.null(oc$deep_top))
+  expect_equal(oc$orthog_fun, orthog_tf)
   
 })

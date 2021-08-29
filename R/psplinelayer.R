@@ -52,27 +52,6 @@ layer_spline = function(units = 1L, P, name) {
   return(splines$layer_spline(P = as.matrix(P), units = units, name = name))
 }
 
-# used in gam_processor for Bayesian splines
-trainable_pspline = function(units, this_lambdas, this_mask, this_P, this_n, this_nr) {
-  python_path <- system.file("python", package = "deepregression")
-  splines <- reticulate::import_from_path("psplines", path = python_path)
-  
-  return(splines$PenLinear(units, lambdas = this_lambdas, mask = this_mask,
-                           P = this_P, n = this_n, nr = this_nr))
-}
-
-
-build_kerasGAM = function(factor, lr_scheduler, avg_over_past, constantdiv = 0, constantinv = 0, constinv_scheduler = NULL) {
-  python_path <- system.file("python", package = "deepregression")
-  splines <- reticulate::import_from_path("psplines", path = python_path)
-  
-  return(splines$build_kerasGAM(
-    # Plist = Plist,
-    fac = factor, 
-    lr_scheduler = lr_scheduler, 
-    avg_over_past = avg_over_past))
-}
-
 
 tf_incross = function(w, P) {
   python_path <- system.file("python", package = "deepregression")
