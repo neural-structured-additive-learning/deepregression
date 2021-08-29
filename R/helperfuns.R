@@ -1417,3 +1417,18 @@ get_special <- function(term, specials)
 }
 
 get_names_pfc <- function(pfc) sapply(pfc, "[[", "term")
+
+#### used in fit.deepregression
+WeightHistory <- R6::R6Class("WeightHistory",
+                             inherit = KerasCallback,
+                             
+                             public = list(
+                               
+                               weights_last_layer = NULL,
+                               
+                               on_epoch_end = function(batch, logs = list()) {
+                                 self$weights_last_layer <-
+                                   cbind(self$weights_last_layer,
+                                         coefkeras(self$model))
+                               }
+                             ))
