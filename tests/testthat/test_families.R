@@ -73,7 +73,7 @@ test_that("tfd families can be fitted", {
         list_of_formulas = list(~ 1 + x, ~ 1 + z, ~ 1),
         list_of_deep_models = NULL,
         family = dist, tf_seed = 44,
-        optimizer = optimizer_rmsprop(lr = 0.000001)
+        optimizer = tf$keras$optimizers$RMSprop(learning_rate = 0.000001)
       )
     )
     cat("Fitting", dist, "\n")

@@ -29,7 +29,7 @@ DRO <- function(X, df = 4, lambda = NULL, dmat = NULL, # weights,
     rank_X <- rankMatrix(X, method = 'qr', warn.t = FALSE)
     if (df >= rank_X) {
       if (df > rank_X)
-        warning(sQuote("df"),
+        warning("'df'",
                 " too large:\n  Degrees of freedom cannot be larger",
                 " than the rank of the design matrix.\n",
                 "  Unpenalized base-learner with df = ",
