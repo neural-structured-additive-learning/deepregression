@@ -1,4 +1,4 @@
-#' Options for smooths setup in the pre-processing
+#' Options for penalty setup in the pre-processing
 #'
 #' @param defaultSmoothing function applied to all s-terms, per default (NULL)
 #' the minimum df of all possible terms is used. Must be a function the smooth term
@@ -18,12 +18,12 @@
 #' be a vector of \code{length(list_of_formulas)} for each distribution parameter.
 #' @param hat1 logical; if TRUE, the smoothing parameter is defined by the trace of the hat
 #' matrix sum(diag(H)), else sum(diag(2*H-HH))
-#' @param sp_scale function of response; for scaling the DRO calculated penalty (1/n per default)
+#' @param sp_scale function of response; for scaling the penalty (1/n per default)
 #' 
 #' @return Returns a list with options
 #' @export
 #'
-smooth_control <- function(defaultSmoothing = NULL, 
+penalty_control <- function(defaultSmoothing = NULL, 
                            df = 7,
                            null_space_penalty = FALSE,
                            absorb_cons = FALSE,

@@ -28,7 +28,7 @@
 #' like a keras model
 #' @param fitting_function function to fit the instantiated model when calling \code{fit}. Per default
 #' the keras \code{fit} function.
-#' @param smooth_options options for smoothing terms defined by \code{smooth_control}
+#' @param penalty_options options for smoothing and penalty terms defined by \code{penalty_control}
 #' @param orthog_options options for the orthgonalization defined by \code{orthog_control}
 #' @param verbose logical; whether to print progress of model initialization to console
 #' @param ... further arguments passed to the \code{model_builder} function
@@ -93,7 +93,7 @@ deepregression <- function(
   model_builder = keras_dr,
   fitting_function = utils::getFromNamespace("fit.keras.engine.training.Model", "keras"),
   additional_processors = list(),
-  smooth_options = smooth_control(),
+  penalty_options = penalty_control(),
   orthog_options = orthog_control(),
   verbose = TRUE,
   ...
@@ -191,7 +191,7 @@ deepregression <- function(
   parsed_formulas_contents <- lapply(1:length(list_of_formulas),
                                      function(i){
                                        
-                                       so <- smooth_options
+                                       so <- penalty_options
                                        if(!is.null(so$df) && length(so$df)>1) so$df <- so$df[[i]]
                                        if(length(so$zero_constraint_for_smooths)>1) 
                                          so$zero_constraint_for_smooths <- 
@@ -244,7 +244,7 @@ deepregression <- function(
                   y = y,
                   ellipsis = list(...),
                   family = family,
-                  smooth_options = smooth_options,
+                  penalty_options = penalty_options,
                   orthog_options = orthog_options,
                   image_var = image_var
                 ),

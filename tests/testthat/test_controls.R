@@ -1,8 +1,8 @@
 context("Controls")
 
-test_that("smooth_control", {
+test_that("penalty_control", {
   
-  sc = smooth_control()
+  sc = penalty_control()
   data = data.frame(x = rnorm(100), y = rnorm(100))
   expect_equal(sc$sp_scale(data), 1/nrow(data))
   expect_false(sc$null_space_penalty)

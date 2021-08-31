@@ -20,13 +20,13 @@ test_that("vc_processor", {
   n <- 40
   data = data.frame(a=rnorm(n), b=rnorm(n), c=gl(n/2,2), d=gl(n/2,2))
   term="vc(te(a,b), by=c(c,d))"
-  expect_equal(vc_processor(term, data, 1, 1, smooth_control())$input_dim, 27)
+  expect_equal(vc_processor(term, data, 1, 1, penalty_control())$input_dim, 27)
   term="vc(te(a,b), by=c)"
-  expect_equal(vc_processor(term, data, 1, 1, smooth_control())$input_dim, 26)
+  expect_equal(vc_processor(term, data, 1, 1, penalty_control())$input_dim, 26)
   term="vc(s(a), by=c(c,d))"
-  expect_equal(vc_processor(term, data, 1, 1, smooth_control())$input_dim, 12)
+  expect_equal(vc_processor(term, data, 1, 1, penalty_control())$input_dim, 12)
   term="vc(s(a), by=c)" 
-  expect_equal(vc_processor(term, data, 1, 1, smooth_control())$input_dim, 11)
+  expect_equal(vc_processor(term, data, 1, 1, penalty_control())$input_dim, 11)
   
 })
 
@@ -35,7 +35,7 @@ test_that("processor", {
   
   form = ~ 1 + d(x) + s(x) + lasso(z) + ridge(z) + te(y) %OZ% (y + s(x)) + d(z) %OZ% s(x) + u
   data = data.frame(x = rnorm(100), y = rnorm(100), z = rnorm(100), u = rnorm(100))
-  controls = smooth_control()
+  controls = penalty_control()
   output_dim = 1L
   param_nr = 1L
   d = dnn_placeholder_processor(function(x) layer_dense(x, units=1L))

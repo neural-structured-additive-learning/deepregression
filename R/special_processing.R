@@ -73,7 +73,8 @@ processor <- function(
           result[[i]] <- c(list_terms[[i]], do.call(lin_processor, args))
         lin_counter <- lin_counter+1
     }else{
-      if(spec %in% c("s", "te", "ti", "vc")) args$controls <- controls
+      if(spec %in% c("s", "te", "ti", "vc", "lasso", "ridge")) 
+        args$controls <- controls
       result[[i]] <- c(list_terms[[i]], do.call(procs[[spec]], args))
     }
     
@@ -255,10 +256,10 @@ vc_processor <- function(term, data, output_dim, param_nr, controls){
   P <- evaluated_gam_term[[1]]$S[[1]]
   
   if(length(nlev)==1){
-    layer <- vc_block(ncolNum, nlev, penalty = P, 
+    layer <- vc_block(ncolNum, nlev, penalty = controls$sp_scale(data) * P, 
                       name = makelayername(term, param_nr), units = units)
   }else if(length(nlev)==2){
-    layer <- vvc_block(ncolNum, nlev[1], nlev[2], penalty = P, 
+    layer <- vvc_block(ncolNum, nlev[1], nlev[2], penalty = controls$sp_scale(data) * P, 
                       name = makelayername(term, param_nr), units = units)
   }else{
     stop("vc terms with more than 2 factors currently not supported.")
@@ -276,7 +277,7 @@ vc_processor <- function(term, data, output_dim, param_nr, controls){
   )
 }
 
-l1_processor <- function(term, data, output_dim, param_nr){
+l1_processor <- function(term, data, output_dim, param_nr, controls){
   # l1 (Tib)
   list(
     data_trafo = function() data[extractvar(term)],
@@ -285,7 +286,7 @@ l1_processor <- function(term, data, output_dim, param_nr){
     layer = function(x, ...) 
       return(tib_layer(
         units = as.integer(output_dim),
-        la = extractval(term, "la"),
+        la = controls$sp_scale(data) * extractval(term, "la"),
         name = makelayername(term, 
                              param_nr),
         ...
@@ -301,7 +302,7 @@ l1_processor <- function(term, data, output_dim, param_nr){
   
 }
 
-l2_processor <- function(term, data, output_dim, param_nr){
+l2_processor <- function(term, data, output_dim, param_nr, controls){
   # ridge
   list(
     data_trafo = function() data[extractvar(term)],
@@ -310,7 +311,9 @@ l2_processor <- function(term, data, output_dim, param_nr){
     layer = function(x, ...)
       return(tf$keras$layers$Dense(units = output_dim, 
                                    kernel_regularizer = 
-                                     tf$keras$regularizers$l2(l = extractval(term, "la")),
+                                     tf$keras$regularizers$l2(
+                                       l = controls$sp_scale(data) * 
+                                         extractval(term, "la")),
                                    name = makelayername(term, 
                                                         param_nr),
                                    ...)(x)),

@@ -6,7 +6,7 @@ test_that("subnetwork_init", {
   data = data.frame(x = rnorm(100), y = rnorm(100), 
                     z = rnorm(100), u = rnorm(100),
                     w = rnorm(100))
-  controls = smooth_control()
+  controls = penalty_control()
   output_dim = 1L
   param_nr = 1L
   d = dnn_placeholder_processor(function(x) x %>% 
