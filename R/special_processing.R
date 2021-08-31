@@ -150,8 +150,14 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
   trainable_smooth <- is.null(evaluated_gam_term[[1]]$sp)
   # get sp and S
   sp_and_S <- extract_sp_S(evaluated_gam_term)
+  # extract Xs
+  if(length(evaluated_gam_term)==1){
+    thisX <- evaluated_gam_term[[1]]$X
+  }else{
+    thisX <- do.call("cbind", lapply(evaluated_gam_term, "[[", "X"))
+  }
   # get default Z matrix, which is possibly overwritten afterwards
-  Z <- diag(rep(1,ncol(evaluated_gam_term[[1]]$X)))
+  Z <- diag(rep(1,ncol(thisX)))
   # constraint
   if(controls$zero_constraint_for_smooths & 
      length(evaluated_gam_term)==1 & 
@@ -190,14 +196,14 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
   }
   
   list(
-    data_trafo = function() evaluated_gam_term[[1]]$X %*% Z,
+    data_trafo = function() thisX %*% Z,
     predict_trafo = function(newdata) predict_gam_handler(evaluated_gam_term, newdata = newdata) %*% Z,
-    input_dim = as.integer(ncol(evaluated_gam_term[[1]]$X %*% Z)),
+    input_dim = as.integer(ncol(thisX %*% Z)),
     layer = layer,
     coef = function(weights)  as.matrix(weights),
     partial_effect = function(weights, newdata=NULL){
       if(is.null(newdata))
-        return(evaluated_gam_term[[1]]$X %*% Z %*% weights)
+        return(thisX %*% Z %*% weights)
       return(predict_gam_handler(evaluated_gam_term, newdata = newdata) %*% Z %*% weights)
     },
     plot_fun = function(self, weights, grid_length) gam_plot_data(self, weights, grid_length),

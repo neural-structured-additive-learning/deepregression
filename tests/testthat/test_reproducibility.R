@@ -28,7 +28,7 @@ test_that("reproducibility", {
     y = y,
     data = data,
     tf_seed = 1L,
-    list_of_formulae = list(loc = ~ 1 + d(x), scale = ~1),
+    list_of_formulas = list(loc = ~ 1 + d(x), scale = ~1),
     list_of_deep_models = list(d = deep_model)
   )
 
@@ -36,7 +36,7 @@ test_that("reproducibility", {
     y = y,
     data = data,
     tf_seed = 1L,
-    list_of_formulae = list(loc = ~ 1 + d(x), scale = ~1),
+    list_of_formulas = list(loc = ~ 1 + d(x), scale = ~1),
     list_of_deep_models = list(d = deep_model)
   )
   mean1 <- mod1 %>% fitted()

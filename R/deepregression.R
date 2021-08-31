@@ -131,7 +131,9 @@ deepregression <- function(
     netnames <- names(list_of_deep_models)
     
     if(is.null(netnames) & length(list_of_deep_models) == 1)
-      netnames <- "d"
+    {
+      names(list_of_deep_models) <- netnames <- "d"
+    }
     if(!is.null(list_of_deep_models) && is.null(names(list_of_deep_models)))
       stop("Please provide a named list of deep models.")
   }

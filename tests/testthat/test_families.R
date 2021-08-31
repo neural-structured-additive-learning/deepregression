@@ -97,3 +97,17 @@ test_that("tfd_zip", {
   expect_true(as.numeric(zipfun$log_prob(1)) < 0)
   expect_true(as.numeric(zipfun$log_prob(0)) > as.numeric(zipfun$log_prob(1)))
 })
+
+
+test_that("tffuns", {
+  x = 2
+  y = 3
+  expect_is(tfe(x), "tensorflow.tensor")
+  expect_is(tfsig(x), "tensorflow.tensor")
+  expect_is(tfsoft(c(x,y)), "tensorflow.tensor")
+  expect_is(tfsqrt(x), "tensorflow.tensor")
+  expect_is(tfsq(x), "tensorflow.tensor")
+  expect_is(tfdiv(x,y), c("numeric","tensorflow.tensor"))
+  expect_is(tfrec(x), "tensorflow.tensor")
+  expect_is(tfmult(x,y), "tensorflow.tensor")
+})

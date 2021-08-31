@@ -299,7 +299,8 @@ coef.deepregression <- function(
   pfc <- object$init_params$parsed_formulas_contents[[which_param]]
   linear <- sapply(pfc, function(x) is.null(x$partial_effect) & !is.null(x$coef) & 
                      !(!x$left_from_oz & !is.null(x$right_from_oz)))
-  smooth <- sapply(pfc, function(x) !is.null(x$partial_effect) & !is.null(x$coef))
+  smooth <- sapply(pfc, function(x) !is.null(x$partial_effect) & !is.null(x$coef) & 
+                     !(!x$left_from_oz & !is.null(x$right_from_oz)))
   
   if(is.null(type)) type <- c("linear", "smooth") else 
     stopifnot(type %in% c("linear", "smooth"))

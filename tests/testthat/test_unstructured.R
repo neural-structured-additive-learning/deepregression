@@ -28,7 +28,7 @@ test_that("array inputs", {
 
   list_as_input <- append(train_X, (data.frame(z=z, fac=fac, m=m)))
 
-  mod <- deepregression(y = train_y, list_of_formulae =
+  mod <- deepregression(y = train_y, list_of_formulas =
                           list(logit = ~ 1 + simple_mod(z) + fac + conv_mod(x)),
                         data = list_as_input,
                         list_of_deep_models = list(simple_mod = simple_mod,
@@ -103,6 +103,7 @@ test_that("deep specification", {
     this_list <- list_models[usei]
     if (i %in% 1:3) {
       use_list <- list_models_wo_name[use[[i]]]
+      if(i==3) use_list <- use_list[1]
     } else {
       use_list <- list_models[use[[i]]]
     }
@@ -111,7 +112,7 @@ test_that("deep specification", {
         y = y,
         data = data,
         # define how parameters should be modeled
-        list_of_formulae = list(loc = as.formula(form), scale = ~1),
+        list_of_formulas = list(loc = as.formula(form), scale = ~1),
         list_of_deep_models = use_list
       )
     )
@@ -127,18 +128,4 @@ test_that("deep specification", {
     expect_true(is.numeric(res))
     expect_true(!any(is.nan(res)))
   }
-})
-
-
-test_that("tffuns", {
-  x = 2
-  y = 3
-  expect_is(tfe(x), "tensorflow.tensor")
-  expect_is(tfsig(x), "tensorflow.tensor")
-  expect_is(tfsoft(c(x,y)), "tensorflow.tensor")
-  expect_is(tfsqrt(x), "tensorflow.tensor")
-  expect_is(tfsq(x), "tensorflow.tensor")
-  expect_is(tfdiv(x,y), c("numeric","tensorflow.tensor"))
-  expect_is(tfrec(x), "tensorflow.tensor")
-  expect_is(tfmult(x,y), "tensorflow.tensor")
 })
