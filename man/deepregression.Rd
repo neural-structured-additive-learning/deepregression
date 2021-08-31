@@ -62,6 +62,10 @@ the keras \code{fit} function.}
 
 \item{additional_processors}{a named list with additional processors to convert the formula(s)}
 
+\item{smooth_options}{options for smoothing terms defined by \code{smooth_control}}
+
+\item{orthog_options}{options for the orthgonalization defined by \code{orthog_control}}
+
 \item{...}{further arguments passed to the \code{model_builder} function}
 }
 \description{

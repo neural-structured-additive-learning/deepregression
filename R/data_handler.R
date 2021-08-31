@@ -54,7 +54,13 @@ prepare_newdata <- function(pfc, newdata)
 to_matrix <- function(x)
 {
   
-  if(is.list(x)) return(do.call("cbind", x))
+  if(is.list(x)){ 
+    if(length(x)==1){ # array as input
+      return(x[[1]])
+    }else{
+      return(do.call("cbind", x))
+    }
+  }
   if(is.data.frame(x)) return(as.matrix(x))
   return(x)
   

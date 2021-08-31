@@ -1396,7 +1396,16 @@ extractlen <- function(term, data)
 {
   
   vars <- extractvar(term)
-  sum(sapply(vars, function(v) NCOL(data[v])))
+  if(is.list(data) & length(vars)==1) return(extractdim(data[[vars]]))
+  return(sum(sapply(vars, function(v) NCOL(data[v]))))
+  
+}
+
+extractdim <- function(x)
+{
+  
+  if(is.null(dim(x))) return(1L)
+  return(dim(x)[-1])
   
 }
 

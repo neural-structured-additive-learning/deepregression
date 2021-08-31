@@ -36,7 +36,7 @@
   patience = 20,
   save_weights = FALSE,
   validation_data = NULL,
-  validation_split = 0.1,
+  validation_split = ifelse(is.null(validation_data), 0.1, 0),
   callbacks = list(),
   convertfun = function(x) tf$constant(x, dtype = "float32"),
   ...

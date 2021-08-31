@@ -12,15 +12,13 @@ smooth_control(
   anisotropic = TRUE,
   zero_constraint_for_smooths = TRUE,
   hat1 = FALSE,
-  sp_scale = function(x) dim(x)[1],
-  penalty_summary = tf$keras$backend$sum,
-  variational_options = bayes_control(),
-  variational = FALSE
+  sp_scale = function(x) 1/NROW(x)
 )
 }
 \arguments{
 \item{defaultSmoothing}{function applied to all s-terms, per default (NULL)
-the minimum df of all possible terms is used.}
+the minimum df of all possible terms is used. Must be a function the smooth term
+from mgcv's smoothCon and an argument \code{df}.}
 
 \item{df}{degrees of freedom for all non-linear structural terms (default = 7);
 either one common value or a list of the same length as number of parameters;
@@ -44,9 +42,6 @@ be a vector of \code{length(list_of_formulas)} for each distribution parameter.}
 matrix sum(diag(H)), else sum(diag(2*H-HH))}
 
 \item{sp_scale}{function of response; for scaling the DRO calculated penalty (1/n per default)}
-
-\item{penalty_summary}{tensorflow function; summary function for the penalty in the spline layer;
-default is \code{k_sum}. Another option could be \code{k_mean}.}
 }
 \value{
 Returns a list with options
