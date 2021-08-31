@@ -49,7 +49,7 @@ pen_vc <- function(P, strength, nlev)
 {
   python_path <- system.file("python", package = "deepregression")
   splines <- reticulate::import_from_path("psplines", path = python_path)
-  return(splines$squaredPenaltyVC(P = as.matrix(P), strength=strength, nlev))
+  return(splines$squaredPenaltyVC(P = as.matrix(P), strength = strength, nlev = nlev))
   
 }
 

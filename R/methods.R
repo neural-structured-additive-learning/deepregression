@@ -34,6 +34,8 @@ plot.deepregression <- function(
     which <- intersect(names, which)
     if(length(which)==0)
       return("No smooth effects. Nothing to plot.")
+  }else if(length(names)==0){
+    return("No smooth effects. Nothing to plot.")
   }else{
     which <- names
   }
@@ -503,7 +505,7 @@ mean.deepregression <- function(
 #'
 #' @export
 stddev <- function (x, ...) {
-  UseMethod("sd", x)
+  UseMethod("stddev", x)
 }
 
 #' Standard deviation of fit distribution

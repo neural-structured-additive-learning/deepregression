@@ -55,7 +55,7 @@ to_matrix <- function(x)
 {
   
   if(is.list(x)){ 
-    if(length(x)==1){ # array as input
+    if(length(x)==1 & !is.null(dim(x[[1]]))){ # array as input
       return(x[[1]])
     }else{
       return(do.call("cbind", x))

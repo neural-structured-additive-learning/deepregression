@@ -14,7 +14,7 @@ test_that("separate_define_relation", {
   # without automatic OZ
   res2 <- separate_define_relation(form, specials, specials_to_oz, automatic_oz_check = FALSE)
   expect_is(res2, "list")
-  expect_equal(length(res2), 7)
+  expect_equal(length(res2), 8)
   expect_equal(res2[[2]]$right_from_oz, c(5,6))
   # without DNN
   specials_to_oz = c()

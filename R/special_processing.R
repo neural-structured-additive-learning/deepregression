@@ -95,7 +95,7 @@ int_processor <- function(term, data, output_dim, param_nr){
         matrix(rep(1, nrow(as.data.frame(newdata[[1]]))), ncol=1)
       )
     },
-    input_dim = 1,
+    input_dim = 1L,
     layer = function(x, ...)
       return(
         tf$keras$layers$Dense(
@@ -125,8 +125,8 @@ lin_processor <- function(term, data, output_dim, param_nr){
                      data = as.data.frame(newdata))
       )
     },
-    input_dim = ncol(model.matrix(object = as.formula(paste0("~ -1 +", term)), 
-                                  data = data)),
+    input_dim = as.integer(ncol(model.matrix(object = as.formula(paste0("~ -1 +", term)), 
+                                  data = data))),
     layer = function(x, ...)
       return(
         tf$keras$layers$Dense(
@@ -192,7 +192,7 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
   list(
     data_trafo = function() evaluated_gam_term[[1]]$X %*% Z,
     predict_trafo = function(newdata) predict_gam_handler(evaluated_gam_term, newdata = newdata) %*% Z,
-    input_dim = ncol(evaluated_gam_term[[1]]$X %*% Z),
+    input_dim = as.integer(ncol(evaluated_gam_term[[1]]$X %*% Z)),
     layer = layer,
     coef = function(weights)  as.matrix(weights),
     partial_effect = function(weights, newdata=NULL){
@@ -210,7 +210,7 @@ fac_processor <- function(term, data, output_dim, param_nr){
   list(
     data_trafo = function() as.integer(data[extractvar(term)]),
     predict_trafo = function(newdata) as.integer(newdata[extractvar(term)]),
-    input_dim = extractlen(term, data),
+    input_dim = as.integer(extractlen(term, data)),
     layer = function(x, ...)
       return(tf$one_hot(tf$cast(x, dtype="int32"), 
                         depth = nlevels(data[[extractvar(term)]])) %>% 
@@ -235,6 +235,8 @@ vc_processor <- function(term, data, output_dim, param_nr, controls){
     stop("vc terms currently only suppoert one gam term and one by term.")
   
   nlev <- sapply(data[extractvar(byt)], nlevels)
+  if(any(nlev==0))
+    stop("Can only deal with factor variables as by-terms in vc().")
   
   output_dim <- as.integer(output_dim)
   # extract mgcv smooth object
@@ -250,7 +252,7 @@ vc_processor <- function(term, data, output_dim, param_nr, controls){
     layer <- vc_block(ncolNum, nlev, penalty = P, 
                       name = makelayername(term, param_nr), units = units)
   }else if(length(nlev)==2){
-    layer <- vc_block(ncolNum, nlev[1], nlev[2], penalty = P, 
+    layer <- vvc_block(ncolNum, nlev[1], nlev[2], penalty = P, 
                       name = makelayername(term, param_nr), units = units)
   }else{
     stop("vc terms with more than 2 factors currently not supported.")
@@ -262,7 +264,7 @@ vc_processor <- function(term, data, output_dim, param_nr, controls){
     predict_trafo = function(newdata) do.call("cbind", c(
       predict_gam_handler(evaluated_gam_term, newdata = newdata),
       as.integer(data[byt]))),
-    input_dim = ncolNum + length(nlev),
+    input_dim = as.integer(ncolNum + length(nlev)),
     layer = layer,
     coef = function(weights) as.matrix(weights)
   )
@@ -273,7 +275,7 @@ l1_processor <- function(term, data, output_dim, param_nr){
   list(
     data_trafo = function() data[extractvar(term)],
     predict_trafo = function(newdata) newdata[extractvar(term)],
-    input_dim = extractlen(term, data),
+    input_dim = as.integer(extractlen(term, data)),
     layer = function(x, ...) 
       return(tib_layer(
         units = as.integer(output_dim),
@@ -298,7 +300,7 @@ l2_processor <- function(term, data, output_dim, param_nr){
   list(
     data_trafo = function() data[extractvar(term)],
     predict_trafo = function(newdata) newdata[extractvar(term)],
-    input_dim = extractlen(term, data),
+    input_dim = as.integer(extractlen(term, data)),
     layer = function(x, ...)
       return(tf$keras$layers$Dense(units = output_dim, 
                                    kernel_regularizer = 
@@ -316,7 +318,7 @@ offset_processor <- function(term, data, output_dim, param_nr){
   list(
     data_trafo = function() data[extractvar(term)],
     predict_trafo = function(newdata) newdata[extractvar(term)],
-    input_dim = extractlen(term, data),
+    input_dim = as.integer(extractlen(term, data)),
     layer = function(x, ...)
       return(tf$keras$layers$Dense(units = 1L,
                                    trainable = FALSE,
@@ -341,7 +343,7 @@ dnn_placeholder_processor <- function(dnn){
     list(
       data_trafo = function() data[extractvar(term)],
       predict_trafo = function(newdata) newdata[extractvar(term)],
-      input_dim = extractlen(term, data),
+      input_dim = as.integer(extractlen(term, data)),
       layer = dnn
     )
   }
@@ -352,7 +354,7 @@ dnn_image_placeholder_processor <- function(dnn, size){
     list(
       data_trafo = function() as.data.frame(data[extractvar(term)]),
       predict_trafo = function(newdata) as.data.frame(newdata[extractvar(term)]),
-      input_dim = size,
+      input_dim = as.integer(size),
       layer = dnn
     )
   }

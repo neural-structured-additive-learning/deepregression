@@ -66,8 +66,6 @@ tfmult <- function(x,y) tf$math$multiply(x,y)
 #'  \item{"zip":  }{Zero-inflated poisson distribution with mean (exp) and prob (sigmoid)}
 #' }
 #' @param add_const small positive constant to stabilize calculations
-#' @param return_nrparams logical, if TRUE, only the number of distribution parameters is
-#' returned; else (FALSE) the \code{dist_fun} required in \code{deepregression}
 #' @param trafo_list list of transformations for each distribution parameter.
 #' Per default the transformation listed in details is applied.
 #' @param output_dim number of output dimensions of the response (larger 1 for
@@ -76,7 +74,7 @@ tfmult <- function(x,y) tf$math$multiply(x,y)
 #' @export
 #' @rdname dr_families
 make_tfd_dist <- function(family, add_const = 1e-8, output_dim = 1L,
-                          return_nrparams = FALSE, trafo_list = NULL)
+                          trafo_list = NULL)
 {
 
   # define dist_fun

@@ -6,7 +6,8 @@ test_that("lin_processor", {
   term="lin(a + b + c)"
   expect_equal(lin_processor(term, data, 1, 1)$input_dim, 3)
   term="lin(1 + b + c)"
-  expect_equal(lin_processor(term, data, 1, 1)$input_dim, 3)
+  expect_equal(lin_processor(term, data, 1, 1)$input_dim, 2)
+  # -> 2 because intercepts must be added explicitly to the formula
   term="lin(a, b, c)"
   expect_equal(lin_processor(term, data, 1, 1)$input_dim, 3)
   term="lin(1, b, c)" # intercept is treated separately
@@ -17,15 +18,15 @@ test_that("lin_processor", {
 test_that("vc_processor", {
   
   n <- 40
-  data = data.frame(a=rnorm(n), b=rnorm(n), c=rnorm(n), d=rnorm(n))
+  data = data.frame(a=rnorm(n), b=rnorm(n), c=gl(n/2,2), d=gl(n/2,2))
   term="vc(te(a,b), by=c(c,d))"
-  expect_equal(vc_processor(term, data, 1, 1)$input_dim, 3)
+  expect_equal(vc_processor(term, data, 1, 1, smooth_control())$input_dim, 27)
   term="vc(te(a,b), by=c)"
-  expect_equal(vc_processor(term, data, 1, 1)$input_dim, 3)
+  expect_equal(vc_processor(term, data, 1, 1, smooth_control())$input_dim, 26)
   term="vc(s(a), by=c(c,d))"
-  expect_equal(vc_processor(term, data, 1, 1)$input_dim, 3)
+  expect_equal(vc_processor(term, data, 1, 1, smooth_control())$input_dim, 12)
   term="vc(s(a), by=c)" 
-  expect_equal(vc_processor(term, data, 1, 1)$input_dim, 2)
+  expect_equal(vc_processor(term, data, 1, 1, smooth_control())$input_dim, 11)
   
 })
 

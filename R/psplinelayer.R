@@ -99,7 +99,10 @@ defaultSmoothingFun <- function(st, this_df, hat1, sp_scale,
                                 null_space_penalty, anisotropic){
   if(st[[1]]$by!="NA" && length(st)!=1)
     return(unlist(lapply(1:length(st), function(i) 
-      defaultSmoothing(st[i], this_df = this_df)), recursive = F))
+      defaultSmoothingFun(st[i], this_df = this_df, 
+                          hat1 = hat1, sp_scale = sp_scale,
+                          null_space_penalty = null_space_penalty,
+                          anisotropic = anisotropic)), recursive = F))
   # TODO: Extend for TPs (S[[1]] is only the first matrix)
   if(length(st[[1]]$S)==1 & length(st)==1){ 
     S <- st[[1]]$S[[1]]

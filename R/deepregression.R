@@ -30,6 +30,7 @@
 #' the keras \code{fit} function.
 #' @param smooth_options options for smoothing terms defined by \code{smooth_control}
 #' @param orthog_options options for the orthgonalization defined by \code{orthog_control}
+#' @param verbose logical; whether to print progress of model initialization to console
 #' @param ... further arguments passed to the \code{model_builder} function
 #'
 #' @import tensorflow tfprobability keras mgcv dplyr R6 reticulate Matrix
@@ -94,6 +95,7 @@ deepregression <- function(
   additional_processors = list(),
   smooth_options = smooth_control(),
   orthog_options = orthog_control(),
+  verbose = TRUE,
   ...
 )
 {
@@ -182,7 +184,7 @@ deepregression <- function(
     stop("Only one-sided formulas are allowed in list_of_formulas.")
   }
   
-  cat("Preparing additive formula(e)...")
+  if(verbose) cat("Preparing additive formula(e)...")
   # parse formulas
   parsed_formulas_contents <- lapply(1:length(list_of_formulas),
                                      function(i){
@@ -212,7 +214,7 @@ deepregression <- function(
   
   names(parsed_formulas_contents) <- names(list_of_formulas)
   
-  cat(" Done.\n")
+  if(verbose) cat(" Done.\n")
 
   if(return_prepoc)
     return(parsed_formulas_contents)

@@ -91,21 +91,20 @@ test_that("generalized additive model", {
   mod <- deepregression(
     y = y,
     data = data,
-    list_of_formulae = list(loc = ~ s(X3, bs = "ts") + s(X1, bs = "cr") + g(X2), scale = ~1),
+    list_of_formulas = list(loc = ~ s(X3, bs = "ts") + s(X1, bs = "cr") + g(X2), scale = ~1),
     list_of_deep_models = list(d = deep_model, g = deep_model)
   )
-  suppressMessages(
-    suppressWarnings(expect_object_dims(mod, data, 19, 1))
-  )
+  
+  mod %>% fit(epochs = 2)
 
   # # 2 deep 1 structured no intercept
   mod <- deepregression(
     y = y,
     data = data,
-    list_of_formulae = list(loc = ~ X1 + d(X1) + g(X2), scale = ~ -1 + s(X3, bs = "tp")),
+    list_of_formulas = list(loc = ~ X1 + d(X1) + g(X2), scale = ~ -1 + s(X3, bs = "tp")),
     list_of_deep_models = list(d = deep_model, g = deep_model)
   )
-  expect_object_dims(mod, data, 2, 9)
+  mod %>% fit(epochs = 2)
 })
 
 
@@ -134,12 +133,12 @@ test_that("deep generalized additive model with LSS", {
   mod <- deepregression(
     y = y,
     data = data,
-    list_of_formulae = list(loc = ~ 1 + s(x, bs="tp") + d(z), scale = ~ 1 + x),
+    list_of_formulas = list(loc = ~ 1 + s(x, bs="tp") + d(z), scale = ~ 1 + x),
     list_of_deep_models = list(d = deep_model),
     family = "normal"
   )
-  suppressWarnings(expect_object_dims(mod, data, 10,2))
-
+  
+  mod %>% fit(epochs = 2)
 })
 
 test_that("multivariate response", {

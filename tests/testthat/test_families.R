@@ -14,7 +14,7 @@ test_that("tfd families", {
   for (fam in families) {
     d = make_tfd_dist(fam)
     expect_is(d, "function")
-    np = make_tfd_dist(fam, return_nrparams = TRUE)
+    np = attr(d, "nrparams_dist")
     expect_true(np %in% c(1:3))
   }
 
@@ -70,7 +70,7 @@ test_that("tfd families can be fitted", {
         y = y,
         data = data,
         # define how parameters should be modeled
-        list_of_formulae = list(~ 1 + x, ~ 1 + z, ~ 1),
+        list_of_formulas = list(~ 1 + x, ~ 1 + z, ~ 1),
         list_of_deep_models = NULL,
         family = dist, tf_seed = 44,
         optimizer = optimizer_rmsprop(lr = 0.000001)
