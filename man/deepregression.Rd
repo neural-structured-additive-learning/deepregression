@@ -17,8 +17,9 @@ deepregression(
   fitting_function = utils::getFromNamespace("fit.keras.engine.training.Model",
     "keras"),
   additional_processors = list(),
-  smooth_options = smooth_control(),
+  penalty_options = penalty_control(),
   orthog_options = orthog_control(),
+  verbose = TRUE,
   ...
 )
 }
@@ -62,9 +63,11 @@ the keras \code{fit} function.}
 
 \item{additional_processors}{a named list with additional processors to convert the formula(s)}
 
-\item{smooth_options}{options for smoothing terms defined by \code{smooth_control}}
+\item{penalty_options}{options for smoothing and penalty terms defined by \code{penalty_control}}
 
 \item{orthog_options}{options for the orthgonalization defined by \code{orthog_control}}
+
+\item{verbose}{logical; whether to print progress of model initialization to console}
 
 \item{...}{further arguments passed to the \code{model_builder} function}
 }

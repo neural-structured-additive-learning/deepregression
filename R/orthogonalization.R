@@ -1,32 +1,3 @@
-
-orthog_structured <- function(S,L)
-{
-  qrL <- qr(L)
-  Q <- qr.Q(qrL)
-  X_XtXinv_Xt <- tcrossprod(Q)
-  Sorth <- S - X_XtXinv_Xt%*%S
-  return(Sorth)
-}
-
-orthog_structured_smooths <- function(S,P,L)
-{
-
-  C <- t(S) %*% L
-  qr_C <- qr(C)
-  if( any(class(qr_C) == "sparseQR") ){
-    rank_C <- qr_C@Dim[2]
-  }else{
-    rank_C <- qr_C$rank
-  }
-  Q <- qr.Q(qr_C, complete=TRUE)
-  Z <- Q[  , (rank_C + 1) : ncol(Q) ]
-  if(is.null(P)) return(S %*% Z) else
-    return(list(Snew = S %*% Z,
-                Pnew = lapply(P, function(p) t(Z) %*% p %*% Z))
-    )
-
-}
-
 # needed by gam_processor
 orthog_structured_smooths_Z <- function(S,L)
 {
@@ -50,210 +21,6 @@ orthog_P <- function(P,Z)
   return(crossprod(Z,P) %*% Z)
 }
 
-orthog_smooth <- function(pcf, zero_cons = TRUE){
-
-  nml <- attr(pcf$linterms, "names")
-  nms <- attr(pcf$smoothterms, "names")
-  re <- sapply(pcf$smoothterms, function(x) attr(x[[1]], "class")[[1]])=="random.effect"
-  # if(!is.null(nms) && grepl(",by_",nms)){
-  #   warning("Orthogonalization for s-terms with by-Term currently not supported.")
-  # }
-  for(nm in nms){
-
-    L <- NULL
-    
-    Lcontent <- c()
-
-    if(#"(Intercept)" %in% nml &
-      !grepl("by", nm) &
-      !re[nm] &
-      zero_cons)
-    {
-
-      L <- matrix(rep(1,NROW(pcf$smoothterms[[nm]][[1]]$X)), ncol=1)
-      Lcontent <- c("int")
-
-    }
-
-    if(nm %in% nml & !re[nm]){
-
-      if(!is.null(L))
-        L <- cbind(L, pcf$linterms[,nm]) else
-          L <- pcf$linterms[,nm]
-        Lcontent <- c(Lcontent, "lin")
-
-    }
-
-
-    if(!is.null(L)){
-
-      X_and_P <- orthog_structured_smooths(
-        pcf$smoothterms[[nm]][[1]]$X,
-        pcf$smoothterms[[nm]][[1]]$S,
-        L
-      )
-
-      pcf$smoothterms[[nm]][[1]]$X <- X_and_P[[1]]
-      pcf$smoothterms[[nm]][[1]]$S <- X_and_P[[2]]
-      pcf$smoothterms[[nm]][[1]]$Lcontent <- Lcontent
-
-    }else{
-
-      pcf$smoothterms[[nm]][[1]]$Lcontent <- Lcontent
-
-    }
-
-  }
-
-  return(pcf)
-}
-
-
-
-make_orthog <- function(
-  pcf,
-  retcol = FALSE,
-  returnX = FALSE,
-  newdata = NULL,
-  otherdata = NULL
-)
-{
-
-  if(is.null(pcf$deepterms)) return(NULL)
-  if(is.null(newdata)) n_obs <- nROW(pcf) else n_obs <- nROW(newdata)
-  if(n_obs==0){
-    if(!is.null(pcf$smoothterms))
-      n_obs <- NROW(pcf$smoothterms[[1]][[1]]$X) else
-        n_obs <- nROW(pcf$deepterms[[1]])
-  }
-  nms <- lapply(pcf[c("linterms","smoothterms")], function(x)attr(x,"names"))
-  nmsd <- lapply(pcf$deepterms, function(x) attr(x,"names"))
-  manoz <- lapply(pcf$deepterms, function(x) attr(x,"manoz"))
-  if(!is.null(nms$smoothterms))
-    struct_nms <- c(nms$linterms, #unlist(strsplit(nms$smoothterms,",")),
-                    nms$smoothterms) else
-                      struct_nms <- nms$linterms
-  if(is.null(pcf$linterms) & is.null(pcf$smoothterms) & is.null(manoz))
-    return(NULL)
-
-  if(is.list(newdata)) newdata <- as.data.frame(newdata)
-  
-  qList <- lapply(1:length(nmsd), function(i){
-
-    nn <- nmsd[[i]]
-
-    # number of columns removed due to collinearity
-    rem_cols <- 0
-    # if there is any smooth
-    if(length(intersect(nn, struct_nms))>0) 
-      X <- matrix(rep(1,n_obs), ncol=1) else
-        X <- matrix(ncol=0, nrow=n_obs)
-    # Ps <- list()
-    # lambdas <- c()
-    if(length(intersect(nn, struct_nms)) > 0 | !is.null(manoz[[i]])){
-
-      if(!is.null(manoz[[i]])){ 
-        
-        X <- cbind(X, do.call("cbind", lapply(manoz[[i]], 
-                                              get_X_manoz,
-                                              lint = pcf$linterms,
-                                              newdata = c(newdata, otherdata))))
-        
-      }
-
-      for(nm in nn){
-
-        # FIXME: deal with factor variables
-        if(nm %in% nms$linterms){ 
-          if(!is.null(newdata)){
-            X <- cbind(X,newdata[,nm,drop=FALSE])
-          }else{
-            X <- cbind(X,pcf$linterms[,nm,drop=FALSE])
-          }
-        }
-        if(nm %in% nms$smoothterms){
-          
-          this_smooth <- pcf$smoothterms[[
-            grep(paste0("\\b",nm,"\\b"),nms$smoothterms)
-            ]]
-          
-          if(is.null(newdata)){ 
-            if(length(this_smooth)==1)
-              this_sX <- this_smooth[[1]]$X else
-                this_sX <- this_smooth$X
-          }else{
-            this_sX <- get_X_from_smooth(this_smooth, newdata)
-          }
-          
-          if(is.null(newdata)){ 
-            
-            Z_nr <- drop_constant(this_sX)
-            X <- cbind(X,Z_nr[[1]])
-            rem_cols <- rem_cols + Z_nr[[2]]
-            
-          }else{
-            
-            X <- cbind(X, this_sX)
-            
-          }
-
-        }
-      }
-
-      # check for TP
-      if(any(length(nn)>1 &  grepl(",", nms$smoothterms))){
-
-        tps_index <- grep(",", nms$smoothterms)
-        for(tpi in tps_index){
-
-          if(length(setdiff(unlist(strsplit(nms$smoothterms[tpi],",")), nn))==0){
-
-            this_smooth <- pcf$smoothterms[[tpi]]
-            
-            if(is.null(newdata)){ 
-              if(length(this_smooth)==1)
-                this_sX <- this_smooth[[1]]$X else
-                  this_sX <- this_smooth$X
-            }else{
-              this_sX <- get_X_from_smooth(this_smooth, newdata)
-            }
-            
-            X <- cbind(X, this_sX)
-
-          }
-        }
-      }
-
-    }else{
-      return(NULL)
-    }
-
-    if(returnX){
-      if(retcol) return(NCOL(X)) else
-        return(as.matrix(X))
-    }
-
-    qrX <- qr(X)
-    # if(qrX$rank<ncol(X)){
-    #   warning("Collinear features in X")
-    #   # qrX <- qr(qrX$qr[,1:qrX$rank])
-    # }
-
-    Q <- qr.Q(qrX)
-    # coefmat <- tcrossprod(Q)
-    if(retcol) return(NCOL(Q)) else
-      return(Q)
-
-  })
-
-  return(qList)
-
-}
-
-# for P-Splines
-# Section 2.3. of Fahrmeir et al. (2004, Stat Sinica)
-centerxk <- function(X,K) tcrossprod(X, K) %*% solve(tcrossprod(K))
-
 orthog <- function(Y, Q)
 {
 
@@ -271,8 +38,6 @@ orthog_tf <- function(Y, X)
   Yorth <- tf$subtract(Y, tf$linalg$matmul(X_XtXinv_Xt, Y))
   
 }
-
-orthog_nt <- function(Y,X) Y <- X%*%solve(crossprod(X))%*%crossprod(X,Y)
 
 split_model <- function(model, where = -1)
 {
@@ -303,165 +68,138 @@ split_model <- function(model, where = -1)
 
 }
 
-### R6 class, not used atm
-
-if(FALSE){
-
-  Orthogonalizer <- R6::R6Class("Orthogonalizer",
-
-                                lock_objects = FALSE,
-                                inherit = KerasLayer,
-
-                                public = list(
-
-                                  output_dim = NULL,
-
-                                  kernel = NULL,
-
-                                  initialize = function(inputs) {
-
-                                    self$inputs <- inputs
-
-                                  },
-
-                                  call = function(inputs, training=NULL) {
-                                    if(is.null(training))
-                                      return(inputs[[1]]) else
-                                        return(orthog(inputs[[1]],inputs[[2]]))
-                                  }
-                                )
-  )
-
-  layer_orthog <- function(inputs, ...) {
-    create_layer(layer_class = Orthogonalizer,
-                 args = list(inputs = inputs)
-    )
-  }
-
-
-}
-
-combine_model_parts <- function(deep, deep_top, struct, ox, orthog_fun, shared)
-{
-
-  if(is.null(deep) || length(deep)==0){
-
-    if(is.null(shared)) return(struct) else
-      return(
-        layer_add(list(shared,struct))
-      )
-
-
-  }else if((is.null(struct) || (is.list(struct) && length(struct)==0)) & (is.null(ox) | is.null(ox[[1]]))){
-
-    if(length(deep)==1){
-
-      if(is.null(shared))
-        return(deep_top[[1]](deep[[1]])) else
-          return(
-            layer_add(list(shared,deep_top[[1]](deep[[1]])))
-          )
-
-    } # else
-
-    if(is.null(shared))
-      return(
-        layer_add(
-          lapply(1:length(deep), function(j) deep_top[[j]](deep[[j]])))) else
-            return(
-              layer_add(list(shared,
-                             layer_add(lapply(1:length(deep),
-                                              function(j) deep_top[[j]](deep[[j]])))))
-            )
-
-  }else{
-
-    if(is.null(ox) || length(ox)==0 || (length(ox)==1 & is.null(ox[[1]]))){
-
-      if(is.null(shared))
-        return(
-          layer_add( append(lapply(1:length(deep),
-                                   function(j) deep_top[[j]](deep[[j]])),
-                            list(struct))
-          )
-        ) else
-          return(
-            layer_add( append(lapply(1:length(deep),
-                                     function(j) deep_top[[j]](deep[[j]])),
-                              list(struct), list(shared))
-            )
-          )
-
-    }else{
-
-      if(length(deep) > 1)
-        warning("Applying orthogonalization for more than ",
-                "one deep model in each predictor.")
-
-      if(is.null(struct) || (is.list(struct) && length(struct)==0)){
-        
-        if(length(deep)==1){
-          return(
-              deep_top[[1]](orthog_fun(deep[[1]], ox[[1]]))
-              )
-        }else{
-          
-          return(
-            layer_add( lapply(1:length(deep),
-                              function(j){
-                                
-                                if(is.null(ox[[j]]))
-                                  return(deep_top[[j]](deep[[j]])) else
-                                    deep_top[[j]](orthog_fun(deep[[j]],
-                                                             ox[[j]]))
-                              })) 
-          )
-          
-        }
-        
-      }
-      
-      return(
-        layer_add( append(lapply(1:length(deep),
-                                 function(j){
-                                   
-                                   if(is.null(ox[[j]]))
-                                     return(deep_top[[j]](deep[[j]])) else
-                                       deep_top[[j]](orthog_fun(deep[[j]],
-                                                                ox[[j]]))
-                                 }),
-                          struct))
-      )
-    }
-  }
-}
-
-drop_constant <- function(X){
-
-  this_notok <- apply(X, 2, function(x) var(x, na.rm=TRUE)==0)
-  return(list(X[,!this_notok],
-              sum(this_notok))
-  )
-}
-
-get_X_manoz <- function(m, lint, newdata=NULL)
+#' Function to define orthogonalization connections in the formula
+#' 
+#' @param form a formula for one distribution parameter
+#' @return Returns a list of formula components with ids and 
+#' assignments for orthogonalization
+#' 
+#' 
+separate_define_relation <- function(form, specials, specials_to_oz, automatic_oz_check = TRUE)
 {
   
-  if(is.list(m))
-  {
-    if(!is.null(newdata)){
-      return(get_X_from_smooth(m, newdata))
-    }else{
-      if(length(m)==1) X <- m[[1]]$X else
-        X <- do.call("cbind", lapply(m,"[[","X"))
-      return(X)
+  tf <- terms.formula(form, specials = specials)
+  has_intercept <- attr(tf, "intercept")
+  trmstrings <- attr(tf, "term.labels")
+  if(length(trmstrings)==0 & has_intercept)
+    return(
+      list(list(
+        term = "(Intercept)",
+        nr = 1,
+        left_from_oz = TRUE,
+        right_from_oz = NULL
+      ))
+    )
+  variables_per_trmstring <- sapply(trmstrings, function(x) all.vars(as.formula(paste0("~",x))))
+  manual_oz <- grepl("%OZ%", trmstrings)
+  # do a check for automatic OZ if defined
+  # and add it via the %OZ% operator
+  if(automatic_oz_check){
+    # if no specials_to_oz are present, return function call without automatic oz
+    if(is.null(specials_to_oz) | length(specials_to_oz)==0)
+      return(separate_define_relation(form, specials = specials, 
+                                      specials_to_oz = specials_to_oz,
+                                      automatic_oz_check = FALSE))
+    # otherwise start checking
+    oz_to_add <- rep(list(NULL), length(trmstrings))
+    for(i in 1:length(trmstrings)){
+      
+      if(any(sapply(specials_to_oz, function(nn) grepl(paste0(nn,"\\(.*\\)"), trmstrings[i]))) & 
+         !manual_oz[i]){
+        # term is checked for automatic orthogonalization
+        # find structured term with same variable
+        these_vars <- variables_per_trmstring[[i]]
+        these_terms <- trmstrings[sapply(1:length(trmstrings), function(j){ 
+          !manual_oz[j] & 
+            any(sapply(these_vars, function(tv) tv%in%variables_per_trmstring[[j]])) & 
+            i != j
+        })]
+        # TODO: check if this is actually necessary
+        if(has_intercept) these_terms <- c("1", these_terms)
+        if(length(these_terms)>0) oz_to_add[[i]] <- 
+          paste0(" %OZ% (", paste(these_terms, collapse = "+"), ")")
+        
+      }
     }
-  }else{
-    if(!is.null(newdata)){
-      return(get_X_lin_newdata(m, newdata))
-    }else{
-      return(get_X_lin_newdata(m, lint))
+    no_changes <- sapply(oz_to_add,is.null)
+    if(any(!no_changes)){
+      trmstrings[!no_changes] <- mapply(function(x,y) paste0(x, y), 
+                                        trmstrings[!no_changes],
+                                        oz_to_add[!no_changes])
+      form <- as.formula(paste0("~ ", paste(trmstrings, collapse = " + ")))
+      return(separate_define_relation(form, specials = specials, 
+                                      specials_to_oz = specials_to_oz,
+                                      automatic_oz_check = FALSE))
     }
   }
+  # define which terms are related to which other terms due to OZ
+  terms <- strsplit(trmstrings, "%OZ%", fixed=TRUE)
+  terms_left <- lapply(terms, function(x) trimws(x[[1]]))
+  terms_right <- lapply(terms, function(trm){
+    if(length(trm)>1) remove_brackets(trimws(trm[[2]])) else return(NULL)
+  }) 
+  terms_right <- lapply(terms_right, function(trm)
+  {
+    if(is.null(trm)) return(NULL)
+    return(trimws(strsplit(trm, "+", fixed=TRUE)[[1]]))
+  })
+  
+  terms <- lapply(1:length(terms_left), function(i) 
+    list(term = terms_left[[i]],
+         nr = i,
+         left_from_oz = TRUE,
+         right_from_oz = NULL
+    ))
+  
+  if(has_intercept & length(intersect(c("(Intercept)","1"), sapply(terms, "[[", "term")))==0)
+    terms[[length(terms)+1]] <- list(
+      term = "1",
+      nr = length(terms)+1,
+      left_from_oz = TRUE,
+      right_from_oz = NULL
+    )
+  
+  add_terms <- list()
+  j <- 1
+  
+  for(i in 1:length(terms_right)){
+    
+    if(is.null(terms_right[[i]])) next
+    for(k in 1:length(terms_right[[i]])){
+      
+      is_already_left <- is_equal_not_null(terms_right[[i]][[k]], sapply(terms, "[[", "term"))
+      is_already_right <- FALSE
+      if(length(add_terms)>0)
+        is_already_right <- is_equal_not_null(terms_right[[i]][[k]], 
+                                              sapply(add_terms, "[[", "term"))
+      if(any(is_already_left)){
+        terms[[which(is_already_left)]]$right_from_oz <- 
+          c(terms[[which(is_already_left)]]$right_from_oz, i)
+      }else if(any(is_already_right)){
+        add_terms[[which(is_already_right)]]$right_from_oz <- 
+          c(add_terms[[which(is_already_right)]]$right_from_oz, i)
+      }else{ # add
+        add_terms[[j]] <- list(
+          term = terms_right[[i]][[k]],
+          nr = length(terms) + j,
+          left_from_oz = FALSE,
+          right_from_oz = i
+        )
+        j <- j + 1
+      }
+      
+    }
+    
+  }
+  
+  terms <- c(terms, add_terms)
+  
+  if(has_intercept){
+    
+    terms[[which(sapply(terms, "[[", "term")=="1")]]$left_from_oz <- TRUE
+    
+  }
+  
+  return(terms)
   
 }

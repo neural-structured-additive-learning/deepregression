@@ -4,13 +4,7 @@
 \alias{make_tfd_dist}
 \title{Families for deepregression}
 \usage{
-make_tfd_dist(
-  family,
-  add_const = 1e-08,
-  output_dim = 1L,
-  return_nrparams = FALSE,
-  trafo_list = NULL
-)
+make_tfd_dist(family, add_const = 1e-08, output_dim = 1L, trafo_list = NULL)
 }
 \arguments{
 \item{family}{character vector}
@@ -19,9 +13,6 @@ make_tfd_dist(
 
 \item{output_dim}{number of output dimensions of the response (larger 1 for
 multivariate case)}
-
-\item{return_nrparams}{logical, if TRUE, only the number of distribution parameters is
-returned; else (FALSE) the \code{dist_fun} required in \code{deepregression}}
 
 \item{trafo_list}{list of transformations for each distribution parameter.
 Per default the transformation listed in details is applied.}

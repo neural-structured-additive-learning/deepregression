@@ -3,7 +3,7 @@ Title: Fitting Deep Distributional Regression
 Version: 0.1
 Authors@R: c(
     person("David", "Ruegamer", , "david.ruegamer@gmail.com", role = c("aut", "cre")),
-    person("Florian", "Pfisterer", , "florian.pfisterer@stat.uni-muenchen.de", role = c("aut")),
+    person("Florian", "Pfisterer", , "florian.pfisterer@stat.uni-muenchen.de", role = c("ctb")),
     person("Philipp", "Baumann", , "baumann@kof.ethz.ch", role = c("ctb")),
     person("Chris", "Kolb", , "chris.kolb@stat.uni-muenchen.de", role = c("ctb")))
 Description:
@@ -19,10 +19,8 @@ Config/reticulate:
   )
 Depends: R (>= 4.0.0)
 Suggests:
-    rsvd,
     testthat,
-    knitr,
-    covr
+    knitr
 Imports:
     tensorflow (>= 2.2.0),
     tfprobability,

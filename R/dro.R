@@ -13,10 +13,7 @@ make_psd <- function(x, eps = sqrt(.Machine$double.eps)) {
   return(x)
 }
 
-# this is a tweaked version of df2lambda from mboost
-# which is a huge bottleneck for model initialization
-# if dmat is large due to the used SVD
-# => we allow for an approximation based on the package rsvd
+# modified version from mboost
 DRO <- function(X, df = 4, lambda = NULL, dmat = NULL, # weights,
                 svdtype = c("default", "custom"), XtX = NULL,
                 k = 100, q = 3, hat1 = TRUE, custom_svd_fun = NULL, ...) {
