@@ -180,6 +180,7 @@ fit <- function (object, ...) {
 #' @param patience integer, number of rounds after which early stopping is done.
 #' @param save_weights logical, whether to save weights in each epoch.
 #' @param validation_data optional specified validation data
+#' @param validation_split float in [0,1] defining the amount of data used for validation
 #' @param callbacks a list of callbacks for fitting
 #' @param convertfun function to convert R into Tensor object
 #' @param ... further arguments passed to

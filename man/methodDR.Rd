@@ -108,6 +108,8 @@ per default \code{as.matrix}}
 
 \item{validation_data}{optional specified validation data}
 
+\item{validation_split}{float in [0,1] defining the amount of data used for validation}
+
 \item{callbacks}{a list of callbacks used for fitting}
 
 \item{convertfun}{function to convert R into Tensor object}
