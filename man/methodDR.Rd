@@ -70,6 +70,8 @@
 \arguments{
 \item{x}{a deepregression object}
 
+\item{which}{character identifying the effect to plot; default plots all}
+
 \item{which_param}{integer, indicating for which distribution parameter
 coefficients should be returned (default is first parameter)}
 
@@ -84,13 +86,15 @@ is evaluated for plotting.}
 
 \item{newdata}{optional new data, either data.frame or list}
 
-\item{batch_size}{}
+\item{batch_size}{integer, the batch size used for mini-batch training}
 
 \item{apply_fun}{function applied to fitted distribution,
 per default \code{tfd_mean}}
 
 \item{convert_fun}{how should the resulting tensor be converted,
 per default \code{as.matrix}}
+
+\item{epochs}{integer, the number of epochs to fit the model}
 
 \item{early_stopping}{logical, whether early stopping should be user.}
 
@@ -126,10 +130,6 @@ the final result}
 \item{data}{either \code{NULL} or a new data set}
 
 \item{probs}{the quantile value(s)}
-
-\item{name}{which effect to plot as character; default plots all}
-
-\item{auc_callback}{logical, whether to use a callback for AUC}
 }
 \value{
 Returns an object \code{drCV}, a list, one list element for each fold

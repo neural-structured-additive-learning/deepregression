@@ -71,11 +71,18 @@ split_model <- function(model, where = -1)
 #' Function to define orthogonalization connections in the formula
 #' 
 #' @param form a formula for one distribution parameter
+#' @param specials specials in formula to handle separately
+#' @param specials_to_oz parts of the formula to orthogonalize
+#' @param automatic_oz_check logical; automatically check if terms must be orthogonalized
 #' @return Returns a list of formula components with ids and 
 #' assignments for orthogonalization
 #' 
 #' 
-separate_define_relation <- function(form, specials, specials_to_oz, automatic_oz_check = TRUE)
+separate_define_relation <- function(
+  form, 
+  specials, 
+  specials_to_oz, 
+  automatic_oz_check = TRUE)
 {
   
   tf <- terms.formula(form, specials = specials)

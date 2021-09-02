@@ -16,9 +16,13 @@ processor(
 )
 }
 \arguments{
+\item{form}{the formula to be processed}
+
 \item{data}{the data for the terms in the formula}
 
 \item{controls}{controls for gam terms}
+
+\item{output_dim}{the output dimension of the response}
 
 \item{param_nr}{integer; identifier for the distribution parameter}
 
@@ -27,8 +31,6 @@ processor(
 \item{automatic_oz_check}{logical; whether to automatically check for DNNs to be orthogonalized}
 
 \item{...}{further processors}
-
-\item{formula}{the formula to be processed}
 }
 \value{
 returns a processor function

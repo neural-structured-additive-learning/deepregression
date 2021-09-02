@@ -30,6 +30,8 @@ keras_dr(
 
 \item{optimizer}{optimizer used. Per default Adam}
 
+\item{model_fun}{which function to use for model building (default \code{keras_model})}
+
 \item{monitor_metrics}{Further metrics to monitor}
 
 \item{from_preds_to_output}{function taking the list_pred_param outputs
@@ -42,8 +44,6 @@ the arguments \code{family} and \code{weights} using \code{from_dist_to_loss}}
 must be a function of model$trainable_weights with suitable subsetting}
 
 \item{...}{arguments passed to other functions}
-
-\item{model_instance}{which class of model to use (default \code{keras_model})}
 }
 \value{
 a list with input tensors and output tensors that can be passed

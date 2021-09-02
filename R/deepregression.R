@@ -64,6 +64,8 @@
 #'   data = data, y = y,
 #'   list_of_deep_models = list(deep_model = deep_model)
 #' )
+#' 
+#' if(!is.null(mod)){
 #'
 #' # train for more than 10 epochs to get a better model
 #' mod %>% fit(epochs = 10, early_stopping = TRUE)
@@ -72,6 +74,8 @@
 #' mod %>% get_partial_effect(name = "s(xa)")
 #' mod %>% coef()
 #' mod %>% plot()
+#' 
+#' }
 #' 
 #' mod <- deepregression(
 #'   list_of_formulas = list(loc = ~ 1 + s(xa) + x1, scale = ~ 1, 
@@ -392,7 +396,7 @@ from_preds_to_dist <- function(
 #' @param output_dim output dimension
 #' @param weights vector of positive values; optional (default = 1 for all observations)
 #' @param optimizer optimizer used. Per default Adam
-#' @param model_instance which class of model to use (default \code{keras_model})
+#' @param model_fun which function to use for model building (default \code{keras_model})
 #' @param monitor_metrics Further metrics to monitor
 #' @param from_preds_to_output function taking the list_pred_param outputs
 #' and transforms it into a single network output

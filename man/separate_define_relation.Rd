@@ -13,6 +13,12 @@ separate_define_relation(
 }
 \arguments{
 \item{form}{a formula for one distribution parameter}
+
+\item{specials}{specials in formula to handle separately}
+
+\item{specials_to_oz}{parts of the formula to orthogonalize}
+
+\item{automatic_oz_check}{logical; automatically check if terms must be orthogonalized}
 }
 \value{
 Returns a list of formula components with ids and 

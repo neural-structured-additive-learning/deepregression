@@ -208,12 +208,6 @@ sum_cols_smooth <- function(x)
 
 }
 
-applySumToZero <- function(X, apply=TRUE)
-{
-  if(apply)
-    return(orthog_structured_smooths(X, NULL, matrix(rep(1,nrow(X)),ncol=1)))
-  return(X)
-}
 
 convertfun_tf <- function(x) tf$constant(x, dtype="float32")
 
@@ -234,40 +228,6 @@ remove_attr <- function(x)
   return(x)
 }
 
-get_X_from_smooth <- function(sm, newdata)
-{
-  
-  if(length(sm)==1 & sm[[1]]$by=="NA" & !("random.effect" %in% attr(sm[[1]], "class"))){
-    sm <- sm[[1]]
-    sterms <- sm$term
-    Lcontent <- sm$Lcontent
-    pm <- PredictMat(sm,as.data.frame(newdata[sterms]))
-    if(length(Lcontent)>0)
-    {
-      if("int" %in% Lcontent)
-        thisL <- matrix(rep(1,NROW(newdata[[1]])), ncol=1)
-      if("lin" %in% Lcontent)
-        thisL <- cbind(thisL, newdata[[sterms]])
-    }else thisL <- NULL
-    if(is.null(thisL))
-      return(pm) else
-        return(
-          orthog_structured_smooths(
-            S = pm, P = NULL, L = thisL
-          )
-        )
-  }else if("random.effect" %in% attr(sm[[1]], "class")){
-    sterms <- sm[[1]]$term
-    pm <- PredictMat(sm[[1]],as.data.frame(newdata[sterms]))
-    return(pm)
-  }else{
-    sterms <- c(sm[[1]]$term, sm[[1]]$by)
-    do.call("cbind", lapply(sm, function(smm)
-      applySumToZero(PredictMat(smm,as.data.frame(newdata[sterms])),
-                     apply = FALSE)))
-  }
-  
-}
 
 get_X_from_linear <- function(lint, newdata = NULL)
 {
@@ -302,6 +262,13 @@ get_X_lin_newdata <- function(linname, newdata)
 }
 
 
+# used in subnetwork_init
+make_valid_layername <- function(string)
+{
+  
+  gsub("[^a-zA-Z0-9/-]+","_",string)
+  
+}
 
 #### helper functions for processors
 
@@ -392,3 +359,17 @@ WeightHistory <- R6::R6Class("WeightHistory",
                                          coefkeras(self$model))
                                }
                              ))
+
+
+#### used for indexing
+tf_stride_cols <- function(A, start, end=NULL)
+{
+  
+  if(is.null(end)) end <- start
+  return(
+    #tf$strided_slice(A, c(0L,as.integer(start-1)), c(tf$shape(A)[1], as.integer(end)))
+    tf$keras$layers$Lambda(function(x) x[,as.integer(start):as.integer(end)])(A)
+  )
+  
+  
+}

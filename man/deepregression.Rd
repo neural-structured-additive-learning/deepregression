@@ -96,6 +96,8 @@ mod <- deepregression(
   list_of_deep_models = list(deep_model = deep_model)
 )
 
+if(!is.null(mod)){
+
 # train for more than 10 epochs to get a better model
 mod \%>\% fit(epochs = 10, early_stopping = TRUE)
 mod \%>\% fitted() \%>\% head()
@@ -103,6 +105,8 @@ cvres <- mod \%>\% cv()
 mod \%>\% get_partial_effect(name = "s(xa)")
 mod \%>\% coef()
 mod \%>\% plot()
+
+}
 
 mod <- deepregression(
   list_of_formulas = list(loc = ~ 1 + s(xa) + x1, scale = ~ 1, 

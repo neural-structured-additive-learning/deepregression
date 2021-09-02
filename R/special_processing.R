@@ -1,8 +1,9 @@
 #' Control function to define the processor for terms in the formula
 #' 
-#' @param formula the formula to be processed
+#' @param form the formula to be processed
 #' @param data the data for the terms in the formula
 #' @param controls controls for gam terms
+#' @param output_dim the output dimension of the response
 #' @param specials_to_oz specials that should be automatically checked for 
 #' @param automatic_oz_check logical; whether to automatically check for DNNs to be orthogonalized
 #' @param param_nr integer; identifier for the distribution parameter
@@ -23,7 +24,6 @@ processor <- function(
          ti = gam_processor,
          int = int_processor,
          lin = lin_processor,
-         vc = vc_processor,
          lasso = l1_processor,
          ridge = l2_processor,
          offset = offset_processor
@@ -147,8 +147,6 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
   evaluated_gam_term <- handle_gam_term(object = term, 
                                         data = data, 
                                         controls = controls)
-  # check if smoothing parameter is set or not
-  trainable_smooth <- is.null(evaluated_gam_term[[1]]$sp)
   # get sp and S
   sp_and_S <- extract_sp_S(evaluated_gam_term)
   # extract Xs
@@ -176,26 +174,14 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
                        sp_and_S[[1]][[1]][i] * sp_and_S[[2]][[i]]))))
   }
   # define layer  
-  if(trainable_smooth){
-    layer <- function(x, ...)
-      return(
-        layer_trainable_spline(units = output_dim, 
-                               this_lambdas = rep(1, length(sp_and_S[[1]])),
-                               this_P = tf$linalg$LinearOperatorFullMatrix(sp_and_S[[2]]), 
-                               this_n = nrow(data),
-                               name = makelayername(term, 
-                                                    param_nr),
-                               ...)(x))
-  }else{
-    layer <- function(x, ...)
-      return(layer_spline(
-        name = makelayername(term, 
-                             param_nr),
-        P = as.matrix(bdiag(lapply(1:length(sp_and_S[[1]]), function(i) 
-          controls$sp_scale(data) * sp_and_S[[1]][[i]] * sp_and_S[[2]][[i]]))),
-        units = output_dim)(x))
-  }
-  
+  layer <- function(x, ...)
+    return(layer_spline(
+      name = makelayername(term, 
+                           param_nr),
+      P = as.matrix(bdiag(lapply(1:length(sp_and_S[[1]]), function(i) 
+        controls$sp_scale(data) * sp_and_S[[1]][[i]] * sp_and_S[[2]][[i]]))),
+      units = output_dim)(x))
+
   list(
     data_trafo = function() thisX %*% Z,
     predict_trafo = function(newdata) predict_gam_handler(evaluated_gam_term, newdata = newdata) %*% Z,
@@ -212,70 +198,6 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
   )
 }
 
-fac_processor <- function(term, data, output_dim, param_nr){
-  # factor_layer
-  list(
-    data_trafo = function() as.integer(data[extractvar(term)]),
-    predict_trafo = function(newdata) as.integer(newdata[extractvar(term)]),
-    input_dim = as.integer(extractlen(term, data)),
-    layer = function(x, ...)
-      return(tf$one_hot(tf$cast(x, dtype="int32"), 
-                        depth = nlevels(data[[extractvar(term)]])) %>% 
-               tf$keras$layers$Dense(
-                 units = output_dim,
-                 kernel_regularizer = tf$keras$regularizers$l2(l = extractval(term, "la")),
-                 name = makelayername(term, 
-                                      param_nr),
-                 ...
-               )),
-    coef = function(weights) as.matrix(weights)
-  )
-}
-
-vc_processor <- function(term, data, output_dim, param_nr, controls){
-  # vc (old: vc, vcc)
-  vars <- extractvar(term)
-  byt <- form2text(extractval(term, "by"))
-  # extract gam part
-  gampart <- get_gam_part(term)
-  if(length(setdiff(vars, c(extractvar(gampart), extractvar(byt))))>0)
-    stop("vc terms currently only suppoert one gam term and one by term.")
-  
-  nlev <- sapply(data[extractvar(byt)], nlevels)
-  if(any(nlev==0))
-    stop("Can only deal with factor variables as by-terms in vc().")
-  
-  output_dim <- as.integer(output_dim)
-  # extract mgcv smooth object
-  evaluated_gam_term <- handle_gam_term(object = gampart, 
-                                        data = data, 
-                                        controls = controls)
-  
-  ncolNum <- ncol(evaluated_gam_term[[1]]$X)
-  
-  P <- evaluated_gam_term[[1]]$S[[1]]
-  
-  if(length(nlev)==1){
-    layer <- vc_block(ncolNum, nlev, penalty = controls$sp_scale(data) * P, 
-                      name = makelayername(term, param_nr), units = units)
-  }else if(length(nlev)==2){
-    layer <- vvc_block(ncolNum, nlev[1], nlev[2], penalty = controls$sp_scale(data) * P, 
-                      name = makelayername(term, param_nr), units = units)
-  }else{
-    stop("vc terms with more than 2 factors currently not supported.")
-  }
-  
-  list(
-    data_trafo = function() do.call("cbind", c(evaluated_gam_term[[1]]$X, 
-                                               as.integer(data[byt]))),
-    predict_trafo = function(newdata) do.call("cbind", c(
-      predict_gam_handler(evaluated_gam_term, newdata = newdata),
-      as.integer(data[byt]))),
-    input_dim = as.integer(ncolNum + length(nlev)),
-    layer = layer,
-    coef = function(weights) as.matrix(weights)
-  )
-}
 
 l1_processor <- function(term, data, output_dim, param_nr, controls){
   # l1 (Tib)

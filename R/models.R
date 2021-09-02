@@ -12,3 +12,8 @@ build_customKeras = function() {
   return(models$build_customKeras())
 }
 
+tib_layer = function(units, la, ...) {
+  python_path <- system.file("python", package = "deepregression")
+  layers <- reticulate::import_from_path("layers", path = python_path)
+  layers$TibLinearLasso(num_outputs = units, la = la, ...)
+}

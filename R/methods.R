@@ -1,7 +1,7 @@
 #' @title Generic functions for deepregression models
 #'
 #' @param x deepregression object
-#' @param name which effect to plot as character; default plots all
+#' @param which character identifying the effect to plot; default plots all
 #' @param which_param integer of length 1.
 #' Corresponds to the distribution parameter for
 #' which the effects should be plotted.
@@ -161,7 +161,7 @@ fitted.deepregression <- function(
 
 #' Generic train function
 #'
-#' @param x object
+#' @param object object to apply fit on
 #' @param ... further arguments passed to the class-specific function
 #'
 #' @export
@@ -172,13 +172,13 @@ fit <- function (object, ...) {
 #' Fit a deepregression model (pendant to fit for keras)
 #'
 #' @param object a deepregresison object.
-#' @param batch_size 
+#' @param batch_size integer, the batch size used for mini-batch training
+#' @param epochs integer, the number of epochs to fit the model
 #' @param early_stopping logical, whether early stopping should be user.
 #' @param verbose logical, whether to print losses during training.
 #' @param view_metrics logical, whether to trigger the Viewer in RStudio / Browser.
 #' @param patience integer, number of rounds after which early stopping is done.
 #' @param save_weights logical, whether to save weights in each epoch.
-#' @param auc_callback logical, whether to use a callback for AUC
 #' @param validation_data optional specified validation data
 #' @param callbacks a list of callbacks for fitting
 #' @param convertfun function to convert R into Tensor object
@@ -285,6 +285,7 @@ fit.deepregression <- function(
 #' "linear" for linear coefficients or "smooth" for coefficients of 
 #' smooth terms
 #'
+#' @importFrom stats coef
 #' @method coef deepregression
 #' @export
 #' @rdname methodDR

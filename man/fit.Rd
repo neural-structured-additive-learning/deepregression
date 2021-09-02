@@ -7,9 +7,9 @@
 fit(object, ...)
 }
 \arguments{
-\item{...}{further arguments passed to the class-specific function}
+\item{object}{object to apply fit on}
 
-\item{x}{object}
+\item{...}{further arguments passed to the class-specific function}
 }
 \description{
 Generic train function
