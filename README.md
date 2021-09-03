@@ -11,7 +11,7 @@ This is a refactored version of the old [deepregression](https://github.com/davi
 
 To install the package, use the following command:
 ``` r
-devtools::install_github("davidruegamer/deepregression")
+devtools::install_github("neural-structured-additive-learning/deepregression")
 ```
 Note that the installation requires additional packages (see below) and their installation is currently forced by `deepregression`.
 
