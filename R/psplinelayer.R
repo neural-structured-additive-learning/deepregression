@@ -107,7 +107,7 @@ defaultSmoothingFun <- function(st, this_df, hat1, sp_scale,
   if(length(st[[1]]$S)==1 & length(st)==1){ 
     S <- st[[1]]$S[[1]]
   }else if(length(st[[1]]$S)!=1){
-    if(!anisotropic){
+    if(!anisotropic | !is.null(st[[1]]$flev)){
       S <- Reduce("+", st[[1]]$S) 
     }else{
       S <- st[[1]]$S
@@ -138,7 +138,7 @@ defaultSmoothingFun <- function(st, this_df, hat1, sp_scale,
       X <- do.call("cbind", lapply(st,"[[","X"))
     }
   }
-  st[[1]]$sp = DRO(X, df = this_df, dmat = S, hat1 = hat1)["lambda"]/
+  st[[1]]$sp = DRO(X, df = this_df, dmat = S, hat1 = hat1)["lambda"] * 
     sp_scale(X) + 
     null_space_penalty
   return(st)

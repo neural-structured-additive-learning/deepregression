@@ -8,6 +8,7 @@
 #' @param plot logical, if FALSE, only the data for plotting is returned
 #' @param grid_length the length of an equidistant grid at which a two-dimensional function
 #' is evaluated for plotting.
+#' @param type the type of plot (see generic \code{plot} function)
 #' @param ... further arguments, passed to fit, plot or predict function
 #'
 #' @method plot deepregression
@@ -21,6 +22,7 @@ plot.deepregression <- function(
   which_param = 1, # for which parameter
   plot = TRUE,
   grid_length = 40,
+  type = "b",
   ... # passed to plot function
 )
 {
@@ -64,6 +66,7 @@ plot.deepregression <- function(
                                 main = name,
                                 xlab = extractvar(name),
                                 ylab = "partial effect",
+                                type = type,
                                 ...))
           
         }
