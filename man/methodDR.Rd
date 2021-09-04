@@ -13,7 +13,15 @@
 \alias{quant.deepregression}
 \title{Generic functions for deepregression models}
 \usage{
-\method{plot}{deepregression}(x, which = NULL, which_param = 1, plot = TRUE, grid_length = 40, ...)
+\method{plot}{deepregression}(
+  x,
+  which = NULL,
+  which_param = 1,
+  plot = TRUE,
+  grid_length = 40,
+  type = "b",
+  ...
+)
 
 \method{predict}{deepregression}(
   object,
@@ -80,6 +88,10 @@ coefficients should be returned (default is first parameter)}
 \item{grid_length}{the length of an equidistant grid at which a two-dimensional function
 is evaluated for plotting.}
 
+\item{type}{either NULL (all types of coefficients are returned),
+"linear" for linear coefficients or "smooth" for coefficients of 
+smooth terms}
+
 \item{...}{arguments passed to the \code{predict} function}
 
 \item{object}{a deepregression model}
@@ -113,10 +125,6 @@ per default \code{as.matrix}}
 \item{callbacks}{a list of callbacks used for fitting}
 
 \item{convertfun}{function to convert R into Tensor object}
-
-\item{type}{either NULL (all types of coefficients are returned),
-"linear" for linear coefficients or "smooth" for coefficients of 
-smooth terms}
 
 \item{print_folds}{whether to print the current fold}
 

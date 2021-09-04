@@ -243,23 +243,18 @@ make_tfd_dist <- function(family, add_const = 1e-8, output_dim = 1L,
   if(is.null(trafo_list))
     stop("Family not implemented.")
   
-  ret_fun <- function(x) do.call(tfd_dist,
-                                 lapply(1:(x$shape[[2]]/output_dim),
-                                        function(i)
-                                          trafo_list[[i]](
-                                            tf_stride_cols(x,(i-1L)*output_dim+1L,
-                                                           (i-1L)*output_dim+output_dim)))
-  )
-
   if(family=="multinomial"){
 
     ret_fun <- function(x) tfd_dist(trafo_list[[1]](x))
 
-  }
-  if(family=="multinoulli"){
+  }else if(family=="multinoulli"){
 
     ret_fun <- function(x) tfd_dist(trafo_list[[1]](x))
 
+  }else{
+    
+    ret_fun <- create_family(tfd_dist, trafo_list, output_dim)
+    
   }
 
   attr(ret_fun, "nrparams_dist") <- length(trafo_list)
@@ -267,6 +262,36 @@ make_tfd_dist <- function(family, add_const = 1e-8, output_dim = 1L,
   return(ret_fun)
 
 }
+
+#' Function to create (custom) family
+#' 
+#' @param tfd_dist a tensorflow probability distribution
+#' @param trafo_list list of transformations h for each parameter 
+#' (e.g, \code{exp} for a variance parameter)
+#' @param output_dim integer defining the size of the response
+#' @return a function that can be used by 
+#' \code{tfp$layers$DistributionLambda} to create a new 
+#' distribuional layer
+#' @export
+#' @examples 
+#' 
+create_family <- function(tfd_dist, trafo_list, output_dim = 1L)
+{
+  
+  ret_fun <- function(x) do.call(tfd_dist,
+                                 lapply(1:(x$shape[[2]]/output_dim),
+                                        function(i)
+                                          trafo_list[[i]](
+                                            tf_stride_cols(x,(i-1L)*output_dim+1L,
+                                                           (i-1L)*output_dim+output_dim)))
+  )
+  
+  attr(ret_fun, "nrparams_dist") <- length(trafo_list)
+  
+  return(ret_fun)
+  
+}
+
 
 names_families <- function(family)
 {

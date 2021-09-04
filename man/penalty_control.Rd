@@ -6,7 +6,7 @@
 \usage{
 penalty_control(
   defaultSmoothing = NULL,
-  df = 7,
+  df = 10,
   null_space_penalty = FALSE,
   absorb_cons = FALSE,
   anisotropic = TRUE,

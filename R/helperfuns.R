@@ -287,6 +287,15 @@ extractvar <- function(term)
   
 }
 
+#' Extract value in term name
+#' 
+#' @param term character representing a formula term
+#' @param name character; the value to extract
+#' @return the value used for \code{name}
+#' @export
+#' @examples 
+#' extractval("s(a, la = 2)", "la")
+#' 
 extractval <- function(term, name)
 {
   
