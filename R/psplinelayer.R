@@ -144,6 +144,16 @@ defaultSmoothingFun <- function(st, this_df, hat1, sp_scale,
   return(st)
 }
 
+#' Function to define smoothness and call mgcv's smooth constructor
+#' 
+#' @param object character defining the model term
+#' @param data data.frame or list
+#' @param controls controls for penalization
+#' @return constructed smooth term
+#'
+#' @export
+#'
+#'
 handle_gam_term <- function(
   object,
   data,

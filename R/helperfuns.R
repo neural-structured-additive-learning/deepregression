@@ -370,7 +370,14 @@ WeightHistory <- R6::R6Class("WeightHistory",
                              ))
 
 
-#### used for indexing
+#' Function to index tensors columns
+#' 
+#' @param A tensor
+#' @param start first index
+#' @param end last index (equals start index if NULL)
+#' @return sliced tensor
+#' @export
+#' 
 tf_stride_cols <- function(A, start, end=NULL)
 {
   

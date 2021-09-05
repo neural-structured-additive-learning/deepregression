@@ -73,8 +73,7 @@ processor <- function(
           result[[i]] <- c(list_terms[[i]], do.call(lin_processor, args))
         lin_counter <- lin_counter+1
     }else{
-      if(spec %in% c("s", "te", "ti", "vc", "lasso", "ridge")) 
-        args$controls <- controls
+      args$controls <- controls
       result[[i]] <- c(list_terms[[i]], do.call(procs[[spec]], args))
     }
     
@@ -244,7 +243,7 @@ l2_processor <- function(term, data, output_dim, param_nr, controls){
   
 }
 
-offset_processor <- function(term, data, output_dim, param_nr){
+offset_processor <- function(term, data, output_dim, param_nr, controls=NULL){
   # offset
   list(
     data_trafo = function() data[extractvar(term)],
@@ -270,7 +269,7 @@ dnn_processor <- function(dnn){
 }
 
 dnn_placeholder_processor <- function(dnn){
-  function(term, data, output_dim, param_nr){
+  function(term, data, output_dim, param_nr, controls=NULL){
     list(
       data_trafo = function() data[extractvar(term)],
       predict_trafo = function(newdata) newdata[extractvar(term)],
@@ -281,7 +280,7 @@ dnn_placeholder_processor <- function(dnn){
 }
 
 dnn_image_placeholder_processor <- function(dnn, size){
-  function(term, data, output_dim, param_nr){
+  function(term, data, output_dim, param_nr, controls=NULL){
     list(
       data_trafo = function() as.data.frame(data[extractvar(term)]),
       predict_trafo = function(newdata) as.data.frame(newdata[extractvar(term)]),
