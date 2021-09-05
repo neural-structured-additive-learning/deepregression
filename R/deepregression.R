@@ -276,6 +276,8 @@ deepregression <- function(
 #' the second distribution parameter and  \code{list_pred_param[[3]]} for both
 #' distribution parameters (and then added once to \code{list_pred_param[[1]]} and
 #' once to \code{list_pred_param[[2]]})
+#' @param from_distfun_to_dist function creating a tfp distribution based on the
+#' prediction tensors and \code{dist_fun}. See \code{?distfun_to_dist}
 #' @param add_layer_shared_pred layer to extend shared layers defined in \code{mapping}
 #' @return a list with input tensors and output tensors that can be passed
 #' to, e.g., \code{keras_model}
@@ -286,6 +288,7 @@ from_preds_to_dist <- function(
   family = NULL,
   output_dim = 1L,
   mapping = NULL,
+  from_distfun_to_dist = distfun_to_dist,
   add_layer_shared_pred = function(x, units) layer_dense(x, units = units, 
                                                          use_bias = FALSE)
 )
@@ -346,12 +349,24 @@ from_preds_to_dist <- function(
   # check family
   if(!is.null(family)){
     if(is.character(family)){
-      dist_fun <- make_tfd_dist(family, output_dim = output_dim)
+      if(family %in% c("betar", "gammar", "pareto_ls", "inverse_gamma_ls")){
+        
+        dist_fun <- family_trafo_funs_special(family)
+        
+      }else{
+        
+        dist_fun <- make_tfd_dist(family, output_dim = output_dim)
+        
+      }
     }else{ # assuming that family is a dist_fun already
-    dist_fun <- family
+      
+      dist_fun <- family
+      
     }
   }else{
+    
     return(layer_concatenate_identity(unname(list_pred_param)))
+    
   }
   nrparams_dist <- attr(dist_fun, "nrparams_dist")
   
@@ -370,20 +385,27 @@ from_preds_to_dist <- function(
   # concatenate predictors
   preds <- layer_concatenate_identity(unname(list_pred_param))
   
-  ############################################################
-  ### Define Distribution Layer ####
-  
-  if(family %in% c("betar", "gammar", "pareto_ls", "inverse_gamma_ls")){
-    
-    dist_fun <- family_trafo_funs_special(family)
-    
-  }
-  
   # generate output
-  # out <- tfprobability::layer_distribution_lambda(preds, make_distribution_fn = dist_fun)
-  out <- tfp$layers$DistributionLambda(dist_fun)(preds)
+  out <- from_distfun_to_dist(dist_fun, preds)
   
   return(out)
+  
+}
+
+#' @title Function to define output distribution based on dist_fun
+#' 
+#' @param dist_fun a distribution function as defined by \code{make_tfd_dist}
+#' @param preds tensors with predictions
+#' @return a symbolic tfp distribution
+#' @export
+#' 
+distfun_to_dist <- function(dist_fun, preds)
+{
+ 
+  # tfprobability::layer_distribution_lambda(preds, make_distribution_fn = dist_fun) 
+  return(
+    tfp$layers$DistributionLambda(dist_fun)(preds)
+  )
   
 }
 
@@ -400,6 +422,7 @@ from_preds_to_dist <- function(
 #' @param monitor_metrics Further metrics to monitor
 #' @param from_preds_to_output function taking the list_pred_param outputs
 #' and transforms it into a single network output
+#' @param from_distfun_to_dist see \code{?from_preds_to_dist}
 #' @param loss the model's loss function; per default evaluated based on
 #' the arguments \code{family} and \code{weights} using \code{from_dist_to_loss}
 #' @param additional_penalty a penalty that is added to the negative log-likelihood;
@@ -418,6 +441,7 @@ keras_dr <- function(
   model_fun = keras_model,
   monitor_metrics = list(),
   from_preds_to_output = from_preds_to_dist,
+  from_distfun_to_dist = distfun_to_dist,
   loss = from_dist_to_loss(family = family, weights = weights),
   additional_penalty = NULL,
   ...
@@ -430,7 +454,8 @@ keras_dr <- function(
   outputs <- lapply(list_pred_param, function(x) x[[length(x)]])
   # define single output of network
   out <- from_preds_to_output(outputs, family, list(...)$mapping, 
-                              output_dim = output_dim)
+                              output_dim = output_dim,
+                              from_distfun_to_dist = from_distfun_to_dist)
   # define model
   model <- model_fun(inputs = unlist(inputs, recursive = TRUE),
                      outputs = out)

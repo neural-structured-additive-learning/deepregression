@@ -13,6 +13,7 @@ keras_dr(
   model_fun = keras_model,
   monitor_metrics = list(),
   from_preds_to_output = from_preds_to_dist,
+  from_distfun_to_dist = distfun_to_dist,
   loss = from_dist_to_loss(family = family, weights = weights),
   additional_penalty = NULL,
   ...
@@ -36,6 +37,8 @@ keras_dr(
 
 \item{from_preds_to_output}{function taking the list_pred_param outputs
 and transforms it into a single network output}
+
+\item{from_distfun_to_dist}{see \code{?from_preds_to_dist}}
 
 \item{loss}{the model's loss function; per default evaluated based on
 the arguments \code{family} and \code{weights} using \code{from_dist_to_loss}}

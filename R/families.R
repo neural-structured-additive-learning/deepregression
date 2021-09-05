@@ -443,6 +443,8 @@ family_trafo_funs_special <- function(family, add_const = 1e-8)
   )
 
   ret_fun <- function(x) do.call(tfd_dist, trafo_fun(x))
+  
+  attr(ret_fun, "nrparams_dist") <- 2L
 
   return(ret_fun)
 

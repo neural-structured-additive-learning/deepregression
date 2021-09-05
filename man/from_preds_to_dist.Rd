@@ -9,6 +9,7 @@ from_preds_to_dist(
   family = NULL,
   output_dim = 1L,
   mapping = NULL,
+  from_distfun_to_dist = distfun_to_dist,
   add_layer_shared_pred = function(x, units) layer_dense(x, units = units, use_bias =
     FALSE)
 )
@@ -29,6 +30,9 @@ is used for the first distribution parameter, \code{list_pred_param[[2]]} for
 the second distribution parameter and  \code{list_pred_param[[3]]} for both
 distribution parameters (and then added once to \code{list_pred_param[[1]]} and
 once to \code{list_pred_param[[2]]})}
+
+\item{from_distfun_to_dist}{function creating a tfp distribution based on the
+prediction tensors and \code{dist_fun}. See \code{?distfun_to_dist}}
 
 \item{add_layer_shared_pred}{layer to extend shared layers defined in \code{mapping}}
 }
