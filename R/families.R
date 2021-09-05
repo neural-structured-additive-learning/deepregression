@@ -285,7 +285,7 @@ family_to_tfd <- function(family)
 #' @param family character defining the distribution
 #' @return a list of transformation for each distribution parameter
 #' @export
-family_to_trafo <- function(family)
+family_to_trafo <- function(family, add_const = 1e-8)
 {
   
   trafo_list <- switch(family,

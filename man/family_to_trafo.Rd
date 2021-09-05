@@ -4,7 +4,7 @@
 \alias{family_to_trafo}
 \title{Character-to-transformation mapping function}
 \usage{
-family_to_trafo(family)
+family_to_trafo(family, add_const = 1e-08)
 }
 \arguments{
 \item{family}{character defining the distribution}
