@@ -178,6 +178,8 @@ fit <- function (object, ...) {
 #' @param batch_size integer, the batch size used for mini-batch training
 #' @param epochs integer, the number of epochs to fit the model
 #' @param early_stopping logical, whether early stopping should be user.
+#' @param early_stopping_metric character, based on which metric should
+#' early stopping be trigged (default: "val_loss")
 #' @param verbose logical, whether to print losses during training.
 #' @param view_metrics logical, whether to trigger the Viewer in RStudio / Browser.
 #' @param patience integer, number of rounds after which early stopping is done.
@@ -200,6 +202,7 @@ fit.deepregression <- function(
   batch_size = 32,
   epochs = 10,
   early_stopping = FALSE,
+  early_stopping_metric = "val_loss",
   verbose = TRUE,
   view_metrics = FALSE,
   patience = 20,
@@ -220,7 +223,8 @@ fit.deepregression <- function(
   if(early_stopping & length(callbacks)==0)
     callbacks <- append(callbacks,
                         callback_early_stopping(patience = patience,
-                                                restore_best_weights = TRUE))
+                                                restore_best_weights = TRUE,
+                                                monitor = early_stopping_metric))
   
   args <- list(...)
 
