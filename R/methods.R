@@ -5,7 +5,7 @@
 #' @param which_param integer of length 1.
 #' Corresponds to the distribution parameter for
 #' which the effects should be plotted.
-#' @param plot logical, if FALSE, only the data for plotting is returned
+#' @param only_data logical, if TRUE, only the data for plotting is returned
 #' @param grid_length the length of an equidistant grid at which a two-dimensional function
 #' is evaluated for plotting.
 #' @param type the type of plot (see generic \code{plot} function)
@@ -20,7 +20,7 @@ plot.deepregression <- function(
   which = NULL,
   # which of the nonlinear structured effects
   which_param = 1, # for which parameter
-  plot = TRUE,
+  only_data = FALSE,
   grid_length = 40,
   type = "b",
   ... # passed to plot function
@@ -56,7 +56,7 @@ plot.deepregression <- function(
     
     if(dims==1){
       
-      if(plot){ 
+      if(!only_data){ 
        
         # necessary for multivariate outcomes
         for(i in 1:NCOL(plotData[[name]]$partial_effect)){ 
@@ -75,7 +75,7 @@ plot.deepregression <- function(
       
     }else if(dims==2){
       
-      if(plot) suppressWarnings(
+      if(!only_data) suppressWarnings(
         filled.contour(
           plotData[[name]]$x,
           plotData[[name]]$y,

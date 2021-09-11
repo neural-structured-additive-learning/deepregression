@@ -376,6 +376,10 @@ from_preds_to_dist <- function(
             " Will only use ", nrparams_dist, " formula(e).")
     nr_params <- nrparams_dist
     list_pred_param <- list_pred_param[1:nrparams_dist]
+  }else if(nrparams_dist > nr_params){
+    stop("Length of list_of_formula (", nr_params, 
+         ") does not match number of distribution parameters (", 
+         nrparams_dist, ").")
   }
   
   if(is.null(names(list_pred_param))){
