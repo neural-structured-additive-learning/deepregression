@@ -183,7 +183,7 @@ handle_gam_term <- function(
 remove_df <- function(object)
 {
   
-  gsub(",\\s?df\\s?=\\s?[0-9]*","",object)
+  gsub(",\\s?df\\s?=\\s?[0-9.-]+","",object)
   
 }
 
