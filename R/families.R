@@ -186,6 +186,8 @@ names_families <- function(family)
                  laplace = c("location", "scale"),
                  log_normal = c("location", "scale"),
                  logistic = c("location", "scale"),
+                 multinomial = c("probs"),
+                 multinoulli = c("logits"),
                  negbinom = c("count", "prob"),
                  negbinom_ls = c("mean", "clutter_factor"),
                  pareto = c("concentration", "scale"),

@@ -42,12 +42,12 @@ this network.}
 See the examples for more details.}
 
 \item{family}{a character specifying the distribution. For information on
-possible distribution and parameters, see \code{\link{make_tfd_dist}}. Can also 
+possible distribution and parameters, see \code{\link{dr_families}}. Can also 
 be a custom distribution}
 
 \item{data}{data.frame or named list with input features}
 
-\item{tf_seed}{a seed for tensorflow (only works with R version >= 2.2.0)}
+\item{tf_seed}{a seed for TensorFlow (only works with R version >= 2.2.0)}
 
 \item{return_prepoc}{logical; if TRUE only the pre-processed data and layers are returned (default FALSE).}
 
@@ -61,7 +61,8 @@ like a keras model}
 \item{fitting_function}{function to fit the instantiated model when calling \code{fit}. Per default
 the keras \code{fit} function.}
 
-\item{additional_processors}{a named list with additional processors to convert the formula(s)}
+\item{additional_processors}{a named list with additional processors to convert the formula(s).
+Can have an attribute \code{"controls"} to pass additional controls}
 
 \item{penalty_options}{options for smoothing and penalty terms defined by \code{penalty_control}}
 

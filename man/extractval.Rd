@@ -4,12 +4,14 @@
 \alias{extractval}
 \title{Extract value in term name}
 \usage{
-extractval(term, name)
+extractval(term, name, null_for_missing = FALSE)
 }
 \arguments{
 \item{term}{character representing a formula term}
 
 \item{name}{character; the value to extract}
+
+\item{null_for_missing}{logical; if TRUE, returns NULL if argument is missing}
 }
 \value{
 the value used for \code{name}

@@ -15,7 +15,7 @@ gam_plot_data <- function(pp, weights, grid_length = 40)
            coef = weights,
            partial_effect = BX%*%weights)
     
-  }else{
+  }else if(length(org_values)==2){
     
     BX <- pp$data_trafo()
     
@@ -37,6 +37,10 @@ gam_plot_data <- function(pp, weights, grid_length = 40)
     plotData$x <- this_x
     plotData$y <- this_y
     plotData$partial_effect <- pmat%*%weights
+    
+  }else{
+    
+    warning("Plot for more than 2 dimensions not implemented yet.")
     
   }
   

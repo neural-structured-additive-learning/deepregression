@@ -17,7 +17,7 @@
   x,
   which = NULL,
   which_param = 1,
-  plot = TRUE,
+  only_data = FALSE,
   grid_length = 40,
   type = "b",
   ...
@@ -39,6 +39,7 @@
   batch_size = 32,
   epochs = 10,
   early_stopping = FALSE,
+  early_stopping_metric = "val_loss",
   verbose = TRUE,
   view_metrics = FALSE,
   patience = 20,
@@ -78,12 +79,13 @@
 \arguments{
 \item{x}{a deepregression object}
 
-\item{which}{character identifying the effect to plot; default plots all}
+\item{which}{character vector or number(s) identifying the effect to plot; 
+default plots all effects}
 
 \item{which_param}{integer, indicating for which distribution parameter
 coefficients should be returned (default is first parameter)}
 
-\item{plot}{whether to plot the resulting losses in each fold}
+\item{only_data}{logical, if TRUE, only the data for plotting is returned}
 
 \item{grid_length}{the length of an equidistant grid at which a two-dimensional function
 is evaluated for plotting.}
@@ -110,6 +112,9 @@ per default \code{as.matrix}}
 
 \item{early_stopping}{logical, whether early stopping should be user.}
 
+\item{early_stopping_metric}{character, based on which metric should
+early stopping be trigged (default: "val_loss")}
+
 \item{verbose}{whether to print training in each fold}
 
 \item{view_metrics}{logical, whether to trigger the Viewer in RStudio / Browser.}
@@ -125,6 +130,8 @@ per default \code{as.matrix}}
 \item{callbacks}{a list of callbacks used for fitting}
 
 \item{convertfun}{function to convert R into Tensor object}
+
+\item{plot}{whether to plot the resulting losses in each fold}
 
 \item{print_folds}{whether to print the current fold}
 

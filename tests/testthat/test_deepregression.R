@@ -67,7 +67,9 @@ test_that("simple additive model", {
   mod <- deepregression(
     y = y,
     data = data,
-    list_of_formulas = list(loc = ~ -1 + X3 + d(X1), scale = ~1 + d(X1), both = ~ g(X2)),
+    list_of_formulas = list(loc = ~ -1 + X3 + d(X1), 
+                            scale = ~1 + d(X1), 
+                            both = ~ g(X2)),
     list_of_deep_models = list(d = deep_model, g = deep_model_2),
     mapping = list(1,2,1:2),
     add_layer_shared_pred = function(x) x

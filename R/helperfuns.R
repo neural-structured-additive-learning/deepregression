@@ -291,17 +291,19 @@ extractvar <- function(term)
 #' 
 #' @param term character representing a formula term
 #' @param name character; the value to extract
+#' @param null_for_missing logical; if TRUE, returns NULL if argument is missing
 #' @return the value used for \code{name}
 #' @export
 #' @examples 
 #' extractval("s(a, la = 2)", "la")
 #' 
-extractval <- function(term, name)
+extractval <- function(term, name, null_for_missing = FALSE)
 {
   
   if(is.character(term)) term <- as.formula(paste0("~", term))
   inputs <- as.list(as.list(term)[[2]])[-1]
   if(name %in% names(inputs)) return(inputs[[name]])
+  if(null_for_missing) return(NULL)
   warning("Argument ", name, " not found. Setting it to some default.")
   if(name=="df") return(NULL) else if(name=="la") return(0.1) else return(NULL)
   

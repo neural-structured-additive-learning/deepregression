@@ -31,7 +31,7 @@ processor <- function(
   
   dots <- list(...)
   
-  if(!(is.null(dots) | (is.list(dots) && is.null(dots[[1]]))) && is.null(names(dots)))
+  if(length(dots)>0 && is.null(names(dots)))
     stop("Please provide named arguments.")
   
   procs <- c(defaults, dots)

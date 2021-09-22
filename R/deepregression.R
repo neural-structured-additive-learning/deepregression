@@ -15,11 +15,12 @@
 #' @param list_of_deep_models a named list of functions specifying a keras model.
 #' See the examples for more details.
 #' @param family a character specifying the distribution. For information on
-#' possible distribution and parameters, see \code{\link{make_tfd_dist}}. Can also 
+#' possible distribution and parameters, see \code{\link{dr_families}}. Can also 
 #' be a custom distribution
 #' @param data data.frame or named list with input features
-#' @param tf_seed a seed for tensorflow (only works with R version >= 2.2.0)
-#' @param additional_processors a named list with additional processors to convert the formula(s)
+#' @param tf_seed a seed for TensorFlow (only works with R version >= 2.2.0)
+#' @param additional_processors a named list with additional processors to convert the formula(s).
+#' Can have an attribute \code{"controls"} to pass additional controls
 #' @param return_prepoc logical; if TRUE only the pre-processed data and layers are returned (default FALSE).
 #' @param subnetwork_builder function to build each subnetwork (network for each distribution parameter;
 #' per default \code{subnetwork_init})
@@ -128,7 +129,7 @@ deepregression <- function(
 
   # for convenience transform NULL to list(NULL) for list_of_deep_models
   if(missing(list_of_deep_models) | is.null(list_of_deep_models)){
-    list_of_deep_models <- list(NULL)
+    list_of_deep_models <- list(d = NULL)
     netnames <- NULL
   }else{
     # get names of networks
@@ -190,12 +191,18 @@ deepregression <- function(
     stop("Only one-sided formulas are allowed in list_of_formulas.")
   }
   
+  # check for further controls
+  if(!is.null(attr(additional_processors, "controls")))
+    penalty_options <- c(penalty_options, attr(additional_processors, "controls"))
+  
   if(verbose) cat("Preparing additive formula(e)...")
   # parse formulas
   parsed_formulas_contents <- lapply(1:length(list_of_formulas),
                                      function(i){
                                        
                                        so <- penalty_options
+                                       if(!is.null(attr(additional_processors, "controls")))
+                                         so <- c(so, attr(additional_processors, "controls"))
                                        if(!is.null(so$df) && length(so$df)>1) so$df <- so$df[[i]]
                                        if(length(so$zero_constraint_for_smooths)>1) 
                                          so$zero_constraint_for_smooths <- 
@@ -234,10 +241,13 @@ deepregression <- function(
                     param_nr = i)
   )
     
-  
+  names(additive_predictors) <- names(list_of_formulas)
   
   # initialize model
-  model <- model_builder(additive_predictors, family, output_dim = output_dim, ...)
+  model <- model_builder(list_pred_param = additive_predictors, 
+                         family = family, 
+                         output_dim = output_dim, 
+                         ...)
 
   ret <- list(model = model,
               init_params = 
@@ -334,11 +344,15 @@ from_preds_to_dist <- function(
        
     }
     
+    # store names as they are obstructive later
+    names_lpp <- names(lpp)
+    lpp <- unname(lpp)
+    
     for(i in 1:nr_params){
       list_pred_param[[i]] <- layer_add_identity(lpp[which(sapply(mapping, function(mp) i %in% mp))])
     }
 
-    if(!is.null(names(lpp))) names(list_pred_param) <- names(lpp)[1:nr_params]
+    if(!is.null(names_lpp)) names(list_pred_param) <- names_lpp[1:nr_params]
     
   }else{
   
@@ -418,35 +432,30 @@ distfun_to_dist <- function(dist_fun, preds)
 #'
 #' @param list_pred_param list of input-output(-lists) generated from
 #' \code{subnetwork_init}
-#' @param family see \code{?deepregression}
-#' @param output_dim output dimension
 #' @param weights vector of positive values; optional (default = 1 for all observations)
 #' @param optimizer optimizer used. Per default Adam
 #' @param model_fun which function to use for model building (default \code{keras_model})
 #' @param monitor_metrics Further metrics to monitor
 #' @param from_preds_to_output function taking the list_pred_param outputs
 #' and transforms it into a single network output
-#' @param from_distfun_to_dist see \code{?from_preds_to_dist}
 #' @param loss the model's loss function; per default evaluated based on
 #' the arguments \code{family} and \code{weights} using \code{from_dist_to_loss}
 #' @param additional_penalty a penalty that is added to the negative log-likelihood;
 #' must be a function of model$trainable_weights with suitable subsetting
-#' @param ... arguments passed to other functions
+#' @param ... arguments passed to \code{from_preds_to_output}
 #' @return a list with input tensors and output tensors that can be passed
 #' to, e.g., \code{keras_model}
 #'
 #' @export
 keras_dr <- function(
   list_pred_param,
-  family,
-  output_dim = 1L,
   weights = NULL,
   optimizer = tf$keras$optimizers$Adam(),
   model_fun = keras_model,
   monitor_metrics = list(),
   from_preds_to_output = from_preds_to_dist,
-  from_distfun_to_dist = distfun_to_dist,
-  loss = from_dist_to_loss(family = family, weights = weights),
+  loss = from_dist_to_loss(family = list(...)$family, 
+                           weights = weights),
   additional_penalty = NULL,
   ...
 )
@@ -457,9 +466,7 @@ keras_dr <- function(
   # extract predictor outputs
   outputs <- lapply(list_pred_param, function(x) x[[length(x)]])
   # define single output of network
-  out <- from_preds_to_output(outputs, family, list(...)$mapping, 
-                              output_dim = output_dim,
-                              from_distfun_to_dist = from_distfun_to_dist)
+  out <- from_preds_to_output(outputs, ...)
   # define model
   model <- model_fun(inputs = unlist(inputs, recursive = TRUE),
                      outputs = out)

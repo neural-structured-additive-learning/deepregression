@@ -1,7 +1,8 @@
 #' @title Generic functions for deepregression models
 #'
 #' @param x deepregression object
-#' @param which character identifying the effect to plot; default plots all
+#' @param which character vector or number(s) identifying the effect to plot; 
+#' default plots all effects
 #' @param which_param integer of length 1.
 #' Corresponds to the distribution parameter for
 #' which the effects should be plotted.
@@ -33,7 +34,11 @@ plot.deepregression <- function(
   names <- names_all[plotable]
   
   if(!is.null(which)){
-    which <- intersect(names, which)
+    if(!is.character(which)){
+      which <- names[which]
+    }else{
+      which <- intersect(names, which)
+    }
     if(length(which)==0)
       return("No smooth effects. Nothing to plot.")
   }else if(length(names)==0){
@@ -75,19 +80,27 @@ plot.deepregression <- function(
       
     }else if(dims==2){
       
-      if(!only_data) suppressWarnings(
-        filled.contour(
-          plotData[[name]]$x,
-          plotData[[name]]$y,
-          matrix(plotData[[name]]$partial_effect, 
-                 ncol=length(plotData[[name]]$y)),
-          ...,
-          xlab = colnames(plotData[[name]]$df)[1],
-          ylab = colnames(plotData[[name]]$df)[2],
-          # zlab = "partial effect",
-          main = name
-        )
-      )
+      if(!only_data){ 
+        
+        for(k in 1:NCOL(plotData[[name]]$partial_effect)){
+          
+          suppressWarnings(
+            filled.contour(
+              plotData[[name]]$x,
+              plotData[[name]]$y,
+              matrix(plotData[[name]]$partial_effect[,k], 
+                     ncol=length(plotData[[name]]$y)),
+              ...,
+              xlab = colnames(plotData[[name]]$df)[1],
+              ylab = colnames(plotData[[name]]$df)[2],
+              # zlab = "partial effect",
+              main = name
+            )
+          )
+          
+        }
+        
+      }
       
     }else{
       warning("Plotting of effects with ", dims,

@@ -6,15 +6,12 @@
 \usage{
 keras_dr(
   list_pred_param,
-  family,
-  output_dim = 1L,
   weights = NULL,
   optimizer = tf$keras$optimizers$Adam(),
   model_fun = keras_model,
   monitor_metrics = list(),
   from_preds_to_output = from_preds_to_dist,
-  from_distfun_to_dist = distfun_to_dist,
-  loss = from_dist_to_loss(family = family, weights = weights),
+  loss = from_dist_to_loss(family = list(...)$family, weights = weights),
   additional_penalty = NULL,
   ...
 )
@@ -22,10 +19,6 @@ keras_dr(
 \arguments{
 \item{list_pred_param}{list of input-output(-lists) generated from
 \code{subnetwork_init}}
-
-\item{family}{see \code{?deepregression}}
-
-\item{output_dim}{output dimension}
 
 \item{weights}{vector of positive values; optional (default = 1 for all observations)}
 
@@ -38,15 +31,13 @@ keras_dr(
 \item{from_preds_to_output}{function taking the list_pred_param outputs
 and transforms it into a single network output}
 
-\item{from_distfun_to_dist}{see \code{?from_preds_to_dist}}
-
 \item{loss}{the model's loss function; per default evaluated based on
 the arguments \code{family} and \code{weights} using \code{from_dist_to_loss}}
 
 \item{additional_penalty}{a penalty that is added to the negative log-likelihood;
 must be a function of model$trainable_weights with suitable subsetting}
 
-\item{...}{arguments passed to other functions}
+\item{...}{arguments passed to \code{from_preds_to_output}}
 }
 \value{
 a list with input tensors and output tensors that can be passed

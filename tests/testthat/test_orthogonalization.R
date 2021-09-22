@@ -46,8 +46,7 @@ test_that("orthogonalization", {
         y = y,
         data = data,
         list_of_formulas = list(loc = as.formula(form), scale = ~1),
-        list_of_deep_models = list(d = deep_model),
-        cv_folds = 2
+        list_of_deep_models = list(d = deep_model)
       )
     )
     mod %>% fit(epochs=1, verbose = FALSE, view_metrics = FALSE)

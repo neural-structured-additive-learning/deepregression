@@ -74,7 +74,17 @@ subnetwork_init <- function(pp, deep_top = NULL,
   
   
 }
-
+#' Convenience layer function
+#' 
+#' @param inputs list of tensors
+#' @return tensor
+#' @details convenience layers to work with list of inputs where \code{inputs}
+#' can also have length one
+#' 
+#' @export
+#' @rdname convenience_layers
+#' 
+#' 
 layer_add_identity <- function(inputs)
 {
   
@@ -83,6 +93,8 @@ layer_add_identity <- function(inputs)
   
 }
 
+#' @export
+#' @rdname convenience_layers
 layer_concatenate_identity <- function(inputs)
 {
   
