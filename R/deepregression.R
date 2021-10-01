@@ -15,8 +15,8 @@
 #' @param list_of_deep_models a named list of functions specifying a keras model.
 #' See the examples for more details.
 #' @param family a character specifying the distribution. For information on
-#' possible distribution and parameters, see \code{\link{dr_families}}. Can also 
-#' be a custom distribution
+#' possible distribution and parameters, see \code{\link{make_tfd_dist}}. Can also 
+#' be a custom distribution.
 #' @param data data.frame or named list with input features
 #' @param tf_seed a seed for TensorFlow (only works with R version >= 2.2.0)
 #' @param additional_processors a named list with additional processors to convert the formula(s).
@@ -30,8 +30,8 @@
 #' like a keras model
 #' @param fitting_function function to fit the instantiated model when calling \code{fit}. Per default
 #' the keras \code{fit} function.
-#' @param penalty_options options for smoothing and penalty terms defined by \code{penalty_control}
-#' @param orthog_options options for the orthgonalization defined by \code{orthog_control}
+#' @param penalty_options options for smoothing and penalty terms defined by \code{\link{penalty_control}}
+#' @param orthog_options options for the orthgonalization defined by \code{\link{orthog_control}}
 #' @param verbose logical; whether to print progress of model initialization to console
 #' @param ... further arguments passed to the \code{model_builder} function
 #'
@@ -42,6 +42,12 @@
 #' @importFrom graphics abline filled.contour matplot par points
 #' @importFrom stats as.formula model.matrix terms terms.formula uniroot var dbeta coef predict
 #' @importFrom methods slotNames is as
+#'
+#' @references 
+#' Ruegamer, D. et al. (2021):
+#' deepregression: a Flexible Neural Network Framework for Semi-Structured Deep Distributional Regression.
+#' \url{https://arxiv.org/abs/2104.02705}.
+#' 
 #'
 #' @export
 #'
@@ -101,7 +107,7 @@ deepregression <- function(
   additional_processors = list(),
   penalty_options = penalty_control(),
   orthog_options = orthog_control(),
-  verbose = TRUE,
+  verbose = FALSE,
   ...
 )
 {
@@ -252,6 +258,7 @@ deepregression <- function(
            "list_of_formulas.")
   }
   
+  if(verbose) cat("Preparing subnetworks...")
   # create additive predictor per formula
   additive_predictors <- lapply(1:length(parsed_formulas_contents), function(i)
     subnetwork_builder[[i]](parsed_formulas_contents[[i]], 
@@ -260,14 +267,17 @@ deepregression <- function(
                             split_fun = orthog_options$split_fun,
                             param_nr = i)
   )
+  if(verbose) cat(" Done.\n")
     
   names(additive_predictors) <- names(list_of_formulas)
   
   # initialize model
+  if(verbose) cat("Building model...")
   model <- model_builder(list_pred_param = additive_predictors, 
                          family = family, 
                          output_dim = output_dim, 
                          ...)
+  if(verbose) cat(" Done.\n")
 
   ret <- list(model = model,
               init_params = 

@@ -19,7 +19,7 @@ deepregression(
   additional_processors = list(),
   penalty_options = penalty_control(),
   orthog_options = orthog_control(),
-  verbose = TRUE,
+  verbose = FALSE,
   ...
 )
 }
@@ -42,8 +42,8 @@ this network.}
 See the examples for more details.}
 
 \item{family}{a character specifying the distribution. For information on
-possible distribution and parameters, see \code{\link{dr_families}}. Can also 
-be a custom distribution}
+possible distribution and parameters, see \code{\link{make_tfd_dist}}. Can also 
+be a custom distribution.}
 
 \item{data}{data.frame or named list with input features}
 
@@ -65,9 +65,9 @@ the keras \code{fit} function.}
 \item{additional_processors}{a named list with additional processors to convert the formula(s).
 Can have an attribute \code{"controls"} to pass additional controls}
 
-\item{penalty_options}{options for smoothing and penalty terms defined by \code{penalty_control}}
+\item{penalty_options}{options for smoothing and penalty terms defined by \code{\link{penalty_control}}}
 
-\item{orthog_options}{options for the orthgonalization defined by \code{orthog_control}}
+\item{orthog_options}{options for the orthgonalization defined by \code{\link{orthog_control}}}
 
 \item{verbose}{logical; whether to print progress of model initialization to console}
 
@@ -118,4 +118,9 @@ mod <- deepregression(
   mapping = list(1,2,1:2)
 )
 
+}
+\references{
+Ruegamer, D. et al. (2021):
+deepregression: a Flexible Neural Network Framework for Semi-Structured Deep Distributional Regression.
+\url{https://arxiv.org/abs/2104.02705}.
 }

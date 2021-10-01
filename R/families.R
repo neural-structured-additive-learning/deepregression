@@ -285,6 +285,7 @@ family_to_tfd <- function(family)
 #' Character-to-transformation mapping function
 #' 
 #' @param family character defining the distribution
+#' @param add_const see \code{\link{make_tfd_dist}}
 #' @return a list of transformation for each distribution parameter
 #' @export
 family_to_trafo <- function(family, add_const = 1e-8)

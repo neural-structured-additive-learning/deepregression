@@ -17,16 +17,18 @@ test_that("subnetwork_init", {
   specials_to_oz = c("d")
   
   
-  pp <- processor(form = form, 
-                  d = d,
-                  specials_to_oz = specials_to_oz, 
-                  data = data,
-                  output_dim = output_dim,
-                  automatic_oz_check = TRUE,
-                  param_nr = 1,
-                  controls = controls)
+  pp <- suppressWarnings(
+    processor(form = form, 
+              d = d,
+              specials_to_oz = specials_to_oz, 
+              data = data,
+              output_dim = output_dim,
+              automatic_oz_check = TRUE,
+              param_nr = 1,
+              controls = controls)
+  )
   
-  res <- subnetwork_init(pp)
+  res <- suppressWarnings(subnetwork_init(pp))
   expect_true(all(sapply(res[[1]], function(x) "python.builtin.object" %in% class(x))))
   expect_true("python.builtin.object" %in% class(res[[2]]))
   

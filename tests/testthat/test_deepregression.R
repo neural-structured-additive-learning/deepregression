@@ -74,7 +74,11 @@ test_that("simple additive model", {
     mapping = list(1,2,1:2),
     add_layer_shared_pred = function(x) x
   )
+  
+  expect_is(mod, "deepregression")
+  
   mod %>% fit(epochs = 2)
+  
 })
 
 
@@ -97,6 +101,8 @@ test_that("generalized additive model", {
     list_of_deep_models = list(d = deep_model, g = deep_model)
   )
   
+  expect_is(mod, "deepregression")
+  
   mod %>% fit(epochs = 2)
 
   # # 2 deep 1 structured no intercept
@@ -106,6 +112,9 @@ test_that("generalized additive model", {
     list_of_formulas = list(loc = ~ X1 + d(X1) + g(X2), scale = ~ -1 + s(X3, bs = "tp")),
     list_of_deep_models = list(d = deep_model, g = deep_model)
   )
+  
+  expect_is(mod, "deepregression")
+  
   mod %>% fit(epochs = 2)
 })
 
@@ -140,6 +149,8 @@ test_that("deep generalized additive model with LSS", {
     family = "normal"
   )
   
+  expect_is(mod, "deepregression")
+  
   mod %>% fit(epochs = 2)
 })
 
@@ -158,6 +169,8 @@ test_that("multivariate response", {
     data = data,
     list_of_formulas = list(loc = ~ x.1 + x.2, scale = ~1)
   )
+  
+  expect_is(mod, "deepregression")
   
   mod %>% fit(epochs = 3L)
   

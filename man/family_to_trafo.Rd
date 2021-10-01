@@ -8,6 +8,8 @@ family_to_trafo(family, add_const = 1e-08)
 }
 \arguments{
 \item{family}{character defining the distribution}
+
+\item{add_const}{see \code{\link{make_tfd_dist}}}
 }
 \value{
 a list of transformation for each distribution parameter
