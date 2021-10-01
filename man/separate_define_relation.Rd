@@ -8,7 +8,8 @@ separate_define_relation(
   form,
   specials,
   specials_to_oz,
-  automatic_oz_check = TRUE
+  automatic_oz_check = TRUE,
+  identify_intercept = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ separate_define_relation(
 \item{specials_to_oz}{parts of the formula to orthogonalize}
 
 \item{automatic_oz_check}{logical; automatically check if terms must be orthogonalized}
+
+\item{identify_intercept}{logical; whether to make the intercept identifiable}
 }
 \value{
 Returns a list of formula components with ids and 

@@ -7,7 +7,8 @@
 orthog_control(
   split_fun = split_model,
   orthog_type = c("tf", "manual"),
-  orthogonalize = TRUE,
+  orthogonalize = options()$orthogonalize,
+  identify_intercept = options()$identify_intercept,
   deep_top = NULL
 )
 }
@@ -24,7 +25,10 @@ the QR decomposition is calculated before model fitting,
 otherwise (\code{"tf"}) a QR is calculated in each batch iteration via TF.
 The first only works well for larger batch sizes or ideally batch_size == NROW(y).}
 
-\item{orthogonalize}{logical; if set to \code{FALSE}, orthogonalization is deactivated}
+\item{orthogonalize}{logical; if set to \code{TRUE}, automatic orthogonalization is activated}
+
+\item{identify_intercept}{whether to orthogonalize the deep network w.r.t. the intercept
+to make the intercept identifiable}
 
 \item{deep_top}{function; optional function to put on top of the deep network instead
 of splitting the function using \code{split_fun}}

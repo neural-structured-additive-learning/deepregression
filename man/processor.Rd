@@ -12,6 +12,7 @@ processor(
   param_nr,
   specials_to_oz = c(),
   automatic_oz_check = TRUE,
+  identify_intercept = FALSE,
   ...
 )
 }
@@ -29,6 +30,8 @@ processor(
 \item{specials_to_oz}{specials that should be automatically checked for}
 
 \item{automatic_oz_check}{logical; whether to automatically check for DNNs to be orthogonalized}
+
+\item{identify_intercept}{logical; whether to make the intercept automatically identifiable}
 
 \item{...}{further processors}
 }

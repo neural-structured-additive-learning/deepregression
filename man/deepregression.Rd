@@ -52,7 +52,8 @@ be a custom distribution}
 \item{return_prepoc}{logical; if TRUE only the pre-processed data and layers are returned (default FALSE).}
 
 \item{subnetwork_builder}{function to build each subnetwork (network for each distribution parameter;
-per default \code{subnetwork_init})}
+per default \code{subnetwork_init}). Can also be a list of the same size as
+\code{list_of_formulas}.}
 
 \item{model_builder}{function to build the model based on additive predictors (per default \code{keras_dr}).
 In order to work with the methods defined for the class \code{deepregression}, the model should behave

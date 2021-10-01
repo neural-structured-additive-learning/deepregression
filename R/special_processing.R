@@ -6,6 +6,7 @@
 #' @param output_dim the output dimension of the response
 #' @param specials_to_oz specials that should be automatically checked for 
 #' @param automatic_oz_check logical; whether to automatically check for DNNs to be orthogonalized
+#' @param identify_intercept logical; whether to make the intercept automatically identifiable
 #' @param param_nr integer; identifier for the distribution parameter
 #' @param ... further processors
 #' @return returns a processor function
@@ -16,6 +17,7 @@ processor <- function(
   output_dim, param_nr, 
   specials_to_oz = c(), 
   automatic_oz_check = TRUE, 
+  identify_intercept = FALSE,
   ...){
   
   defaults <- 
@@ -66,14 +68,13 @@ processor <- function(
     lin_counter <- 1
     args$term = list_terms[[i]]$term
     spec <- get_special(list_terms[[i]]$term, specials = specials)
-    args$controls <- NULL 
+    args$controls <- controls 
     if(is.null(spec)){
       if(args$term=="(Intercept)")
         result[[i]] <- c(list_terms[[i]], do.call(int_processor, args)) else
           result[[i]] <- c(list_terms[[i]], do.call(lin_processor, args))
         lin_counter <- lin_counter+1
     }else{
-      args$controls <- controls
       result[[i]] <- c(list_terms[[i]], do.call(procs[[spec]], args))
     }
     
@@ -83,10 +84,22 @@ processor <- function(
   
 }
 
-int_processor <- function(term, data, output_dim, param_nr){
+int_processor <- function(term, data, output_dim, param_nr, controls){
   
   if(term=="(Intercept)") term <- "1"
   data <- as.data.frame(data[[1]])
+  
+  if(controls$with_layer){
+    layer = function(x, ...)
+      return(
+        tf$keras$layers$Dense(
+          units = output_dim,
+          use_bias = FALSE,
+          name = makelayername(term, param_nr),
+          ...)(x))
+  }else{
+    layer = tf$identity
+  }
   
   list(
     data_trafo = function() matrix(rep(1, nrow(data)), ncol=1),
@@ -96,25 +109,31 @@ int_processor <- function(term, data, output_dim, param_nr){
       )
     },
     input_dim = 1L,
-    layer = function(x, ...)
-      return(
-        tf$keras$layers$Dense(
-          units = output_dim,
-          use_bias = FALSE,
-          name = makelayername(term, param_nr),
-          ...)(x)),
+    layer = layer,
     coef = function(weights)  as.matrix(weights)
   )
   
   
 }
 
-lin_processor <- function(term, data, output_dim, param_nr){
+lin_processor <- function(term, data, output_dim, param_nr, controls){
   
   
   if(grepl("lin(.*)", term)) term <- paste0(paste(extractvar(term),
                                                   collapse = " + "),
                                             "+ 0 ")
+  
+  if(controls$with_layer){
+    layer = function(x, ...)
+      return(
+        tf$keras$layers$Dense(
+          units = output_dim,
+          use_bias = FALSE,
+          name = makelayername(term, param_nr),
+          ...)(x))
+  }else{
+    layer = tf$identity
+  }
   
   list(
     data_trafo = function() model.matrix(object = as.formula(paste0("~ -1 + ", term)), 
@@ -127,13 +146,7 @@ lin_processor <- function(term, data, output_dim, param_nr){
     },
     input_dim = as.integer(ncol(model.matrix(object = as.formula(paste0("~ -1 +", term)), 
                                   data = data))),
-    layer = function(x, ...)
-      return(
-        tf$keras$layers$Dense(
-          units = output_dim,
-          use_bias = FALSE,
-          name = makelayername(term, param_nr),
-          ...)(x)),
+    layer = layer,
     coef = function(weights)  as.matrix(weights)
   )
   
@@ -173,13 +186,17 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
                        sp_and_S[[1]][[1]][i] * sp_and_S[[2]][[i]]))))
   }
   # define layer  
-  layer <- function(x, ...)
-    return(layer_spline(
-      name = makelayername(term, 
-                           param_nr),
-      P = as.matrix(bdiag(lapply(1:length(sp_and_S[[1]]), function(i) 
-        controls$sp_scale(data) * sp_and_S[[1]][[i]] * sp_and_S[[2]][[i]]))),
-      units = output_dim)(x))
+  if(controls$with_layer){
+    layer = function(x, ...)
+      return(layer_spline(
+        name = makelayername(term, 
+                             param_nr),
+        P = as.matrix(bdiag(lapply(1:length(sp_and_S[[1]]), function(i) 
+          controls$sp_scale(data) * sp_and_S[[1]][[i]] * sp_and_S[[2]][[i]]))),
+        units = output_dim)(x))
+  }else{
+    layer = tf$identity
+  }
 
   list(
     data_trafo = function() thisX %*% Z,
@@ -225,10 +242,8 @@ l1_processor <- function(term, data, output_dim, param_nr, controls){
 
 l2_processor <- function(term, data, output_dim, param_nr, controls){
   # ridge
-  list(
-    data_trafo = function() data[extractvar(term)],
-    predict_trafo = function(newdata) newdata[extractvar(term)],
-    input_dim = as.integer(extractlen(term, data)),
+  
+  if(controls$with_layer){
     layer = function(x, ...)
       return(tf$keras$layers$Dense(units = output_dim, 
                                    kernel_regularizer = 
@@ -237,7 +252,16 @@ l2_processor <- function(term, data, output_dim, param_nr, controls){
                                          extractval(term, "la")),
                                    name = makelayername(term, 
                                                         param_nr),
-                                   ...)(x)),
+                                   ...)(x))
+  }else{
+    layer = tf$identity
+  }
+  
+  list(
+    data_trafo = function() data[extractvar(term)],
+    predict_trafo = function(newdata) newdata[extractvar(term)],
+    input_dim = as.integer(extractlen(term, data)),
+    layer = layer,
     coef = function(weights)  as.matrix(weights)
   )
   

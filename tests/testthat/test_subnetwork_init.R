@@ -7,6 +7,7 @@ test_that("subnetwork_init", {
                     z = rnorm(100), u = rnorm(100),
                     w = rnorm(100))
   controls = penalty_control()
+  controls$with_layer <- TRUE
   output_dim = 1L
   param_nr = 1L
   d = dnn_placeholder_processor(function(x) x %>% 

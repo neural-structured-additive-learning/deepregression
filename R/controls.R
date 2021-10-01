@@ -66,7 +66,9 @@ penalty_control <- function(defaultSmoothing = NULL,
 #' the QR decomposition is calculated before model fitting, 
 #' otherwise (\code{"tf"}) a QR is calculated in each batch iteration via TF.
 #' The first only works well for larger batch sizes or ideally batch_size == NROW(y).
-#' @param orthogonalize logical; if set to \code{FALSE}, orthogonalization is deactivated
+#' @param orthogonalize logical; if set to \code{TRUE}, automatic orthogonalization is activated
+#' @param identify_intercept whether to orthogonalize the deep network w.r.t. the intercept
+#' to make the intercept identifiable
 #' @param deep_top function; optional function to put on top of the deep network instead
 #' of splitting the function using \code{split_fun}
 #' @return Returns a list with options
@@ -74,7 +76,8 @@ penalty_control <- function(defaultSmoothing = NULL,
 #'
 orthog_control <- function(split_fun = split_model,
                            orthog_type = c("tf", "manual"),
-                           orthogonalize = TRUE,
+                           orthogonalize = options()$orthogonalize,
+                           identify_intercept = options()$identify_intercept,
                            deep_top = NULL)
 {
   
@@ -89,6 +92,7 @@ orthog_control <- function(split_fun = split_model,
   return(list(split_fun = split_fun,
               orthog_type = orthog_type,
               orthogonalize = orthogonalize,
+              identify_intercept = identify_intercept,
               orthog_fun = orthog_fun,
               deep_top = deep_top))
   

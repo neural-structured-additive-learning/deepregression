@@ -74,6 +74,7 @@ split_model <- function(model, where = -1)
 #' @param specials specials in formula to handle separately
 #' @param specials_to_oz parts of the formula to orthogonalize
 #' @param automatic_oz_check logical; automatically check if terms must be orthogonalized
+#' @param identify_intercept logical; whether to make the intercept identifiable
 #' @return Returns a list of formula components with ids and 
 #' assignments for orthogonalization
 #' 
@@ -82,7 +83,9 @@ separate_define_relation <- function(
   form, 
   specials, 
   specials_to_oz, 
-  automatic_oz_check = TRUE)
+  automatic_oz_check = TRUE,
+  identify_intercept = FALSE
+  )
 {
   
   tf <- terms.formula(form, specials = specials)
@@ -122,7 +125,7 @@ separate_define_relation <- function(
             i != j
         })]
         # TODO: check if this is actually necessary
-        if(has_intercept) these_terms <- c("1", these_terms)
+        if(has_intercept & identify_intercept) these_terms <- c("1", these_terms)
         if(length(these_terms)>0) oz_to_add[[i]] <- 
           paste0(" %OZ% (", paste(these_terms, collapse = "+"), ")")
         

@@ -6,6 +6,7 @@ test_that("loop_through_pfc_and_call_trafo", {
   form = ~ 1 + d(x) + s(x) + lasso(z) + ridge(z) + te(y) %OZ% (y + s(x)) + d(z) %OZ% s(x) + u
   data = data.frame(x = rnorm(100), y = rnorm(100), z = rnorm(100), u = rnorm(100))
   controls = penalty_control()
+  controls$with_layer <- TRUE
   output_dim = 1L
   param_nr = 1L
   d = dnn_placeholder_processor(function(x) layer_dense(x, units=1L))

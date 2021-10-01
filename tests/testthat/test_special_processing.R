@@ -4,14 +4,18 @@ test_that("lin_processor", {
   
   data = data.frame(a=rnorm(2), b=rnorm(2), c=rnorm(2))
   term="lin(a + b + c)"
-  expect_equal(lin_processor(term, data, 1, 1)$input_dim, 3)
+  expect_equal(lin_processor(term, data, 1, 1, 
+                             controls = list(with_layer = TRUE))$input_dim, 3)
   term="lin(1 + b + c)"
-  expect_equal(lin_processor(term, data, 1, 1)$input_dim, 2)
+  expect_equal(lin_processor(term, data, 1, 1,
+                             controls = list(with_layer = TRUE))$input_dim, 2)
   # -> 2 because intercepts must be added explicitly to the formula
   term="lin(a, b, c)"
-  expect_equal(lin_processor(term, data, 1, 1)$input_dim, 3)
+  expect_equal(lin_processor(term, data, 1, 1, 
+                             controls = list(with_layer = TRUE))$input_dim, 3)
   term="lin(1, b, c)" # intercept is treated separately
-  expect_equal(lin_processor(term, data, 1, 1)$input_dim, 2)
+  expect_equal(lin_processor(term, data, 1, 1, 
+                             controls = list(with_layer = TRUE))$input_dim, 2)
   
 })
 
@@ -20,10 +24,11 @@ test_that("processor", {
   form = ~ 1 + d(x) + s(x) + lasso(z) + ridge(z) + te(y) %OZ% (y + s(x)) + d(z) %OZ% s(x) + u
   data = data.frame(x = rnorm(100), y = rnorm(100), z = rnorm(100), u = rnorm(100))
   controls = penalty_control()
+  controls$with_layer <- TRUE
   output_dim = 1L
   param_nr = 1L
   d = dnn_placeholder_processor(function(x) layer_dense(x, units=1L))
-  specials = c("s", "te", "ti", "vc", "lasso", "ridge", "offset", "vi", "fm", "vfm")
+  specials = c("s", "te", "ti", "lasso", "ridge", "offset")
   specials_to_oz = c("d")
   
   

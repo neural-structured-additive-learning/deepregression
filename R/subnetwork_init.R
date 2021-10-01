@@ -15,20 +15,7 @@ subnetwork_init <- function(pp, deep_top = NULL,
 {
   
   
-  inputs <- lapply(pp, function(ap){ 
-    
-    if(length(ap$input_dim)>1)
-      inp <- as.list(as.integer(ap$input_dim)) else
-        inp <- list(as.integer(ap$input_dim))
-      
-      return(
-        tf$keras$Input(
-          shape = inp,
-          name = paste0("input_", strtrim(make_valid_layername(ap$term), 30),
-                        "_", param_nr))
-      )
-  }
-  )
+  inputs <- makeInputs(pp, param_nr = param_nr)
   
   if(all(sapply(pp, function(x) is.null(x$right_from_oz)))){ # if there is no term to orthogonalize
     
@@ -100,5 +87,35 @@ layer_concatenate_identity <- function(inputs)
   
   if(length(inputs)==1) return(inputs[[1]])
   return(tf$keras$layers$concatenate(inputs))
+  
+}
+
+
+#' Convenience layer function
+#' 
+#' @param pp processed predictors
+#' @param param_nr integer for the parameter
+#' @return input tensors with appropriate names
+#' 
+#' @export
+#' 
+#' 
+makeInputs <- function(pp, param_nr)
+{
+ 
+  lapply(pp, function(ap){ 
+    
+    if(length(ap$input_dim)>1)
+      inp <- as.list(as.integer(ap$input_dim)) else
+        inp <- list(as.integer(ap$input_dim))
+      
+      return(
+        tf$keras$Input(
+          shape = inp,
+          name = paste0("input_", strtrim(make_valid_layername(ap$term), 30),
+                        "_", param_nr))
+      )
+  }
+  ) 
   
 }

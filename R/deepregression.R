@@ -23,7 +23,8 @@
 #' Can have an attribute \code{"controls"} to pass additional controls
 #' @param return_prepoc logical; if TRUE only the pre-processed data and layers are returned (default FALSE).
 #' @param subnetwork_builder function to build each subnetwork (network for each distribution parameter;
-#' per default \code{subnetwork_init})
+#' per default \code{subnetwork_init}). Can also be a list of the same size as
+#' \code{list_of_formulas}.
 #' @param model_builder function to build the model based on additive predictors (per default \code{keras_dr}).
 #' In order to work with the methods defined for the class \code{deepregression}, the model should behave
 #' like a keras model
@@ -207,6 +208,11 @@ deepregression <- function(
                                        if(length(so$zero_constraint_for_smooths)>1) 
                                          so$zero_constraint_for_smooths <- 
                                            so$zero_constraint_for_smooths[i]
+                                       if(!is.null(attr(list_of_formulas[[i]], "with_layer"))){
+                                         so$with_layer <- attr(list_of_formulas[[i]], "with_layer")
+                                       }else{
+                                         so$with_layer <- TRUE
+                                       }
                                        
                                        res <- do.call("processor", 
                                                       c(list(form = list_of_formulas[[i]],
@@ -217,7 +223,9 @@ deepregression <- function(
                                                            specials_to_oz = 
                                                              specials_to_oz, 
                                                            automatic_oz_check = 
-                                                             automatic_oz_check
+                                                             automatic_oz_check,
+                                                           identify_intercept = 
+                                                             orthog_options$identify_intercept
                                                            ),
                                                         list_of_deep_models,
                                                         additional_processors))
@@ -232,13 +240,25 @@ deepregression <- function(
   if(return_prepoc)
     return(parsed_formulas_contents)
   
+  if(!is.list(subnetwork_builder)){
+    subnetwork_builder <- list(subnetwork_builder)[
+      rep(1,length(parsed_formulas_contents))
+      ]
+  }else{
+    if(length(parsed_formulas_contents) != 
+       length(subnetwork_builder))
+      stop("If subnetwork_builder is a list",
+           ", it must be of the same size as the ",
+           "list_of_formulas.")
+  }
+  
   # create additive predictor per formula
   additive_predictors <- lapply(1:length(parsed_formulas_contents), function(i)
-    subnetwork_builder(parsed_formulas_contents[[i]], 
-                    deep_top = orthog_options$deep_top,
-                    orthog_fun = orthog_options$orthog_fun, 
-                    split_fun = orthog_options$split_fun,
-                    param_nr = i)
+    subnetwork_builder[[i]](parsed_formulas_contents[[i]], 
+                            deep_top = orthog_options$deep_top,
+                            orthog_fun = orthog_options$orthog_fun, 
+                            split_fun = orthog_options$split_fun,
+                            param_nr = i)
   )
     
   names(additive_predictors) <- names(list_of_formulas)
@@ -468,7 +488,7 @@ keras_dr <- function(
   # define single output of network
   out <- from_preds_to_output(outputs, ...)
   # define model
-  model <- model_fun(inputs = unlist(inputs, recursive = TRUE),
+  model <- model_fun(inputs = unname(unlist(inputs, recursive = TRUE)),
                      outputs = out)
   # additional loss
   if(!is.null(additional_penalty)){
