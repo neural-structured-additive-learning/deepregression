@@ -22,6 +22,3 @@ distribuional layer
 \description{
 Function to create (custom) family
 }
-\examples{
-
-}

@@ -1,15 +1,24 @@
 .onLoad <- function(libname, pkgname) { # nocov start
-  suppressMessages(reticulate::configure_environment(pkgname))
-  suppressMessages(try(tf$compat$v1$logging$set_verbosity(tf$compat$v1$logging$ERROR)))
-  suppressMessages(try(keras::use_implementation("tensorflow"), silent = TRUE))
-  # catch TFP error
-  suppressMessages(try(invisible(tfprobability::tfd_normal(0,1)), silent = TRUE))
-  # options
-  options(orthogonalize = TRUE,
-          identify_intercept = FALSE
-  )
-} # nocov end
-
+  if(!reticulate::py_available())
+  {
+    res <- suppressMessages(reticulate::configure_environment(pkgname))
+    if(res){
+      suppressMessages(try(tf$get_logger()$setLevel('ERROR')))
+      suppressMessages(try(tf$autograph$set_verbosity(level=0L)))
+      suppressMessages(try(keras::use_implementation("tensorflow"), silent = TRUE))
+      # catch TFP error
+      suppressMessages(try(invisible(tfprobability::tfd_normal(0,1)), silent = TRUE))
+    }else{
+      tf <<- reticulate::import("tensorflow", delay_load = TRUE)
+      keras <<- reticulate::import("keras", delay_load = TRUE)
+      tfp <<- reticulate::import("tensorflow_probability", delay_load = TRUE)
+    }
+    # options
+    options(orthogonalize = TRUE,
+            identify_intercept = FALSE
+    )
+  } # nocov end
+}
 #' Function to check python environment and install necessary packages
 #'
 #' Note: The package currently relies on tensorflow version 2.0.0 which is

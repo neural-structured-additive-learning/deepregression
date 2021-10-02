@@ -305,16 +305,18 @@ fit.deepregression <- function(
 #' @param type either NULL (all types of coefficients are returned),
 #' "linear" for linear coefficients or "smooth" for coefficients of 
 #' smooth terms
+#' @param ... not used
 #'
 #' @importFrom stats coef
 #' @method coef deepregression
-#' @export
 #' @rdname methodDR
+#' @export
 #'
 coef.deepregression <- function(
   object,
   which_param = 1,
-  type = NULL
+  type = NULL,
+  ...
 )
 {
   

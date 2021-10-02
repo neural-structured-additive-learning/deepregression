@@ -51,7 +51,7 @@
   ...
 )
 
-\method{coef}{deepregression}(object, which_param = 1, type = NULL)
+\method{coef}{deepregression}(object, which_param = 1, type = NULL, ...)
 
 \method{print}{deepregression}(x, ...)
 

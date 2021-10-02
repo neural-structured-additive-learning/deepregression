@@ -7,8 +7,8 @@ Authors@R: c(
     person("Philipp", "Baumann", , "baumann@kof.ethz.ch", role = c("ctb")),
     person("Chris", "Kolb", , "chris.kolb@stat.uni-muenchen.de", role = c("ctb")))
 Description:
-    Allows for the specification of deep distributional regression models which are fitted as part of a possibly large neural network.
-    Potential predictors can be modeled using structured linear effects, structured non-linear effects or using an unstructured deep network model.
+    Allows for the specification of deep distributional regression models which are fitted in a neural network.
+    Predictors can be modeled using structured (penalized) linear effects, structured non-linear effects or using an unstructured deep network model.
 Config/reticulate:
   list(
     packages = list(
@@ -40,5 +40,3 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
-StagedInstall: no
-VignetteBuilder: knitr

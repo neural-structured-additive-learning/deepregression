@@ -135,7 +135,6 @@ make_tfd_dist <- function(family, add_const = 1e-8, output_dim = 1L,
 #' \code{tfp$layers$DistributionLambda} to create a new 
 #' distribuional layer
 #' @export
-#' @examples 
 #' 
 create_family <- function(tfd_dist, trafo_list, output_dim = 1L)
 {
