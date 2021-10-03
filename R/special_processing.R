@@ -250,6 +250,7 @@ l2_processor <- function(term, data, output_dim, param_nr, controls){
                                      tf$keras$regularizers$l2(
                                        l = controls$sp_scale(data) * 
                                          extractval(term, "la")),
+                                   use_bias = FALSE,
                                    name = makelayername(term, 
                                                         param_nr),
                                    ...)(x))
@@ -276,6 +277,7 @@ offset_processor <- function(term, data, output_dim, param_nr, controls=NULL){
     layer = function(x, ...)
       return(tf$keras$layers$Dense(units = 1L,
                                    trainable = FALSE,
+                                   use_bias = FALSE,
                                    kernel_initializer = tf$keras$initializers$Ones,
                                    name = makelayername(term, 
                                                         param_nr),
