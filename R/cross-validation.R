@@ -48,6 +48,8 @@ plot_cv <- function(x, what=c("loss","weight"), ...){
     vloss <- cres$validloss
     mean_vloss <- apply(vloss, 1, mean)
     
+    oldpar <- par(no.readonly = TRUE)    # code line i
+    on.exit(par(oldpar))            # code line i + 1
     par(mfrow=c(1,2))
     matplot(loss, type="l", col="black", ..., ylab="loss", xlab="epoch")
     points(1:(nrow(loss)), mean_loss, type="l", col="red", lwd=2)

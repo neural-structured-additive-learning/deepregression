@@ -321,14 +321,7 @@ coef.deepregression <- function(
 {
   
   pfc <- object$init_params$parsed_formulas_contents[[which_param]]
-  linear <- sapply(pfc, function(x) is.null(x$partial_effect) & !is.null(x$coef) & 
-                     !(!x$left_from_oz & !is.null(x$right_from_oz)))
-  smooth <- sapply(pfc, function(x) !is.null(x$partial_effect) & !is.null(x$coef) & 
-                     !(!x$left_from_oz & !is.null(x$right_from_oz)))
-  
-  if(is.null(type)) type <- c("linear", "smooth") else 
-    stopifnot(type %in% c("linear", "smooth"))
-  to_return <- linear * ("linear" %in% type) + smooth * ("smooth" %in% type)
+  to_return <- get_type_pfc(pfc, type)
   
   names <- get_names_pfc(pfc)[as.logical(to_return)]
   pfc <- pfc[as.logical(to_return)]
@@ -429,8 +422,10 @@ cv.deepregression <- function(
     subset_fun <- function(y,ind) y[ind] else
       subset_fun <- function(y,ind) subset_array(y,ind)
 
-  res <- mylapply(cv_folds, function(this_fold){
+  res <- mylapply(1:length(cv_folds), function(folds_iter){
 
+    this_fold <- cv_folds[[folds_iter]]
+    
     if(print_folds) cat("Fitting Fold ", folds_iter, " ... ")
     st1 <- Sys.time()
 
@@ -480,8 +475,6 @@ cv.deepregression <- function(
     
     if(stop_if_nan && any(is.nan(ret$metrics$validloss)))
       stop("Fold ", folds_iter, " with NaN's in ")
-
-    if(print_folds) folds_iter <<- folds_iter + 1
 
     this_mod$set_weights(old_weights)
     td <- Sys.time()-st1

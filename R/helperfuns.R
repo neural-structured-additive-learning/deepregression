@@ -391,3 +391,26 @@ tf_stride_cols <- function(A, start, end=NULL)
   
   
 }
+
+#' Function to subset parsed formulas
+#' 
+#' @param pfc list of parsed formulas
+#' @param type either NULL (all types of coefficients are returned),
+#' "linear" for linear coefficients or "smooth" for coefficients of 
+#' 
+#' @export
+get_type_pfc <- function(pfc, type = NULL)
+{
+  
+  linear <- sapply(pfc, function(x) is.null(x$partial_effect) & !is.null(x$coef) & 
+                     !(!x$left_from_oz & !is.null(x$right_from_oz)))
+  smooth <- sapply(pfc, function(x) !is.null(x$partial_effect) & !is.null(x$coef) & 
+                     !(!x$left_from_oz & !is.null(x$right_from_oz)))
+  
+  if(is.null(type)) type <- c("linear", "smooth") else 
+    stopifnot(type %in% c("linear", "smooth"))
+  to_return <- linear * ("linear" %in% type) + smooth * ("smooth" %in% type)
+  
+  return(to_return)
+  
+}
