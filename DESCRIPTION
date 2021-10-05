@@ -7,7 +7,8 @@ Authors@R: c(
     person("Philipp", "Baumann", , "baumann@kof.ethz.ch", role = c("ctb")),
     person("Chris", "Kolb", , "chris.kolb@stat.uni-muenchen.de", role = c("ctb")))
 Description:
-    Allows for the specification of deep distributional regression models which are fitted in a neural network.
+    Allows for the specification of semi-structured deep distributional regression models which are fitted in a neural network as 
+    proposed by Ruegamer et al. (2021) <arXiv:2104.02705>.
     Predictors can be modeled using structured (penalized) linear effects, structured non-linear effects or using an unstructured deep network model.
 Config/reticulate:
   list(

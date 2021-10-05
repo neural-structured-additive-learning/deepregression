@@ -13,11 +13,12 @@
       keras <<- reticulate::import("keras", delay_load = TRUE)
       tfp <<- reticulate::import("tensorflow_probability", delay_load = TRUE)
     }
-    # options
-    options(orthogonalize = TRUE,
-            identify_intercept = FALSE
-    )
+    
   } # nocov end
+  # options
+  options(orthogonalize = TRUE,
+          identify_intercept = FALSE
+  )
 }
 #' Function to check python environment and install necessary packages
 #'
