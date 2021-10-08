@@ -1,8 +1,8 @@
 
 # deepregression
 
-[![R build status](https://github.com/davidruegamer/deepregression/workflows/R-CMD-check/badge.svg)](https://github.com/davidruegamer/deepregression/actions)
-[![Codecov test coverage](https://codecov.io/gh/davidruegamer/deepregression/branch/master/graph/badge.svg)](https://codecov.io/gh/davidruegamer/deepregression?branch=master)
+[![R build status](https://github.com/davidruegamer/deepregression/workflows/R-CMD-check/badge.svg)](https://github.com/neural-structured-additive-learning/deepregression/actions)
+[![Codecov test coverage](https://codecov.io/gh/davidruegamer/deepregression/branch/master/graph/badge.svg)](https://codecov.io/gh/neural-structured-additive-learning/deepregression?branch=main)
 [![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)
 
 This is a refactored version of the old [deepregression](https://github.com/davidruegamer/deepregression) package.
