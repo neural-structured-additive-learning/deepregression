@@ -78,6 +78,7 @@ quadpen <- function(P){
   return(retfun)
 }
 
+#' @export
 extract_sp_S <- function(x)
 {
   
