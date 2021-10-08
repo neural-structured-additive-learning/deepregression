@@ -1,4 +1,5 @@
 # needed by gam_processor
+#' @export
 orthog_structured_smooths_Z <- function(S,L)
 {
   
@@ -16,6 +17,7 @@ orthog_structured_smooths_Z <- function(S,L)
 }
 
 # needed by gam_processor
+#' @export
 orthog_P <- function(P,Z)
 {
   return(crossprod(Z,P) %*% Z)

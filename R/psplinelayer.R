@@ -1,4 +1,5 @@
 # used by gam_processor
+#' @export
 gam_plot_data <- function(pp, weights, grid_length = 40)
 {
   

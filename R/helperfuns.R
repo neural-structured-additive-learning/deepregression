@@ -282,6 +282,7 @@ makelayername <- function(term, param_nr, truncate = 30)
   
 }
 
+#' @export
 extractvar <- function(term)
 {
   
