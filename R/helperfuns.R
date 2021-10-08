@@ -272,6 +272,8 @@ make_valid_layername <- function(string)
 
 #### helper functions for processors
 
+
+#' @export
 makelayername <- function(term, param_nr, truncate = 30)
 {
   
