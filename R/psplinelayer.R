@@ -73,12 +73,6 @@ tp_penalty <- function(P1,P2,lambda1,lambda2=NULL)
   
 }
 
-quadpen <- function(P){
-  retfun <- function(w) tf$reduce_sum(tf$matmul(
-    tf$matmul(tf$transpose(w), tf$cast(P, "float32")), w))
-  return(retfun)
-}
-
 #' @export
 extract_sp_S <- function(x)
 {
@@ -202,10 +196,12 @@ predict_gam_handler <- function(object, newdata)
   
 }
 
-
-get_gam_part <- function(term, specials = c("s", "te", "ti"))
+#' Extract gam part from wrapped term 
+#' 
+#' @export
+get_gam_part <- function(term, specials = c("s", "te", "ti"), wrapper = "vc")
 {
   
-  gsub("vc\\(((s|te|ti)\\(.*\\))\\,\\sby=.*\\)","\\1", term)
+  gsub(paste0(wrapper, "\\(((s|te|ti)\\(.*\\))\\,\\s*by\\s*=.*\\)"),"\\1", term)
   
 }

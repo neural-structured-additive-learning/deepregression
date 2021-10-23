@@ -175,16 +175,6 @@ fitted.deepregression <- function(
   )
 }
 
-#' Generic train function
-#'
-#' @param object object to apply fit on
-#' @param ... further arguments passed to the class-specific function
-#'
-#' @export
-fit <- function (object, ...) {
-  UseMethod("fit", object)
-}
-
 #' Fit a deepregression model (pendant to fit for keras)
 #'
 #' @param object a deepregresison object.

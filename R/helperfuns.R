@@ -386,6 +386,7 @@ WeightHistory <- R6::R6Class("WeightHistory",
 tf_stride_cols <- function(A, start, end=NULL)
 {
   
+  stopifnot(start <= end)
   if(is.null(end)) end <- start
   return(
     #tf$strided_slice(A, c(0L,as.integer(start-1)), c(tf$shape(A)[1], as.integer(end)))
@@ -415,5 +416,12 @@ get_type_pfc <- function(pfc, type = NULL)
   to_return <- linear * ("linear" %in% type) + smooth * ("smooth" %in% type)
   
   return(to_return)
+  
+}
+
+get_processor_name <- function(term)
+{
+  
+  gsub("([^\\(])\\(.*","\\1", term)
   
 }

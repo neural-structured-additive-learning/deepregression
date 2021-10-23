@@ -129,7 +129,7 @@ class squaredPenaltyVC(regularizers.Regularizer):
         self.nlev = nlev
 
     def __call__(self, x):
-        x_splitted = tf.split(x, nlev)
+        x_splitted = tf.split(x, self.nlev)
         pen = 0
         for x_k in x_splitted:
             pen += tf.reduce_sum(vecmatvec(x_k, tf.cast(self.P, dtype="float32"), sparse_mat = True))
