@@ -8,6 +8,8 @@
 #' @param param_nr integer number for the distribution parameter
 #' @return returns a list of input and output for this additive predictor
 #' 
+#' @export
+#' 
 subnetwork_init <- function(pp, deep_top = NULL, 
                             orthog_fun = orthog_tf, 
                             split_fun = split_model,

@@ -118,7 +118,7 @@ plot.deepregression <- function(
 #'
 #' @param object a deepregression model
 #' @param newdata optional new data, either data.frame or list
-#' @param batch_size batch_size for generator (image use cases)
+#' @param batch_size batch_size for generator (image or large data use case)
 #' @param apply_fun which function to apply to the predicted distribution,
 #' per default \code{tfd_mean}, i.e., predict the mean of the distribution
 #' @param convert_fun how should the resulting tensor be converted,
@@ -137,17 +137,22 @@ predict.deepregression <- function(
 )
 {
 
-  if(length(object$init_params$image_var)>0)
-    return(predict_generator(object, newdata, batch_size, apply_fun, convert_fun))
+  # image case
+  if(length(object$init_params$image_var)>0 | !is.null(batch_size)){
+    
+    return(predict_generator.deepregression(object, newdata, batch_size, apply_fun, convert_fun))
   
-  if(is.null(newdata)){
-    yhat <- object$model(prepare_data(object$init_params$parsed_formulas_contents))
   }else{
-    # preprocess data
-    if(is.data.frame(newdata)) newdata <- as.list(newdata)
-    newdata_processed <- prepare_newdata(object$init_params$parsed_formulas_contents, 
-                                         newdata)
-    yhat <- object$model(newdata_processed)
+    
+    if(is.null(newdata)){
+      yhat <- object$model(prepare_data(object$init_params$parsed_formulas_contents))
+    }else{
+      # preprocess data
+      if(is.data.frame(newdata)) newdata <- as.list(newdata)
+      newdata_processed <- prepare_newdata(object$init_params$parsed_formulas_contents, 
+                                           newdata)
+      yhat <- object$model(newdata_processed)
+    }
   }
   
   if(!is.null(apply_fun))

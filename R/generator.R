@@ -207,7 +207,7 @@ prepare_generator_deepregression <- function(
   
 }
 
-predict_generator <- function(
+predict_generator.deepregression <- function(
   object,
   newdata = NULL,
   batch_size = NULL,
@@ -230,12 +230,24 @@ predict_generator <- function(
   generator <- make_generator(input_x = newdata_processed,
                               input_y = NULL,
                               batch_size = batch_size,
-                              sizes = object$init_params$image_var)
+                              sizes = object$init_params$image_var,
+                              shuffle = FALSE)
   
-  if(is.null(apply_fun)) apply_fun <- function(x){x}
-  return(sapply(1:steps_per_epoch, function(i) 
+  if(is.null(apply_fun)){ 
+    
+    apply_fun <- function(x){x}
+    ret_dist <- TRUE
+    
+  }else{
+    
+    ret_dist <- FALSE
+    
+  }
+  
+  res <- lapply(1:steps_per_epoch, function(i) 
     convert_fun(apply_fun(suppressWarnings(
       object$model(generator$`__getitem__`(as.integer(i-1)))))))
-  )
+  
+  if(ret_dist) return(res) else return(do.call("rbind", (res)))
   
 }
