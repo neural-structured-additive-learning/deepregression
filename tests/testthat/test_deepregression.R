@@ -1,6 +1,6 @@
-context("main entry: deepregression")
+context("Main entry: deepregression")
 
-test_that("simple additive model", {
+test_that("Simple additive model", {
   n <- 1500
   deep_model <- function(x) x %>%
     layer_dense(units = 2L, activation = "relu", use_bias = FALSE) %>%
@@ -82,7 +82,7 @@ test_that("simple additive model", {
 })
 
 
-test_that("generalized additive model", {
+test_that("Generalized additive model", {
   n <- 1500
   deep_model <- function(x) x %>%
     layer_dense(units = 2L, activation = "relu", use_bias = FALSE) %>%
@@ -119,7 +119,7 @@ test_that("generalized additive model", {
 })
 
 
-test_that("deep generalized additive model with LSS", {
+test_that("Deep generalized additive model with LSS", {
   set.seed(24)
   # generate the data
   n <- 500
@@ -154,7 +154,7 @@ test_that("deep generalized additive model with LSS", {
   mod %>% fit(epochs = 2)
 })
 
-test_that("multivariate response", {
+test_that("Multivariate response", {
   
   n <- 100
   p <- 10
@@ -173,5 +173,30 @@ test_that("multivariate response", {
   expect_is(mod, "deepregression")
   
   mod %>% fit(epochs = 3L)
+  
+})
+
+test_that("Generalized additive model with RWT in formula", {
+  n <- 1500
+  deep_model <- function(x) x %>%
+    layer_dense(units = 2L, activation = "relu", use_bias = FALSE) %>%
+    layer_dense(units = 1L, activation = "linear")
+  
+  x <- runif(n) %>% as.matrix()
+  true_mean_fun <- function(xx) sin(10 * apply(xx, 1, mean) + 1)
+  
+  # 2 deep 1 spline + intercept
+  data = data.frame(matrix(x, ncol=3))
+  y <- true_mean_fun(data)
+  mod <- deepregression(
+    y = y,
+    data = data,
+    list_of_formulas = list(loc = ~ X2 %X% (s(X3, bs = "ts") + s(X1, bs = "cr")) + g(X2), scale = ~1),
+    list_of_deep_models = list(d = deep_model, g = deep_model)
+  )
+  
+  expect_is(mod, "deepregression")
+  
+  mod %>% fit(epochs = 2)
   
 })

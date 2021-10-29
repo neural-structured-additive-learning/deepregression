@@ -462,3 +462,142 @@ tf_row_tensor_right_part <- function(a,b)
 {
   tf$tile(b, c(1L, a$shape[[2]]))
 }
+
+get_terms_rwt <- function(term)
+{
+  
+  trimws(strsplit(gsub("rwt\\((.*)\\)", "\\1", term), split="%X%")[[1]])
+  
+}
+
+rename_rwt <- function(form){
+  
+  tefo <- terms(form)
+  trms <- attr(tefo,"term.labels")
+  if(length(trms)==0) return(form)
+  int <- attr(tefo,"intercept")
+  
+  rwts <- grepl("%X%", trms)
+  if(any(rwts)){
+    
+    trms <- unlist(lapply(trms, function(x){
+      
+      if(grepl("%X%", x)){
+        
+        if(grepl("^\\(.*\\)\\s?%X%\\s.*?", x))
+          x = expand_rwt(x, 1) 
+        if(grepl(".*\\s?%X%\\s?\\(.*\\)$", x))
+          x = expand_rwt(x, 2)
+        
+      }
+      return(x)
+      
+    }))
+    
+    rwts <- grepl("%X%", trms)
+    
+    trms[which(rwts)] <- sapply(trms[which(rwts)], function(x){
+      
+      return(paste0("rwt(", x, ")"))
+      
+    })
+    
+  }
+  
+  form <- paste(trms, collapse = " + ")
+  if(!int) form <- paste0("0 + ", form)
+  form <- as.formula(paste0("~ ", form))
+  
+  return(form)
+  
+}
+
+expand_rwt <- function(x, side){
+  
+  if(side==1){
+    bracket_terms <- gsub("^\\((.*)\\)\\s?%X%\\s(.*)?", "\\1", x)
+    kron_term <- gsub("^\\((.*)\\)\\s?%X%\\s(.*)?", "\\2", x)
+  }else{
+    kron_term <- gsub("(.*)\\s?%X%\\s?\\((.*)\\)$", "\\1", x)
+    bracket_terms <- gsub("(.*)\\s?%X%\\s?\\((.*)\\)$", "\\2", x)
+  }
+  
+  kron_term <- trimws(kron_term)
+  bracket_terms <- trimws(strsplit(bracket_terms, "+", fixed = T)[[1]])
+  sapply(bracket_terms, function(b) paste0(kron_term, " %X% ", b))
+  
+  
+}
+
+combine_penalties <- function(penalties, dims)
+{
+  
+  types <- na.omit(sapply(penalties, function(p) if(is.null(p)) return(NA) else p$type))
+  output_dims <- na.omit(sapply(penalties, function(p) if(is.null(p)) return(NA) else p$dim))
+  null_pen <- sapply(penalties, is.null)
+  
+  if(any(output_dims>1))
+  {
+    
+    stop("Combined penalties for multi-output not implemented yet.")
+    
+  }else if(length(penalties)>2){
+   
+    stop("Combination of more than two penalties not implemented yet.")
+     
+  }else if(any(types=="l1")){
+    
+    stop("Combination with Lasso-Penalty not implemented yet.")
+    
+  }else{
+    
+    if(all(null_pen)) return(NULL)
+    if(any(null_pen)){
+      # no penalization in one direction
+      
+      existing_pen <- penalties[[which(!null_pen)]]
+      
+      if(existing_pen$type=="l2"){
+        
+        return(tf$keras$regularizers$l2(existing_pen$values))
+      
+      }else if(existing_pen$type=="spline"){
+        
+        return(squaredPenalty(P = kronecker(diag(rep(1, dims[[which(null_pen)]])),
+                                        existing_pen$values), 1))
+        
+      }else{
+        
+        stop("Not implemented yet.")
+        
+      }
+      
+    }else{
+      # both directions with penalties
+      if(any(types=="spline")){
+        
+        P1 <- penalties[[1]]$values
+        P2 <- penalties[[2]]$values
+        
+        return(squaredPenalty(
+          P = kronecker(P1, diag(rep(1, dims[2]))) + 
+            kronecker(diag(rep(1, dims[1])), P2),
+          strength = 1
+        ))
+        
+      }else if(all(types=="l2")){
+        
+        return(tf$keras$regularizers$l2(P1 + P2))
+        
+      }else{
+        
+        stop("Not implemented yet.")
+        
+      }
+      
+    }
+    
+  }
+  
+  
+}

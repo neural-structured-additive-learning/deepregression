@@ -19,7 +19,7 @@ class SimplyConnected(keras.layers.Layer):
     def call(self, inputs):
         return tf.math.multiply(inputs, self.w)
     
-class group_lasso_pen(reg.Regularizer):
+class inverse_group_lasso_pen(reg.Regularizer):
 
     def __init__(self, la):
         self.la = la
@@ -33,7 +33,7 @@ class TibLinearLasso(tf.keras.layers.Layer):
     self.num_outputs = num_outputs
     self.la = la
     if self.num_outputs > 1:
-      self.reg = group_lasso_pen(self.la)
+      self.reg = inverse_group_lasso_pen(self.la)
     else:
       self.reg = tf.keras.regularizers.l2(self.la)
     self._name = name

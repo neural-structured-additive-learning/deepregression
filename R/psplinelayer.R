@@ -205,3 +205,12 @@ get_gam_part <- function(term, specials = c("s", "te", "ti"), wrapper = "vc")
   gsub(paste0(wrapper, "\\(((s|te|ti)\\(.*\\))\\,\\s*by\\s*=.*\\)"),"\\1", term)
   
 }
+
+squaredPenalty <- function(P, strength)
+{
+  python_path <- system.file("python", package = "deepregression")
+  splines <- reticulate::import_from_path("psplines", path = python_path)
+  
+  return(splines$squaredPenalty(P = as.matrix(P), strength = strength))
+  
+}

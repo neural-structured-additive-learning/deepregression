@@ -28,7 +28,8 @@ processor <- function(
          lin = lin_processor,
          lasso = l1_processor,
          ridge = l2_processor,
-         offset = offset_processor
+         offset = offset_processor,
+         rwt = rwt_processor
     )
   
   dots <- list(...)
@@ -39,6 +40,8 @@ processor <- function(
   procs <- c(defaults, dots)
   specials <- names(procs)
   specials <- specials[sapply(specials, nchar)>0]
+  
+  form <- rename_rwt(form)
   
   list_terms <- separate_define_relation(form = form, 
                                          specials = specials, 
@@ -69,6 +72,7 @@ processor <- function(
     args$term = list_terms[[i]]$term
     spec <- get_special(list_terms[[i]]$term, specials = specials)
     args$controls <- controls 
+    args$controls$procs <- procs
     if(is.null(spec)){
       if(args$term=="(Intercept)")
         result[[i]] <- c(list_terms[[i]], do.call(int_processor, args)) else
@@ -110,7 +114,8 @@ int_processor <- function(term, data, output_dim, param_nr, controls){
     },
     input_dim = 1L,
     layer = layer,
-    coef = function(weights)  as.matrix(weights)
+    coef = function(weights)  as.matrix(weights),
+    penalty = NULL
   )
   
   
@@ -147,7 +152,8 @@ lin_processor <- function(term, data, output_dim, param_nr, controls){
     input_dim = as.integer(ncol(model.matrix(object = as.formula(paste0("~ -1 +", term)), 
                                   data = data))),
     layer = layer,
-    coef = function(weights)  as.matrix(weights)
+    coef = function(weights)  as.matrix(weights),
+    penalty = NULL
   )
   
 }
@@ -185,14 +191,16 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
                      S = list(do.call("+", lapply(1:length(sp_and_S[[2]]), function(i)
                        sp_and_S[[1]][[1]][i] * sp_and_S[[2]][[i]]))))
   }
+  P <- as.matrix(bdiag(lapply(1:length(sp_and_S[[1]]), function(i) 
+    controls$sp_scale(data) * sp_and_S[[1]][[i]] * sp_and_S[[2]][[i]])))
+  
   # define layer  
   if(controls$with_layer){
     layer = function(x, ...)
       return(layer_spline(
         name = makelayername(term, 
                              param_nr),
-        P = as.matrix(bdiag(lapply(1:length(sp_and_S[[1]]), function(i) 
-          controls$sp_scale(data) * sp_and_S[[1]][[i]] * sp_and_S[[2]][[i]]))),
+        P = P,
         units = output_dim)(x))
   }else{
     layer = tf$identity
@@ -210,32 +218,57 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
       return(predict_gam_handler(evaluated_gam_term, newdata = newdata) %*% Z %*% weights)
     },
     plot_fun = function(self, weights, grid_length) gam_plot_data(self, weights, grid_length),
-    get_org_values = function() data[extractvar(term)]
+    get_org_values = function() data[extractvar(term)],
+    penalty = list(type = "spline", values = P, dim = output_dim)
   )
 }
 
 
 l1_processor <- function(term, data, output_dim, param_nr, controls){
   # l1 (Tib)
+  lambda = controls$sp_scale(data) * extractval(term, "la")
+  
+  if(controls$with_layer){
+    
+    layer <- function(x, ...) 
+      return(tib_layer(
+        units = as.integer(output_dim),
+        la = lambda,
+        name = makelayername(term, 
+                             param_nr),
+        ...
+      )(x))
+    
+  }else{
+    
+    layer <- function(x, ...) 
+      return(simplyconnected_layer(
+        la = lambda,
+        name = makelayername(term, param_nr),
+        ...
+      )(x))
+    
+  }
+  
+  penalty <- if(output_dim > 1){
+    list(type = "inverse_group", values = lambda, dim = output_dim)
+  }else{
+    list(type = "l1", values = lambda, dim = output_dim)
+  }
+  
   list(
     data_trafo = function() data[extractvar(term)],
     predict_trafo = function(newdata) newdata[extractvar(term)],
     input_dim = as.integer(extractlen(term, data)),
-    layer = function(x, ...) 
-      return(tib_layer(
-        units = as.integer(output_dim),
-        la = controls$sp_scale(data) * extractval(term, "la"),
-        name = makelayername(term, 
-                             param_nr),
-        ...
-      )(x)),
+    layer = layer,
     coef = function(weights){ 
       weights <- lapply(weights, as.matrix)
       return(
         weights[[1]] * matrix(rep(weights[[2]], each=ncol(weights[[1]])), 
                               ncol=ncol(weights[[1]]), byrow = TRUE)
       )
-    }
+    },
+    penalty = penalty
   )
   
 }
@@ -243,16 +276,15 @@ l1_processor <- function(term, data, output_dim, param_nr, controls){
 l2_processor <- function(term, data, output_dim, param_nr, controls){
   # ridge
   
+  lambda = controls$sp_scale(data) * extractval(term, "la")
+  
   if(controls$with_layer){
     layer = function(x, ...)
       return(tf$keras$layers$Dense(units = output_dim, 
                                    kernel_regularizer = 
-                                     tf$keras$regularizers$l2(
-                                       l = controls$sp_scale(data) * 
-                                         extractval(term, "la")),
+                                     tf$keras$regularizers$l2(l = lambda),
                                    use_bias = FALSE,
-                                   name = makelayername(term, 
-                                                        param_nr),
+                                   name = makelayername(term, param_nr),
                                    ...)(x))
   }else{
     layer = tf$identity
@@ -263,7 +295,8 @@ l2_processor <- function(term, data, output_dim, param_nr, controls){
     predict_trafo = function(newdata) newdata[extractvar(term)],
     input_dim = as.integer(extractlen(term, data)),
     layer = layer,
-    coef = function(weights)  as.matrix(weights)
+    coef = function(weights)  as.matrix(weights),
+    penalty = list(type = "l2", values = lambda, dim = output_dim)
   )
   
 }
@@ -279,10 +312,84 @@ offset_processor <- function(term, data, output_dim, param_nr, controls=NULL){
                                    trainable = FALSE,
                                    use_bias = FALSE,
                                    kernel_initializer = tf$keras$initializers$Ones,
-                                   name = makelayername(term, 
-                                                        param_nr),
+                                   name = makelayername(term, param_nr),
                                    ...)(x))
   )
+}
+
+rwt_processor <- function(term, data, output_dim, param_nr, controls){
+  
+  terms <- get_terms_rwt(term)
+  
+  special_layer <- suppressWarnings(
+    sapply(terms, function(t) extractval(t, "layer"))
+  )
+  
+  terms <- lapply(terms, function(t){ 
+    args <- list(term = t, data = data, output_dim = output_dim,
+                 param_nr = param_nr, controls = controls)
+    args$controls$with_layer <- FALSE
+    spec <- get_special(t, specials = names(controls$procs))
+    if(is.null(spec))
+      return(do.call(lin_processor, args))
+    do.call(controls$procs[[spec]], args)
+  })
+  
+  dims <- sapply(terms, "[[", "input_dim")
+  penalties <- lapply(terms, "[[", "penalty")
+  combined_penalty <- combine_penalties(penalties, dims)
+  
+  if(all(sapply(special_layer, is.null))){ 
+    
+    this_layer <- function(...)
+      tf$keras$layers$Dense(units = output_dim,
+                            trainable = TRUE,
+                            use_bias = FALSE,
+                            kernel_regularizer = combined_penalty,
+                            name = makelayername(term, param_nr),
+                            ...) 
+    
+  }else{
+    
+    special_layer <- special_layer[!sapply(special_layer, is.null)]
+    if(length(special_layer)==2) 
+      stop("In an RWT, only a single term can have a special layer.")
+    
+    this_layer <- function(...){
+      eval(parse(text = special_layer[[1]]))(
+        units = output_dim,
+        kernel_regularizer = combined_penalty,
+        name = makelayername(term, param_nr),
+        ...
+      )    
+    }
+    
+  }
+  
+  if(controls$with_layer){
+    layer = function(x, ...){
+      a <- tf_stride_cols(x, 1L, as.integer(dims[1]))
+      b <- tf_stride_cols(x, 1L + as.integer(dims[1]), as.integer(sum(dims)))
+      rwt <- tf_row_tensor(a,b)
+      return(this_layer(...)(rwt))
+    }
+  }else{
+    layer = tf$identity
+  }
+  
+  list(
+    data_trafo = function() do.call("cbind", lapply(terms, function(x) x$data_trafo())),
+    predict_trafo = function(newdata) 
+      do.call("cbind", lapply(terms, function(x) x$predict_trafo(newdata))),
+    input_dim = sum(dims),
+    layer = layer,
+    coef = function(weights) lapply(terms, function(x) x$coef(weights)),
+    partial_effect = function(...) lapply(terms, function(x) x$partial_effect(...)),
+    plot_fun = function(...) lapply(terms, function(x) x$plot_fun(...)),
+    get_org_values = function() do.call("cbind", lapply(terms, function(x) x$get_org_values())),
+    penalty = penalties
+  )
+  
 }
 
 dnn_processor <- function(dnn){

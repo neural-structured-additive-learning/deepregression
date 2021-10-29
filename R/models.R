@@ -17,3 +17,16 @@ tib_layer = function(units, la, ...) {
   layers <- reticulate::import_from_path("layers", path = python_path)
   layers$TibLinearLasso(num_outputs = units, la = la, ...)
 }
+
+simplyconnected_layer = function(la, ...) {
+  python_path <- system.file("python", package = "deepregression")
+  layers <- reticulate::import_from_path("layers", path = python_path)
+  layers$SimplyConnected(la = la, ...)
+}
+
+inverse_group_lasso_pen = function(la) {
+  python_path <- system.file("python", package = "deepregression")
+  layers <- reticulate::import_from_path("layers", path = python_path)
+  layers$inverse_group_lasso_pen(la = la)
+} 
+
