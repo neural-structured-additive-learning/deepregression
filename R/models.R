@@ -30,3 +30,8 @@ inverse_group_lasso_pen = function(la) {
   layers$inverse_group_lasso_pen(la = la)
 } 
 
+tibgroup_layer = function(units, group_idx, la, ...) {
+  python_path <- system.file("python", package = "deepregression")
+  layers <- reticulate::import_from_path("layers", path = python_path)
+  layers$TibGroupLasso(num_outputs = units, group_idx = group_idx, la = la, ...)
+}

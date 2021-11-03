@@ -478,6 +478,7 @@ rename_rwt <- function(form){
   int <- attr(tefo,"intercept")
   
   rwts <- grepl("%X%", trms)
+  
   if(any(rwts)){
     
     trms <- unlist(lapply(trms, function(x){

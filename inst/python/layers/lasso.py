@@ -46,3 +46,42 @@ class TibLinearLasso(tf.keras.layers.Layer):
 
   def call(self, input):
     return self.fc(self.sc(input))
+    
+    
+class GroupConnected(keras.layers.Layer):
+    def __init__(self, group_idx=None, la=0):
+        super(GroupConnected, self).__init__()
+        self.la = la
+        self.input_shapes = [len(gii) for gii in group_idx]
+        self.group_idx = group_idx
+        
+    def build(self, input_shape):
+        self.w = [self.add_weight(
+            shape=(inps, 1),
+            initializer="random_normal",
+            regularizer=tf.keras.regularizers.l2(self.la),
+            trainable=True) for inps in self.input_shapes]
+        
+    def call(self, inputs):
+        gathered_inputs = [tf.gather(inputs, ind, axis = 1) for ind in self.group_idx]
+        return tf.squeeze(tf.stack([tf.matmul(gathered_inputs[i], self.w[i]) 
+                          for i in range(len(gathered_inputs))], axis=1), axis=-1)
+
+
+class TibGroupLasso(tf.keras.layers.Layer):
+    def __init__(self, num_outputs=1, group_idx=None, la=0, name="tib_grouplasso"):
+        super(TibGroupLasso, self).__init__()
+        self.num_outputs = num_outputs
+        self.la = la
+        self._name = name
+        self.group_idx = group_idx
+      
+    def build(self, input_shape):
+        self.fc = tf.keras.layers.Dense(input_shape = input_shape, units = self.num_outputs, 
+                                        use_bias=False, bias_regularizer=None, activation=None, 
+                                        kernel_regularizer=tf.keras.regularizers.l2(self.la))
+        self.sc = GroupConnected(group_idx=self.group_idx, la=self.la)
+
+
+    def call(self, input):
+        return self.fc(self.sc(input))
