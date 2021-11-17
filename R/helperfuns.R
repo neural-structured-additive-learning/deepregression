@@ -278,7 +278,7 @@ makelayername <- function(term, param_nr, truncate = 30)
 {
   
   if(class(term)=="formula") term <- form2text(term)
-  return(paste0(strtrim(make_valid_layername(term), truncate), "_", param_nr))
+  return(paste0(strtrim(make_valid_layername(gsub("%X%", "", term)), truncate), "_", param_nr))
   
 }
 
@@ -470,6 +470,13 @@ get_terms_rwt <- function(term)
   
 }
 
+
+remove_layer <- function(term){
+  
+  gsub("\\,\\s?layer\\s?=.*[^\\)]","",term)
+  
+}
+
 rename_rwt <- function(form){
   
   tefo <- terms(form)
@@ -478,6 +485,8 @@ rename_rwt <- function(form){
   int <- attr(tefo,"intercept")
   
   rwts <- grepl("%X%", trms)
+  
+  if(all(rwts)) return(form)
   
   if(any(rwts)){
     
@@ -495,7 +504,7 @@ rename_rwt <- function(form){
       
     }))
     
-    rwts <- grepl("%X%", trms)
+    rwts <- grepl("%X%", trms) & !grepl("rwt\\(", trms)
     
     trms[which(rwts)] <- sapply(trms[which(rwts)], function(x){
       
@@ -599,6 +608,11 @@ combine_penalties <- function(penalties, dims)
     }
     
   }
+}
+
+rename_offset <- function(form)
+{
   
+  as.formula(gsub("offset\\(", "offsetx\\(", form2text(form)))
   
 }

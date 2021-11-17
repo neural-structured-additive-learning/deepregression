@@ -28,7 +28,7 @@ processor <- function(
          lin = lin_processor,
          lasso = l1_processor,
          ridge = l2_processor,
-         offset = offset_processor,
+         offsetx = offset_processor,
          rwt = rwt_processor
     )
   
@@ -41,6 +41,10 @@ processor <- function(
   specials <- names(procs)
   specials <- specials[sapply(specials, nchar)>0]
   
+  # otherwise offset is dropped
+  form <- rename_offset(form)
+  
+  # for row-wise tensor product
   form <- rename_rwt(form)
   
   list_terms <- separate_define_relation(form = form, 
@@ -319,19 +323,21 @@ offset_processor <- function(term, data, output_dim, param_nr, controls=NULL){
 
 rwt_processor <- function(term, data, output_dim, param_nr, controls){
   
-  terms <- get_terms_rwt(term)
+  special_layer <- as.character(extractval(term, "layer"))
+  term <- remove_layer(term)
   
-  special_layer <- suppressWarnings(
-    sapply(terms, function(t) extractval(t, "layer"))
-  )
+  terms <- get_terms_rwt(term)
   
   terms <- lapply(terms, function(t){ 
     args <- list(term = t, data = data, output_dim = output_dim,
                  param_nr = param_nr, controls = controls)
     args$controls$with_layer <- FALSE
     spec <- get_special(t, specials = names(controls$procs))
-    if(is.null(spec))
-      return(do.call(lin_processor, args))
+    if(is.null(spec)){
+      if(t=="1")
+        return(do.call(int_processor, args)) else
+          return(do.call(lin_processor, args))
+    }
     do.call(controls$procs[[spec]], args)
   })
   
@@ -339,7 +345,7 @@ rwt_processor <- function(term, data, output_dim, param_nr, controls){
   penalties <- lapply(terms, "[[", "penalty")
   combined_penalty <- combine_penalties(penalties, dims)
   
-  if(all(sapply(special_layer, is.null))){ 
+  if(is.null(special_layer)){ 
     
     this_layer <- function(...)
       tf$keras$layers$Dense(units = output_dim,
@@ -351,17 +357,21 @@ rwt_processor <- function(term, data, output_dim, param_nr, controls){
     
   }else{
     
-    special_layer <- special_layer[!sapply(special_layer, is.null)]
-    if(length(special_layer)==2) 
-      stop("In an RWT, only a single term can have a special layer.")
+    # special_layer <- special_layer[!sapply(special_layer, is.null)]
+    # if(length(special_layer)==2) 
+      # stop("In an RWT, only a single term can have a special layer.")
     
     this_layer <- function(...){
-      eval(parse(text = special_layer[[1]]))(
+      
+      args <- c(list(
         units = output_dim,
         kernel_regularizer = combined_penalty,
         name = makelayername(term, param_nr),
         ...
-      )    
+      ), controls$special_layer_args)
+      
+      do.call(special_layer, args)
+      
     }
     
   }
