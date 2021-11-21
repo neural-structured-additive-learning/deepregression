@@ -28,18 +28,18 @@ class inverse_group_lasso_pen(reg.Regularizer):
         return self.la * tf.reduce_sum(tf.sqrt(tf.reduce_sum(tf.square(x), 1)))
 
 class TibLinearLasso(tf.keras.layers.Layer):
-  def __init__(self, num_outputs=1, la=0, name="tib_lasso"):
+  def __init__(self, units=1, la=0, name="tib_lasso"):
     super(TibLinearLasso, self).__init__()
-    self.num_outputs = num_outputs
+    self.units = units
     self.la = la
-    if self.num_outputs > 1:
+    if self.units > 1:
       self.reg = inverse_group_lasso_pen(self.la)
     else:
       self.reg = tf.keras.regularizers.l2(self.la)
     self._name = name
       
   def build(self, input_shape):
-    self.fc = tf.keras.layers.Dense(input_shape = input_shape, units = self.num_outputs, use_bias=False,
+    self.fc = tf.keras.layers.Dense(input_shape = input_shape, units = self.units, use_bias=False,
                                     bias_regularizer=None, activation=None, kernel_regularizer=self.reg)
     self.sc = SimplyConnected(la=self.la)
 
@@ -69,15 +69,15 @@ class GroupConnected(keras.layers.Layer):
 
 
 class TibGroupLasso(tf.keras.layers.Layer):
-    def __init__(self, num_outputs=1, group_idx=None, la=0, name="tib_grouplasso"):
+    def __init__(self, units=1, group_idx=None, la=0, name="tib_grouplasso"):
         super(TibGroupLasso, self).__init__()
-        self.num_outputs = num_outputs
+        self.units = units
         self.la = la
         self._name = name
         self.group_idx = group_idx
       
     def build(self, input_shape):
-        self.fc = tf.keras.layers.Dense(input_shape = input_shape, units = self.num_outputs, 
+        self.fc = tf.keras.layers.Dense(input_shape = input_shape, units = self.units, 
                                         use_bias=False, bias_regularizer=None, activation=None, 
                                         kernel_regularizer=tf.keras.regularizers.l2(self.la))
         self.sc = GroupConnected(group_idx=self.group_idx, la=self.la)

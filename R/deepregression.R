@@ -33,6 +33,7 @@
 #' @param penalty_options options for smoothing and penalty terms defined by \code{\link{penalty_control}}
 #' @param orthog_options options for the orthgonalization defined by \code{\link{orthog_control}}
 #' @param verbose logical; whether to print progress of model initialization to console
+#' @param weight_options options for layer weights defined by \code{\link{weight_control}}
 #' @param ... further arguments passed to the \code{model_builder} function
 #'
 #' @import tensorflow tfprobability keras mgcv dplyr R6 reticulate Matrix
@@ -107,6 +108,7 @@ deepregression <- function(
   additional_processors = list(),
   penalty_options = penalty_control(),
   orthog_options = orthog_control(),
+  weight_options = weight_control(),
   verbose = FALSE,
   ...
 )
@@ -202,6 +204,10 @@ deepregression <- function(
   if(!is.null(attr(additional_processors, "controls")))
     penalty_options <- c(penalty_options, attr(additional_processors, "controls"))
   
+  # repeat weight options if not specified otherwise
+  if(length(weight_options)!=length(list_of_formulas))
+    weight_options <- weight_options[rep(1, length(list_of_formulas))]
+
   if(verbose) cat("Preparing additive formula(e)...")
   # parse formulas
   parsed_formulas_contents <- lapply(1:length(list_of_formulas),
@@ -219,8 +225,9 @@ deepregression <- function(
                                        }else{
                                          so$with_layer <- TRUE
                                        }
+                                       so$weight_options <- weight_options[[i]]
                                        
-                                       res <- do.call("processor", 
+                                       res <- do.call("process_terms", 
                                                       c(list(form = list_of_formulas[[i]],
                                                            data = data,
                                                            controls = so,

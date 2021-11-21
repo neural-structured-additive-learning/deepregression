@@ -15,14 +15,14 @@ test_that("loop_through_pfc_and_call_trafo", {
   
   
   res1 <- suppressWarnings(
-    processor(form = form, 
-              d = dnn_placeholder_processor(function(x) x %>% layer_dense(x, units=1L)),
-              specials_to_oz = specials_to_oz, 
-              data = data,
-              output_dim = output_dim,
-              automatic_oz_check = TRUE,
-              param_nr = 1,
-              controls = controls)
+    process_terms(form = form, 
+                  d = dnn_placeholder_processor(function(x) x %>% layer_dense(x, units=1L)),
+                  specials_to_oz = specials_to_oz, 
+                  data = data,
+                  output_dim = output_dim,
+                  automatic_oz_check = TRUE,
+                  param_nr = 1,
+                  controls = controls)
   )
   
   ll <- loop_through_pfc_and_call_trafo(list(res1))
@@ -38,14 +38,14 @@ test_that("loop_through_pfc_and_call_trafo", {
   data$arr <- mnist$train$x[1:100,,]
   form = ~ 1 + d(arr) + s(x) + lasso(z) + ridge(z) + te(y) %OZ% (y + s(x)) + d(z) %OZ% s(x) + u
   res1 <- suppressWarnings(
-    processor(form = form, 
-              d = dnn_placeholder_processor(function(x) x %>% layer_dense(x, units=1L)),
-              specials_to_oz = specials_to_oz, 
-              data = data,
-              output_dim = output_dim,
-              automatic_oz_check = TRUE,
-              param_nr = 1,
-              controls = controls)
+    process_terms(form = form, 
+                  d = dnn_placeholder_processor(function(x) x %>% layer_dense(x, units=1L)),
+                  specials_to_oz = specials_to_oz, 
+                  data = data,
+                  output_dim = output_dim,
+                  automatic_oz_check = TRUE,
+                  param_nr = 1,
+                  controls = controls)
   )
   ll <- loop_through_pfc_and_call_trafo(list(res1))
   expect_true(all(!is.null(sapply(ll, dim))))

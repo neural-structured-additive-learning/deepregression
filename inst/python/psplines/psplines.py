@@ -103,11 +103,11 @@ def get_specific_layer(string_to_match, layers, index=True, invert=False):
         return(layers[wh])    
     
 
-def layer_spline(P, units, name):
-    return(tf.keras.layers.Dense(units = units, name = name, use_bias=False, kernel_regularizer = squaredPenalty(P, 1)))
+def layer_spline(P, units, name, trainable = True, kernel_initializer = "glorot_uniform"):
+    return(tf.keras.layers.Dense(units = units, name = name, use_bias=False, kernel_regularizer = squaredPenalty(P, 1), trainable = trainable, kernel_initializer = kernel_initializer))
 
-def layer_splineVC(P, units, name):
-    return(tf.keras.layers.Dense(units = units, name = name, use_bias=False, kernel_regularizer = squaredPenaltyVC(P, 1)))
+def layer_splineVC(P, units, name, trainable = True, kernel_initializer = "glorot_uniform"):
+    return(tf.keras.layers.Dense(units = units, name = name, use_bias=False, kernel_regularizer = squaredPenaltyVC(P, 1), trainable = trainable, kernel_initializer = kernel_initializer))
 
 class squaredPenalty(regularizers.Regularizer):
 

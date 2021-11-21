@@ -8,6 +8,8 @@ test_that("subnetwork_init", {
                     w = rnorm(100))
   controls = penalty_control()
   controls$with_layer <- TRUE
+  controls$weight_options$warmstarts <- list("s(x)" = c(-4:4))
+  controls$weight_options$general <- weight_control()[[1]]$general
   output_dim = 1L
   param_nr = 1L
   d = dnn_placeholder_processor(function(x) x %>% 
@@ -18,19 +20,21 @@ test_that("subnetwork_init", {
   
   
   pp <- suppressWarnings(
-    processor(form = form, 
-              d = d,
-              specials_to_oz = specials_to_oz, 
-              data = data,
-              output_dim = output_dim,
-              automatic_oz_check = TRUE,
-              param_nr = 1,
-              controls = controls)
+    process_terms(form = form, 
+                  d = d,
+                  specials_to_oz = specials_to_oz, 
+                  data = data,
+                  output_dim = output_dim,
+                  automatic_oz_check = TRUE,
+                  param_nr = 1,
+                  controls = controls)
   )
   
   res <- suppressWarnings(subnetwork_init(pp))
   expect_true(all(sapply(res[[1]], function(x) "python.builtin.object" %in% class(x))))
   expect_true("python.builtin.object" %in% class(res[[2]]))
+  expect_equal(unlist(sapply(res[[1]], function(x) x$shape[2])),
+               c(1, 9, rep(1, 7)))
   
 })
 

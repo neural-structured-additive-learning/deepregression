@@ -669,7 +669,7 @@ get_weight_by_name <- function(mod, name, param_nr=1)
 #' Return partial effect of one smooth term
 #' 
 #' @param object deepregression object
-#' @param name string; for partial match with smooth term
+#' @param names string; for partial match with smooth term
 #' @param return_matrix logical; whether to return the design matrix or
 #' @param which_param integer; which distribution parameter
 #' the partial effect (\code{FALSE}, default)
@@ -677,21 +677,32 @@ get_weight_by_name <- function(mod, name, param_nr=1)
 #' 
 #' @export
 #' 
-get_partial_effect <- function(object, name, return_matrix = FALSE, 
+get_partial_effect <- function(object, names=NULL, return_matrix = FALSE, 
                                which_param = 1, newdata = NULL)
 {
   
-  weights <- get_weight_by_name(object, name = name, param_nr = which_param)
-  names_pfc <- get_names_pfc(object$init_params$parsed_formulas_contents[[which_param]])
-  w <- which(name==names_pfc)
-  if(length(w)==0)
-    stop("Cannot find specified name in additive predictor #", which_param,".")
-  pe_fun <- object$init_params$parsed_formulas_contents[[which_param]][[w]]$partial_effect
-  if(is.null(pe_fun)){
-    warning("Specified term does not have a partial effect function. Returning weights.")
-    return(weights)
-  }
-  return(pe_fun(weights, newdata))
+  pfc <- object$init_params$parsed_formulas_contents[[which_param]]
+  names_pfc <- get_names_pfc(pfc)
+  names <- if(!is.null(names)) intersect(names, names_pfc) else names_pfc
+  
+  if(length(names)==0)
+    stop("Cannot find specified name(s) in additive predictor #", which_param,".")
+  
+  res <- lapply(names, function(name){
+    w <- which(name==names_pfc)
+    
+    if(name=="(Intercept)") name <- "1"
+    weights <- get_weight_by_name(object, name = name, param_nr = which_param)
+    
+    pe_fun <- object$init_params$parsed_formulas_contents[[which_param]][[w]]$partial_effect
+    if(is.null(pe_fun)){
+      #warning("Specified term does not have a partial effect function. Returning weights.")
+      return(weights)
+    }else{
+      return(pe_fun(weights, newdata))
+    }
+  })
+  if(length(res)==1) return(res[[1]]) else return(res)
   
 }
 

@@ -97,3 +97,77 @@ orthog_control <- function(split_fun = split_model,
               deep_top = deep_top))
   
 }
+
+#' Options for weights of layers
+#' 
+#' @param len integer; the length of \code{list_of_formulas}
+#' @param specific_weight_options specific options for certain
+#' weight terms; must be a list of length \code{length(list_of_formulas)} and
+#' each element in turn a named list (names are term names as in the formula)
+#' with specific options in a list
+#' @param general_layer_options default options for layers
+#' @param warmstart_weights While all keras layer options are availabe,
+#' the user can further specify a list for each distribution parameter
+#' with list elements corresponding to term names with values as vectors
+#' corresponding to start weights of the respective weights
+#' 
+#' @return Returns a list with options
+#' 
+#' 
+#' 
+#' @export
+#'
+weight_control <- function(
+  specific_weight_options = NULL,
+  general_weight_options = list(
+    activation = NULL,
+    use_bias = FALSE,
+    trainable = TRUE,
+    kernel_initializer = "glorot_uniform",
+    bias_initializer = "zeros",
+    kernel_regularizer = NULL,
+    bias_regularizer = NULL,
+    activity_regularizer = NULL,
+    kernel_constraint = NULL,
+    bias_constraint = NULL
+  ),
+  warmstart_weights = NULL
+){
+  
+  if(!is.null(specific_weight_options) && !is.null(warmstart_weights)){
+    
+    if(length(specific_weight_options)!=length(warmstart_weights))
+      stop("warmstart_weights must be a list of the same length as specific_weight_options",
+           "if both are given.")
+    
+    len <- length(specific_weight_options)
+    
+  }else if(!is.null(specific_weight_options)){
+    
+    len <- length(specific_weight_options)
+    warmstart_weights <- vector("list", length = len)
+    
+  }else if(!is.null(warmstart_weights)){
+    
+    len <- length(warmstart_weights)
+    specific_weight_options <- vector("list", length = len)
+    
+  }else{ # both NULL
+    
+    len <- 1 # unclear at this stage how many formula terms
+    
+  }
+
+  ret_list <- list(list(specific = NULL, general = NULL, warmstarts = NULL))[rep(1, len)]
+  
+  for(i in 1:length(ret_list)){
+  
+    ret_list[[i]]$specific <- specific_weight_options[[i]]
+    ret_list[[i]]$general <- general_weight_options
+    ret_list[[i]]$warmstarts <- warmstart_weights[[i]]
+    
+  }
+  
+  return(ret_list)
+  
+}

@@ -12,7 +12,7 @@
 #' @return returns a processor function
 #' 
 #' 
-processor <- function(
+process_terms <- function(
   form, data, controls, 
   output_dim, param_nr, 
   specials_to_oz = c(), 
@@ -92,23 +92,97 @@ processor <- function(
   
 }
 
+#' Function that creates layer for each processor
+#' 
+#' @param term character; term in the formula
+#' @param output_dim integer; number of units in the layer
+#' @param param_nr integer; identifier for models with more 
+#' than one additive predictor
+#' @param controls list; control arguments which allow
+#' to pass further information
+#' @param layer_class a tf or keras layer function
+#' @param without_layer function to be used as 
+#' layer if \code{controls$with_layer} is FALSE
+#' @param name character; name of layer. 
+#' if NULL, \code{makelayername} will be used to create layer name
+#' @param use_bias logical; use bias in layer. Default is FALSE
+#' @param further_layer_args named list; further arguments passed to
+#' the layer
+#' @param layer_args_names character vector; if NULL, default
+#' layer args will be used. Needs to be set for layers that do not
+#' provide the arguments of a default Dense layer.
+#' @param ... other keras layer parameters
+#' 
+#' @return a basic processor list structure
+#' 
+#' @export
+#' 
+layer_generator <- function(term, output_dim, param_nr, controls, 
+                            layer_class = tf$keras$layers$Dense,
+                            without_layer = tf$identity,
+                            name = makelayername(term, param_nr), 
+                            further_layer_args = NULL,
+                            layer_args_names = NULL,
+                            units = as.integer(output_dim),
+                            ...
+                            ){
+  
+  layer_args <- controls$weight_options$general
+  
+  specific_opt <- term %in% names(controls$weight_options$specific)
+  if(specific_opt){
+    
+    spop <- controls$weight_options$specific[[term]]
+    layer_args[names(spop)] <- spop
+    
+  }
+  
+  
+  warmstart <- term %in% names(controls$weight_options$warmstarts)
+  
+  if(warmstart)
+    layer_args$kernel_initializer <- tf$keras$initializers$Constant(
+      controls$weight_options$warmstarts[[term]]
+    )
+  
+
+  layer_args$units <- units
+  layer_args$name <- name
+
+  if(!is.null(further_layer_args)) 
+    layer_args <- c(layer_args, further_layer_args)
+  if(!is.null(layer_args_names)) 
+    layer_args <- layer_args[layer_args_names]
+  
+  if(controls$with_layer){
+    
+    layer = function(x){
+      return(
+        do.call(layer_class, layer_args)(x)
+      )
+    }
+    
+  }else{
+    
+    layer = without_layer
+    
+  }
+  
+  return(layer)
+  
+  
+}
+
 int_processor <- function(term, data, output_dim, param_nr, controls){
   
   if(term=="(Intercept)") term <- "1"
   data <- as.data.frame(data[[1]])
   
-  if(controls$with_layer){
-    layer = function(x, ...)
-      return(
-        tf$keras$layers$Dense(
-          units = output_dim,
-          use_bias = FALSE,
-          name = makelayername(term, param_nr),
-          ...)(x))
-  }else{
-    layer = tf$identity
-  }
-  
+  layer <- layer_generator(term = term, 
+                           output_dim = output_dim, 
+                           param_nr = param_nr, 
+                           controls = controls)
+
   list(
     data_trafo = function() matrix(rep(1, nrow(data)), ncol=1),
     predict_trafo = function(newdata){ 
@@ -128,21 +202,14 @@ int_processor <- function(term, data, output_dim, param_nr, controls){
 lin_processor <- function(term, data, output_dim, param_nr, controls){
   
   
+  layer <- layer_generator(term = term, 
+                           output_dim = output_dim, 
+                           param_nr = param_nr, 
+                           controls = controls)
+  
   if(grepl("lin(.*)", term)) term <- paste0(paste(extractvar(term),
                                                   collapse = " + "),
-                                            "+ 0 ")
-  
-  if(controls$with_layer){
-    layer = function(x, ...)
-      return(
-        tf$keras$layers$Dense(
-          units = output_dim,
-          use_bias = FALSE,
-          name = makelayername(term, param_nr),
-          ...)(x))
-  }else{
-    layer = tf$identity
-  }
+                                            " + 0 ")
   
   list(
     data_trafo = function() model.matrix(object = as.formula(paste0("~ -1 + ", term)), 
@@ -198,17 +265,15 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
   P <- as.matrix(bdiag(lapply(1:length(sp_and_S[[1]]), function(i) 
     controls$sp_scale(data) * sp_and_S[[1]][[i]] * sp_and_S[[2]][[i]])))
   
-  # define layer  
-  if(controls$with_layer){
-    layer = function(x, ...)
-      return(layer_spline(
-        name = makelayername(term, 
-                             param_nr),
-        P = P,
-        units = output_dim)(x))
-  }else{
-    layer = tf$identity
-  }
+  layer <- layer_generator(term = term, 
+                           output_dim = output_dim, 
+                           param_nr = param_nr, 
+                           controls = controls,
+                           further_layer_args = list(P = P),
+                           layer_args_names = c("name", "units", "P", "trainable", 
+                                                "kernel_initializer"),
+                           layer_class = layer_spline
+                           )
 
   list(
     data_trafo = function() thisX %*% Z,
@@ -232,28 +297,21 @@ l1_processor <- function(term, data, output_dim, param_nr, controls){
   # l1 (Tib)
   lambda = controls$sp_scale(data) * extractval(term, "la")
   
-  if(controls$with_layer){
-    
-    layer <- function(x, ...) 
-      return(tib_layer(
-        units = as.integer(output_dim),
-        la = lambda,
-        name = makelayername(term, 
-                             param_nr),
-        ...
-      )(x))
-    
-  }else{
-    
-    layer <- function(x, ...) 
-      return(simplyconnected_layer(
-        la = lambda,
-        name = makelayername(term, param_nr),
-        ...
-      )(x))
-    
-  }
-  
+  layer <- layer_generator(term = term, 
+                           output_dim = output_dim, 
+                           param_nr = param_nr, 
+                           controls = controls,
+                           further_layer_args = list(la = lambda),
+                           layer_args_names = c("name", "units", "la"),
+                           layer_class = tib_layer,
+                           without_layer = function(x, ...) 
+                             return(simplyconnected_layer(
+                               la = lambda,
+                               name = makelayername(term, param_nr),
+                               ...
+                             )(x))
+  )
+
   penalty <- if(output_dim > 1){
     list(type = "inverse_group", values = lambda, dim = output_dim)
   }else{
@@ -282,18 +340,13 @@ l2_processor <- function(term, data, output_dim, param_nr, controls){
   
   lambda = controls$sp_scale(data) * extractval(term, "la")
   
-  if(controls$with_layer){
-    layer = function(x, ...)
-      return(tf$keras$layers$Dense(units = output_dim, 
-                                   kernel_regularizer = 
-                                     tf$keras$regularizers$l2(l = lambda),
-                                   use_bias = FALSE,
-                                   name = makelayername(term, param_nr),
-                                   ...)(x))
-  }else{
-    layer = tf$identity
-  }
-  
+  layer <- layer_generator(term = term, 
+                           output_dim = output_dim, 
+                           param_nr = param_nr, 
+                           controls = controls,
+                           kernel_regularizer = tf$keras$regularizers$l2(l = lambda)
+  )
+
   list(
     data_trafo = function() data[extractvar(term)],
     predict_trafo = function(newdata) newdata[extractvar(term)],
@@ -306,24 +359,27 @@ l2_processor <- function(term, data, output_dim, param_nr, controls){
 }
 
 offset_processor <- function(term, data, output_dim, param_nr, controls=NULL){
-  # offset
+  
+  layer <- layer_generator(term = term, 
+                           output_dim = output_dim, 
+                           param_nr = param_nr, 
+                           controls = controls,
+                           trainable = FALSE,
+                           kernel_initializer = tf$keras$initializers$Ones,
+                           )
+  
   list(
     data_trafo = function() data[extractvar(term)],
     predict_trafo = function(newdata) newdata[extractvar(term)],
     input_dim = as.integer(extractlen(term, data)),
-    layer = function(x, ...)
-      return(tf$keras$layers$Dense(units = 1L,
-                                   trainable = FALSE,
-                                   use_bias = FALSE,
-                                   kernel_initializer = tf$keras$initializers$Ones,
-                                   name = makelayername(term, param_nr),
-                                   ...)(x))
+    layer = layer
   )
 }
 
 rwt_processor <- function(term, data, output_dim, param_nr, controls){
   
-  special_layer <- as.character(extractval(term, "layer"))
+  special_layer <- suppressWarnings(extractval(term, "layer"))
+  if(!is.null(special_layer)) special_layer <- as.character(special_layer)
   term <- remove_layer(term)
   
   terms <- get_terms_rwt(term)

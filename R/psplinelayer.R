@@ -1,6 +1,6 @@
 # used by gam_processor
 #' @export
-gam_plot_data <- function(pp, weights, grid_length = 40)
+gam_plot_data <- function(pp, weights, grid_length = 40, pe_fun = pe_gen)
 {
   
   org_values <- pp$get_org_values()
@@ -25,19 +25,22 @@ gam_plot_data <- function(pp, weights, grid_length = 40)
            value = do.call("cbind", org_values),
            design_mat = BX,
            coef = weights
-           )
+      )
     
     this_x <- do.call(seq, c(as.list(range(plotData$value[,1])),
                              list(l=grid_length)))
-    this_y <- do.call(seq, c(as.list(range(plotData$value[,2])),
-                             list(l=grid_length)))
+    if(is.factor(org_values[[2]])){
+      this_y <- unique(org_values[[2]])
+    }else{
+      this_y <- do.call(seq, c(as.list(range(plotData$value[,2])),
+                               list(l=grid_length)))
+    }
     df <- as.data.frame(expand.grid(this_x, this_y))
     colnames(df) <- extractvar(pp$term)
-    pmat <- pp$predict_trafo(newdata = df)
     plotData$df <- df
     plotData$x <- this_x
     plotData$y <- this_y
-    plotData$partial_effect <- pmat%*%weights
+    plotData$partial_effect <- pe_fun(pp, df, weights)
     
   }else{
     
@@ -49,12 +52,20 @@ gam_plot_data <- function(pp, weights, grid_length = 40)
   
 }
 
+pe_gen <- function(pp, df, weights){
+  
+  pmat <- pp$predict_trafo(newdata = df)
+  pmat%*%weights
+  
+} 
 
-layer_spline = function(units = 1L, P, name) {
+layer_spline = function(units = 1L, P, name, trainable = TRUE, 
+                        kernel_initializer = "glorot_uniform") {
   python_path <- system.file("python", package = "deepregression")
   splines <- reticulate::import_from_path("psplines", path = python_path)
   
-  return(splines$layer_spline(P = as.matrix(P), units = units, name = name))
+  return(splines$layer_spline(P = as.matrix(P), units = units, trainable = trainable,
+                              name = name, kernel_initializer = kernel_initializer))
 }
 
 
