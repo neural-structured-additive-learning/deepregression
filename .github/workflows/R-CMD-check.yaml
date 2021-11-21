@@ -1,0 +1,63 @@
+# For help debugging build failures open an issue on the RStudio community with the 'github-actions' tag.
+# https://community.rstudio.com/new-topic?category=Package%20development&tags=github-actions
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+name: R-CMD-check
+
+jobs:
+  R-CMD-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: r-lib/actions/setup-r@master
+        with:
+          Ncpus: 4
+      - uses: r-lib/actions/setup-tinytex@master
+      - uses: r-lib/actions/setup-pandoc@master
+
+      - name: "[Custom block] [Cache] Prepare weekly timestamp for cache"
+        id: date
+        run: echo "::set-output name=datem::$(date '+%Y-%m')"
+
+      - name: [Cache] Cache R packages
+        uses: pat-s/always-upload-cache@v2
+        with:
+          path: ${{ env.R_LIBS_USER }}
+          key: rcache-${{steps.date.outputs.datem}}
+          restore-keys: ${{steps.date.outputs.datem}}
+
+      - name: [Cache] Cache python packages I
+        id: pipdir
+        run: echo "::set-output name=pipdir::$(pip3 cache dir)"
+
+      - name: [Cache] Cache python packages II 
+        uses: pat-s/always-upload-cache@v2
+        with:
+          path: ${{ steps.pipdir.outputs.pipdir }}
+          key: rpycache-${{steps.date.outputs.datem}}
+          restore-keys: pycache-${{steps.date.outputs.datem}}
+          
+      - name: Install linux prerequesites
+        run: |
+          sudo apt-get install libxml2-dev libcurl4-openssl-dev
+      - name: Install dependencies - Keras & TF
+        run: |
+          install.packages(c("remotes", "rcmdcheck"))
+          remotes::install_deps(dependencies = TRUE)
+          reticulate::install_miniconda(update = TRUE)
+          reticulate::conda_create('r-reticulate', packages = c('python==3.6.9'))
+          keras::install_keras(version = "2.5.0rc0", tensorflow = "2.5.0rc0", extra_packages = c('IPython', 'requests', 'certifi', 'urllib3', 'six', 'tensorflow_probability==0.12.0'))
+        shell: Rscript {0}
+      - name: Install dependencies - Tutorial (Vignette)
+        run: |
+          install.packages(c("ggplot2", "reshape2", "MASS", "gamlss.data", "distr"))
+        shell: Rscript {0}
+      - name: Check
+        run: rcmdcheck::rcmdcheck(args=c("--as-cran", "--no-build-vignettes"), build_args=c("--no-build-vignettes"), error_on="error")
+        shell: Rscript {0}
