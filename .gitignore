@@ -4,3 +4,5 @@ tests/testthat/*.pdf
 *.Rproj
 *.pyc
 */__pycache__
+*.pyc
+*.cpython
