@@ -23,7 +23,7 @@ jobs:
 
       - name: "[Custom block] [Cache] Prepare weekly timestamp for cache"
         id: date
-        run: echo "::set-output name=datem::$(date '+%Y-%m')"
+        run: echo "::set-output name=datem::$(date '+%Y-%M')"
 
       - name: [Cache] Cache R packages
         uses: pat-s/always-upload-cache@v2
