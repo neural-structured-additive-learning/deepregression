@@ -1,3 +1,5 @@
+#' @importFrom stats na.omit
+
 .onLoad <- function(libname, pkgname) { # nocov start
   if(!reticulate::py_available())
   {

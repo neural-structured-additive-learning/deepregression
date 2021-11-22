@@ -1,1 +1,3 @@
 ^\.github$
+^codecov.yml$
+^codecov\.yml$
