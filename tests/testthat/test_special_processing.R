@@ -19,7 +19,7 @@ test_that("lin_processor", {
   
 })
 
-test_that("processor", {
+test_that("process_terms", {
   
   form = ~ 1 + d(x) + s(x) + lasso(z) + ridge(z) + te(y) %OZ% (y + s(x)) + d(z) %OZ% s(x) + u
   data = data.frame(x = rnorm(100), y = rnorm(100), z = rnorm(100), u = rnorm(100))
@@ -33,15 +33,15 @@ test_that("processor", {
   
   
   res1 <- suppressWarnings(
-    processor(form = form, 
-              d = dnn_placeholder_processor(function(x) layer_dense(x, units=1L)),
-              specials_to_oz = specials_to_oz, 
-              data = data,
-              output_dim = output_dim,
-              automatic_oz_check = TRUE,
-              param_nr = 1,
-              controls = controls)
-  
+    process_terms(form = form, 
+                  d = dnn_placeholder_processor(function(x) layer_dense(x, units=1L)),
+                  specials_to_oz = specials_to_oz, 
+                  data = data,
+                  output_dim = output_dim,
+                  automatic_oz_check = TRUE,
+                  param_nr = 1,
+                  controls = controls)
+    
   )
   
   expect_is(res1, "list")
@@ -66,14 +66,48 @@ test_that("rwt", {
   
   
   res1 <- suppressWarnings(
-    processor(form = form, 
-              d = dnn_placeholder_processor(function(x) layer_dense(x, units=1L)),
-              specials_to_oz = specials_to_oz, 
-              data = data,
-              output_dim = output_dim,
-              automatic_oz_check = TRUE,
-              param_nr = 1,
-              controls = controls)
+    process_terms(form = form, 
+                  d = dnn_placeholder_processor(function(x) layer_dense(x, units=1L)),
+                  specials_to_oz = specials_to_oz, 
+                  data = data,
+                  output_dim = output_dim,
+                  automatic_oz_check = TRUE,
+                  param_nr = 1,
+                  controls = controls)
+    
+  )
+  
+  expect_is(res1, "list")
+  expect_equal(length(res1), 2)
+  expect_equal(sapply(res1, "[[", "nr"), 1:2)
+  expect_type(sapply(res1, "[[", "input_dim"), "integer")
+  expect_equal(res1[[1]]$input_dim, 3)
+  
+})
+
+test_that("fixed weights", {
+  
+  form = ~ 1 + lin(u) + s(x)
+  data = data.frame(x = rnorm(100), y = rnorm(100), z = rnorm(100), u = rnorm(100))
+  controls = penalty_control()
+  controls$with_layer <- TRUE
+  controls$weight_options$warmstarts <- list("lin(u)" = 1.337)
+  output_dim = 1L
+  param_nr = 1L
+  d = dnn_placeholder_processor(function(x) layer_dense(x, units=1L))
+  specials = c("s", "te", "ti", "lasso", "ridge", "offset", "rwt")
+  specials_to_oz = c("d")
+  
+  
+  res1 <- suppressWarnings(
+    process_terms(form = form, 
+                  d = dnn_placeholder_processor(function(x) layer_dense(x, units=1L)),
+                  specials_to_oz = specials_to_oz, 
+                  data = data,
+                  output_dim = output_dim,
+                  automatic_oz_check = TRUE,
+                  param_nr = 1,
+                  controls = controls)
     
   )
   
@@ -81,6 +115,8 @@ test_that("rwt", {
   expect_equal(length(res1), 3)
   expect_equal(sapply(res1, "[[", "nr"), 1:3)
   expect_type(sapply(res1, "[[", "input_dim"), "integer")
+  expect_true(inherits(get("layer_args", environment(res1[[1]]$layer))$kernel_initializer,
+              "keras.initializers.initializers_v2.Constant"))
   
 })
 

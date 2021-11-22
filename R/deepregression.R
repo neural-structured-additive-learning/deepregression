@@ -33,6 +33,7 @@
 #' @param penalty_options options for smoothing and penalty terms defined by \code{\link{penalty_control}}
 #' @param orthog_options options for the orthgonalization defined by \code{\link{orthog_control}}
 #' @param verbose logical; whether to print progress of model initialization to console
+#' @param weight_options options for layer weights defined by \code{\link{weight_control}}
 #' @param ... further arguments passed to the \code{model_builder} function
 #'
 #' @import tensorflow tfprobability keras mgcv dplyr R6 reticulate Matrix
@@ -40,7 +41,7 @@
 #' @importFrom keras fit compile
 #' @importFrom tfruns is_run_active view_run_metrics update_run_metrics write_run_metadata
 #' @importFrom graphics abline filled.contour matplot par points
-#' @importFrom stats as.formula model.matrix terms terms.formula uniroot var dbeta coef predict
+#' @importFrom stats as.formula model.matrix terms terms.formula uniroot var dbeta coef predict na.omit
 #' @importFrom methods slotNames is as
 #'
 #' @references 
@@ -107,6 +108,7 @@ deepregression <- function(
   additional_processors = list(),
   penalty_options = penalty_control(),
   orthog_options = orthog_control(),
+  weight_options = weight_control(),
   verbose = FALSE,
   ...
 )
@@ -202,6 +204,10 @@ deepregression <- function(
   if(!is.null(attr(additional_processors, "controls")))
     penalty_options <- c(penalty_options, attr(additional_processors, "controls"))
   
+  # repeat weight options if not specified otherwise
+  if(length(weight_options)!=length(list_of_formulas))
+    weight_options <- weight_options[rep(1, length(list_of_formulas))]
+
   if(verbose) cat("Preparing additive formula(e)...")
   # parse formulas
   parsed_formulas_contents <- lapply(1:length(list_of_formulas),
@@ -219,8 +225,9 @@ deepregression <- function(
                                        }else{
                                          so$with_layer <- TRUE
                                        }
+                                       so$weight_options <- weight_options[[i]]
                                        
-                                       res <- do.call("processor", 
+                                       res <- do.call("process_terms", 
                                                       c(list(form = list_of_formulas[[i]],
                                                            data = data,
                                                            controls = so,
@@ -265,6 +272,7 @@ deepregression <- function(
                             deep_top = orthog_options$deep_top,
                             orthog_fun = orthog_options$orthog_fun, 
                             split_fun = orthog_options$split_fun,
+                            shared_layers = weight_options[[i]]$shared_layers,
                             param_nr = i)
   )
   if(verbose) cat(" Done.\n")
@@ -476,7 +484,32 @@ distfun_to_dist <- function(dist_fun, preds)
 #' @return a list with input tensors and output tensors that can be passed
 #' to, e.g., \code{keras_model}
 #'
+#' @examples
+#' set.seed(24)
+#' n <- 500
+#' x <- runif(n) %>% as.matrix()
+#' z <- runif(n) %>% as.matrix()
+#' 
+#' y <- x - z
+#' data <- data.frame(x = x, z = z, y = y)
+#' 
+#' # change loss to mse and adapt
+#' # \code{from_preds_to_output} to work 
+#' only on the first output column
+#' mod <- deepregression(
+#'  y = y,
+#'  data = data,
+#'  list_of_formulas = list(loc = ~ 1 + x + z, scale = ~ 1),
+#'  list_of_deep_models = NULL,
+#'  family = "normal",
+#'  from_preds_to_output = function(x, ...) x[[1]],
+#'  loss = "mse"
+#' )
+#' 
+#' 
 #' @export
+#' 
+#' 
 keras_dr <- function(
   list_pred_param,
   weights = NULL,
@@ -526,6 +559,8 @@ keras_dr <- function(
 #' @param weights sample weights
 #' 
 #' @return loss function
+#' 
+#'  
 #' 
 from_dist_to_loss <- function(
   family,

@@ -6,7 +6,7 @@
 \usage{
 get_partial_effect(
   object,
-  name,
+  names = NULL,
   return_matrix = FALSE,
   which_param = 1,
   newdata = NULL
@@ -15,7 +15,7 @@ get_partial_effect(
 \arguments{
 \item{object}{deepregression object}
 
-\item{name}{string; for partial match with smooth term}
+\item{names}{string; for partial match with smooth term}
 
 \item{return_matrix}{logical; whether to return the design matrix or}
 

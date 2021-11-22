@@ -4,7 +4,12 @@
 \alias{get_gam_part}
 \title{Extract gam part from wrapped term}
 \usage{
-get_gam_part(term, specials = c("s", "te", "ti"), wrapper = "vc")
+get_gam_part(term, wrapper = "vc")
+}
+\arguments{
+\item{term}{character; gam model term}
+
+\item{wrapper}{character; function name that is wrapped around the gam part}
 }
 \description{
 Extract gam part from wrapped term

@@ -1,29 +1,3 @@
-# function that extracts variables from special symbols in formulas
-extract_from_special <- function(x)
-{
-  if(length(x)>1) return(sapply(x, extract_from_special))
-  # remove c()
-  if(grepl("c\\(",x))
-  {
-    x <- gsub("c\\([0-9]+ *, *[0-9]+\\)","", x)
-  }
-  #
-  trimws(
-    strsplit(regmatches(x,
-                        gregexpr("(?<=\\().*?(?=\\))", x, perl=T))[[1]],
-             split = ",")[[1]]
-  )
-}
-
-
-remove_brackets <- function(x)
-{
-  
-  if(grepl("^\\(", x))
-    return(gsub("^\\(","",gsub("\\)$","",x))) else return(x)
-  
-}
-
 is_equal_not_null <- function(x,y)
 {
   
@@ -178,10 +152,6 @@ unlist_order_preserving <- function(x)
 
 get_family_name <- function(dist) gsub(".*(^|/)(.*)/$", "\\2", dist$name)
 
-remove_intercept <- function(form) update(form, ~ 0 + . )
-
-frm_to_text <- function(form) Reduce(paste, deparse(form))
-
 train_together_ind <- function(train_together)
 {
 
@@ -206,20 +176,6 @@ sum_cols_smooth <- function(x)
   return(sum(sapply(x[byt], sum_cols_smooth)) +
            sum(sapply(x[!byt], function(y) NCOL(y[[1]]$X))))
 
-}
-
-
-convertfun_tf <- function(x) tf$constant(x, dtype="float32")
-
-mismatch_brackets <- function(x, logical=TRUE)
-{
-  
-  open_matches <- lengths(regmatches(x, gregexpr("\\{", x)))
-  close_matches <- lengths(regmatches(x, gregexpr("\\}", x)))
-  
-  if(logical) return(open_matches!=close_matches) else
-    return(c(open_matches, close_matches))
-  
 }
 
 remove_attr <- function(x)
@@ -261,90 +217,6 @@ get_X_lin_newdata <- function(linname, newdata)
   
 }
 
-
-# used in subnetwork_init
-make_valid_layername <- function(string)
-{
-  
-  gsub("[^a-zA-Z0-9/-]+","_",string)
-  
-}
-
-#### helper functions for processors
-
-
-#' @export
-makelayername <- function(term, param_nr, truncate = 30)
-{
-  
-  if(class(term)=="formula") term <- form2text(term)
-  return(paste0(strtrim(make_valid_layername(gsub("%X%", "", term)), truncate), "_", param_nr))
-  
-}
-
-#' @export
-extractvar <- function(term)
-{
-  
-  all.vars(as.formula(paste0("~", term)))
-  
-}
-
-#' Extract value in term name
-#' 
-#' @param term character representing a formula term
-#' @param name character; the value to extract
-#' @param null_for_missing logical; if TRUE, returns NULL if argument is missing
-#' @return the value used for \code{name}
-#' @export
-#' @examples 
-#' extractval("s(a, la = 2)", "la")
-#' 
-extractval <- function(term, name, null_for_missing = FALSE)
-{
-  
-  if(is.character(term)) term <- as.formula(paste0("~", term))
-  inputs <- as.list(as.list(term)[[2]])[-1]
-  if(name %in% names(inputs)) return(inputs[[name]])
-  if(null_for_missing) return(NULL)
-  warning("Argument ", name, " not found. Setting it to some default.")
-  if(name=="df") return(NULL) else if(name=="la") return(0.1) else return(NULL)
-  
-}
-
-extractlen <- function(term, data)
-{
-  
-  vars <- extractvar(term)
-  if(is.list(data) & length(vars)==1) return(extractdim(data[[vars]]))
-  return(sum(sapply(vars, function(v) NCOL(data[v]))))
-  
-}
-
-extractdim <- function(x)
-{
-  
-  if(is.null(dim(x))) return(1L)
-  return(dim(x)[-1])
-  
-}
-
-form2text <- function(form)
-{
-  
-  return(gsub(" ","", (Reduce(paste, deparse(form)))))
-  
-}
-
-get_special <- function(term, specials)
-{
-  
-  sp <- attr(terms.formula(as.formula(paste0("~",term)), 
-                           specials = specials), "specials")
-  names(unlist(sp))
-  
-}
-
 get_names_pfc <- function(pfc) sapply(pfc, "[[", "term")
 
 #### used for the weight history
@@ -375,26 +247,7 @@ WeightHistory <- R6::R6Class("WeightHistory",
                              ))
 
 
-#' Function to index tensors columns
-#' 
-#' @param A tensor
-#' @param start first index
-#' @param end last index (equals start index if NULL)
-#' @return sliced tensor
-#' @export
-#' 
-tf_stride_cols <- function(A, start, end=NULL)
-{
-  
-  stopifnot(start <= end)
-  if(is.null(end)) end <- start
-  return(
-    #tf$strided_slice(A, c(0L,as.integer(start-1)), c(tf$shape(A)[1], as.integer(end)))
-    tf$keras$layers$Lambda(function(x) x[,as.integer(start):as.integer(end)])(A)
-  )
-  
-  
-}
+
 
 #' Function to subset parsed formulas
 #' 
@@ -416,126 +269,6 @@ get_type_pfc <- function(pfc, type = NULL)
   to_return <- linear * ("linear" %in% type) + smooth * ("smooth" %in% type)
   
   return(to_return)
-  
-}
-
-get_processor_name <- function(term)
-{
-  
-  gsub("([^\\(])\\(.*","\\1", term)
-  
-}
-
-###### TF Functions ######
-
-#' TensorFlow repeat function which is not available for TF 2.0
-#' 
-#' @param a tensor
-#' @param dim dimension for repeating
-#' 
-#' @export
-#' 
-tf_repeat <- function(a, dim)
-  tf$reshape(tf$tile(tf$expand_dims(a, axis = -1L),  c(1L, 1L, dim)), 
-             shape = list(-1L, a$shape[[2]]*dim))
-
-#' Row-wise tensor product using TensorFlow
-#' 
-#' @param a,b tensor
-#' 
-#' @export
-#' 
-tf_row_tensor <- function(a,b)
-{
-  tf$multiply(
-    tf_row_tensor_left_part(a,b),
-    tf_row_tensor_right_part(a,b)
-  )
-}
-
-tf_row_tensor_left_part <- function(a,b)
-{
-  tf_repeat(a, b$shape[[2]])
-}
-
-tf_row_tensor_right_part <- function(a,b)
-{
-  tf$tile(b, c(1L, a$shape[[2]]))
-}
-
-get_terms_rwt <- function(term)
-{
-  
-  trimws(strsplit(gsub("rwt\\((.*)\\)", "\\1", term), split="%X%")[[1]])
-  
-}
-
-
-remove_layer <- function(term){
-  
-  gsub("\\,\\s?layer\\s?=.*[^\\)]","",term)
-  
-}
-
-rename_rwt <- function(form){
-  
-  tefo <- terms(form)
-  trms <- attr(tefo,"term.labels")
-  if(length(trms)==0) return(form)
-  int <- attr(tefo,"intercept")
-  
-  rwts <- grepl("%X%", trms)
-  
-  if(all(rwts)) return(form)
-  
-  if(any(rwts)){
-    
-    trms <- unlist(lapply(trms, function(x){
-      
-      if(grepl("%X%", x)){
-        
-        if(grepl("^\\(.*\\)\\s?%X%\\s.*?", x))
-          x = expand_rwt(x, 1) 
-        if(grepl(".*\\s?%X%\\s?\\(.*\\)$", x))
-          x = expand_rwt(x, 2)
-        
-      }
-      return(x)
-      
-    }))
-    
-    rwts <- grepl("%X%", trms) & !grepl("rwt\\(", trms)
-    
-    trms[which(rwts)] <- sapply(trms[which(rwts)], function(x){
-      
-      return(paste0("rwt(", x, ")"))
-      
-    })
-    
-  }
-  
-  form <- paste(trms, collapse = " + ")
-  if(!int) form <- paste0("0 + ", form)
-  form <- as.formula(paste0("~ ", form))
-  
-  return(form)
-  
-}
-
-expand_rwt <- function(x, side){
-  
-  if(side==1){
-    bracket_terms <- gsub("^\\((.*)\\)\\s?%X%\\s(.*)?", "\\1", x)
-    kron_term <- gsub("^\\((.*)\\)\\s?%X%\\s(.*)?", "\\2", x)
-  }else{
-    kron_term <- gsub("(.*)\\s?%X%\\s?\\((.*)\\)$", "\\1", x)
-    bracket_terms <- gsub("(.*)\\s?%X%\\s?\\((.*)\\)$", "\\2", x)
-  }
-  
-  kron_term <- trimws(kron_term)
-  bracket_terms <- trimws(strsplit(bracket_terms, "+", fixed = T)[[1]])
-  sapply(bracket_terms, function(b) paste0(kron_term, " %X% ", b))
-  
   
 }
 
@@ -610,9 +343,4 @@ combine_penalties <- function(penalties, dims)
   }
 }
 
-rename_offset <- function(form)
-{
-  
-  as.formula(gsub("offset\\(", "offsetx\\(", form2text(form)))
-  
-}
+is_len_zero <- function(x) length(x)==0

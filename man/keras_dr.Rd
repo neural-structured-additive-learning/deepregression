@@ -46,3 +46,27 @@ to, e.g., \code{keras_model}
 \description{
 Compile a Deep Distributional Regression Model
 }
+\examples{
+set.seed(24)
+n <- 500
+x <- runif(n) \%>\% as.matrix()
+z <- runif(n) \%>\% as.matrix()
+
+y <- x - z
+data <- data.frame(x = x, z = z, y = y)
+
+# change loss to mse and adapt
+# \code{from_preds_to_output} to work 
+only on the first output column
+mod <- deepregression(
+ y = y,
+ data = data,
+ list_of_formulas = list(loc = ~ 1 + x + z, scale = ~ 1),
+ list_of_deep_models = NULL,
+ family = "normal",
+ from_preds_to_output = function(x, ...) x[[1]],
+ loss = "mse"
+)
+
+
+}

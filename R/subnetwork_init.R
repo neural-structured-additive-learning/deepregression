@@ -5,6 +5,8 @@
 #' is different to the one extracted from the provided network 
 #' @param orthog_fun function used for orthogonalization
 #' @param split_fun function to split the network to extract head
+#' @param shared_layers list defining shared weights within one predictor;
+#' each list item is a vector of characters of terms as given in the parameter formula
 #' @param param_nr integer number for the distribution parameter
 #' @return returns a list of input and output for this additive predictor
 #' 
@@ -13,15 +15,41 @@
 subnetwork_init <- function(pp, deep_top = NULL, 
                             orthog_fun = orthog_tf, 
                             split_fun = split_model,
+                            shared_layers = NULL,
                             param_nr = 1)
 {
   
   
   inputs <- makeInputs(pp, param_nr = param_nr)
   
+  layer_matching <- 1:length(pp)
+  names(layer_matching) <- layer_matching
+  
+  if(!is.null(shared_layers))
+  {
+    
+    names_terms <- get_names_pfc(pp)
+    
+    for(group in shared_layers){
+      
+      layer_ref_nr <- which(names_terms==group[1])
+      layer_opts <- get("layer_args", environment(pp[[layer_ref_nr]]$layer))
+      layer_opts$name <- paste0("shared_", 
+                                makelayername(paste(group, collapse="_"), 
+                                              param_nr))
+      layer_ref <- do.call(get("layer_class", environment(pp[[layer_ref_nr]]$layer)),
+                           layer_opts)
+      
+      terms_replace_layer <- which(names_terms%in%group)
+      layer_matching[terms_replace_layer] <- layer_ref_nr
+      for(i in terms_replace_layer) pp[[i]]$layer <- layer_ref
+      
+    }
+  }
+  
   if(all(sapply(pp, function(x) is.null(x$right_from_oz)))){ # if there is no term to orthogonalize
     
-    outputs <- lapply(1:length(pp), function(i) pp[[i]]$layer(inputs[[i]]))
+    outputs <- lapply(1:length(pp), function(i) pp[[layer_matching[i]]]$layer(inputs[[i]]))
     outputs <- layer_add_identity(outputs)
     return(list(inputs, outputs))
   
@@ -34,8 +62,9 @@ subnetwork_init <- function(pp, deep_top = NULL,
     outputs_wo_oz <- setdiff(1:length(pp), c(outputs_w_oz, outputs_onlyfor_oz))
     
     outputs <- list()
-    if(length(outputs_wo_oz)>0) outputs <- layer_add_identity(lapply((1:length(pp))[outputs_wo_oz], 
-                                                                     function(i) pp[[i]]$layer(inputs[[i]])))
+    if(length(outputs_wo_oz)>0) outputs <- 
+      layer_add_identity(lapply((1:length(pp))[outputs_wo_oz], 
+                                function(i) pp[[layer_matching[i]]]$layer(inputs[[i]])))
     ox_outputs <- list()
     k <- 1
     
@@ -44,9 +73,9 @@ subnetwork_init <- function(pp, deep_top = NULL,
       inputs_for_oz <- which(sapply(pp, function(ap) i %in% ap$right_from_oz))
       ox <- layer_concatenate_identity(inputs[inputs_for_oz])
       if(is.null(deep_top)){
-        deep_splitted <- split_fun(pp[[i]]$layer)
+        deep_splitted <- split_fun(pp[[layer_matching[i]]]$layer)
       }else{
-        deep_splitted <- list(pp[[i]]$layer, deep_top)
+        deep_splitted <- list(pp[[layer_matching[i]]]$layer, deep_top)
       }
     
       deep <- deep_splitted[[1]](inputs[[i]])
