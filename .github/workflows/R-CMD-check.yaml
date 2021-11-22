@@ -24,19 +24,19 @@ jobs:
       - name: "[Custom block] [Cache] Prepare weekly timestamp for cache"
         id: date
         run: echo "::set-output name=datem::$(date '+%Y-%M')"
-
-      - name: [Cache] Cache R packages
+        
+      - name: Cache R packages
         uses: pat-s/always-upload-cache@v2
         with:
           path: ${{ env.R_LIBS_USER }}
           key: rcache-${{steps.date.outputs.datem}}
           restore-keys: ${{steps.date.outputs.datem}}
 
-      - name: [Cache] Cache python packages I
+      - name: Cache python I
         id: pipdir
         run: echo "::set-output name=pipdir::$(pip3 cache dir)"
 
-      - name: [Cache] Cache python packages II 
+      - name: Cache python II
         uses: pat-s/always-upload-cache@v2
         with:
           path: ${{ steps.pipdir.outputs.pipdir }}
