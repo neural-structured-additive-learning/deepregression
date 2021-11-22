@@ -41,7 +41,7 @@
 #' @importFrom keras fit compile
 #' @importFrom tfruns is_run_active view_run_metrics update_run_metrics write_run_metadata
 #' @importFrom graphics abline filled.contour matplot par points
-#' @importFrom stats as.formula model.matrix terms terms.formula uniroot var dbeta coef predict
+#' @importFrom stats as.formula model.matrix terms terms.formula uniroot var dbeta coef predict na.omit
 #' @importFrom methods slotNames is as
 #'
 #' @references 

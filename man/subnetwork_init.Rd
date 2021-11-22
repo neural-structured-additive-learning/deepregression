@@ -9,6 +9,7 @@ subnetwork_init(
   deep_top = NULL,
   orthog_fun = orthog_tf,
   split_fun = split_model,
+  shared_layers = NULL,
   param_nr = 1
 )
 }
@@ -21,6 +22,9 @@ is different to the one extracted from the provided network}
 \item{orthog_fun}{function used for orthogonalization}
 
 \item{split_fun}{function to split the network to extract head}
+
+\item{shared_layers}{list defining shared weights within one predictor;
+each list item is a vector of characters of terms as given in the parameter formula}
 
 \item{param_nr}{integer number for the distribution parameter}
 }

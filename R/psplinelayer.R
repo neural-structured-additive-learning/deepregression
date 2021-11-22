@@ -209,8 +209,11 @@ predict_gam_handler <- function(object, newdata)
 
 #' Extract gam part from wrapped term 
 #' 
+#' @param term character; gam model term
+#' @param wrapper character; function name that is wrapped around the gam part
+#' 
 #' @export
-get_gam_part <- function(term, specials = c("s", "te", "ti"), wrapper = "vc")
+get_gam_part <- function(term, wrapper = "vc")
 {
   
   gsub(paste0(wrapper, "\\(((s|te|ti)\\(.*\\))\\,\\s*by\\s*=.*\\)"),"\\1", term)

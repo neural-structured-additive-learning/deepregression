@@ -19,6 +19,7 @@ deepregression(
   additional_processors = list(),
   penalty_options = penalty_control(),
   orthog_options = orthog_control(),
+  weight_options = weight_control(),
   verbose = FALSE,
   ...
 )
@@ -68,6 +69,8 @@ Can have an attribute \code{"controls"} to pass additional controls}
 \item{penalty_options}{options for smoothing and penalty terms defined by \code{\link{penalty_control}}}
 
 \item{orthog_options}{options for the orthgonalization defined by \code{\link{orthog_control}}}
+
+\item{weight_options}{options for layer weights defined by \code{\link{weight_control}}}
 
 \item{verbose}{logical; whether to print progress of model initialization to console}
 
