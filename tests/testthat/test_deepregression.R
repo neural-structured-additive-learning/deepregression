@@ -202,6 +202,42 @@ test_that("Generalized additive model with RWT in formula", {
 })
 
 
+test_that("GAMs with shared weights", {
+  n <- 1500
+  deep_model <- function(x) x %>%
+    layer_dense(units = 2L, activation = "relu", use_bias = FALSE) %>%
+    layer_dense(units = 1L, activation = "linear")
+  
+  x <- runif(n) %>% as.matrix()
+  true_mean_fun <- function(xx) sin(10 * apply(xx, 1, mean) + 1)
+  
+  # 2 deep 1 spline + intercept
+  data = data.frame(matrix(x, ncol=3))
+  y <- true_mean_fun(data)
+  mod <- deepregression(
+    y = y,
+    data = data,
+    list_of_formulas = list(loc = ~ s(X3) + s(X2), 
+                            scale = ~1 + s(X1) + X2),
+    list_of_deep_models = list(d = deep_model, g = deep_model),
+    weight_options = weight_control(
+      shared_layers = list(list(c("s(X3)","s(X2)")),NULL)
+    )
+  )
+
+  expect_equal(mod$init_params$parsed_formulas_contents[[1]][[1]]$shared_name,
+               mod$init_params$parsed_formulas_contents[[1]][[2]]$shared_name)
+  
+  expect_equal(c(coef(mod, which_param = 1)[[1]]),
+               c(coef(mod, which_param = 1)[[2]]))
+
+  mod %>% fit(epochs = 2)
+
+  expect_equal(c(coef(mod, which_param = 1)[[1]]),
+               c(coef(mod, which_param = 1)[[2]]))
+  
+})
+
 test_that("GAMs with fixed weights", {
   n <- 1500
   deep_model <- function(x) x %>%
@@ -223,7 +259,7 @@ test_that("GAMs with fixed weights", {
       warmstart_weights = list(list("s(X3)" = -4:4), list("s(X1)" = rep(1,9), "X2" = 5))
     )
   )
-
+  
   expect_is(mod, "deepregression")
   
   expect_equal(c(coef(mod, which_param = 1)[[1]]),
@@ -248,9 +284,9 @@ test_that("GAMs with fixed weights", {
     )
   )
   
-
+  
   mod %>% fit(epochs = 2)
-
+  
   expect_equal(c(coef(mod, which_param = 1)[[1]]),
                -4:4)
   
@@ -259,5 +295,5 @@ test_that("GAMs with fixed weights", {
   
   expect_equal(c(coef(mod, which_param = 2)[[2]]), 5)
   
-    
+  
 })

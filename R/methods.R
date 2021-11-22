@@ -652,8 +652,16 @@ log_score <- function(
 #' 
 get_weight_by_name <- function(mod, name, param_nr=1)
 {
-  
-  name <- makelayername(name, param_nr)
+
+  # check for shared layer  
+  names_pfc <- get_names_pfc(mod$init_params$parsed_formulas_contents[[param_nr]])
+  names_pfc[names_pfc=="(Intercept)"] <- "1"
+  pfc_term <- mod$init_params$parsed_formulas_contents[[param_nr]][[which(names_pfc==name)]]
+  if(!is.null(pfc_term$shared_name)){
+    name <- pfc_term$shared_name
+  }else{
+    name <- makelayername(name, param_nr) 
+  }
   names <- sapply(mod$model$layers,"[[","name")
   w <- which(name==names)
   if(length(w)==0)

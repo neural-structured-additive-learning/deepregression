@@ -88,6 +88,19 @@ process_terms <- function(
     
   }
   
+  if(!is.null(controls$weight_options$shared_layers)){
+    
+    names_res <- get_names_pfc(result)
+    for(group in controls$weight_options$shared_layers){
+      for(term in group){
+       result[[which(term==names_res)]]$shared_name <-  
+         paste0("shared_", 
+                makelayername(paste(group, collapse="_"), 
+                              param_nr))
+      }
+    }
+  }
+  
   return(result)
   
 }
@@ -457,6 +470,7 @@ rwt_processor <- function(term, data, output_dim, param_nr, controls){
   )
   
 }
+
 
 dnn_processor <- function(dnn){
   

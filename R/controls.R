@@ -110,6 +110,9 @@ orthog_control <- function(split_fun = split_model,
 #' the user can further specify a list for each distribution parameter
 #' with list elements corresponding to term names with values as vectors
 #' corresponding to start weights of the respective weights
+#' @param shared_layers list for each distribution parameter;
+#' each list item can be again a list of character vectors specifying terms
+#' which share layers
 #' 
 #' @return Returns a list with options
 #' 
@@ -131,14 +134,18 @@ weight_control <- function(
     kernel_constraint = NULL,
     bias_constraint = NULL
   ),
-  warmstart_weights = NULL
+  warmstart_weights = NULL,
+  shared_layers = NULL
 ){
+  
+  
   
   if(!is.null(specific_weight_options) && !is.null(warmstart_weights)){
     
-    if(length(specific_weight_options)!=length(warmstart_weights))
-      stop("warmstart_weights must be a list of the same length as specific_weight_options",
-           "if both are given.")
+    if(!is.null(shared_layers) && 
+      (length(specific_weight_options)!=length(warmstart_weights) | 
+         length(specific_weight_options)!=length(shared_layers)))
+      stop("specific options must be a list of the same length.")
     
     len <- length(specific_weight_options)
     
@@ -154,17 +161,29 @@ weight_control <- function(
     
   }else{ # both NULL
     
-    len <- 1 # unclear at this stage how many formula terms
+    if(!is.null(shared_layers)){
+      
+      len <- length(shared_layers)
+      warmstart_weights <- vector("list", length = len)
+      specific_weight_options <- vector("list", length = len)
+      
+    }else{
+      
+      len <- 1 # unclear at this stage how many formula terms
+      
+    }
     
   }
 
-  ret_list <- list(list(specific = NULL, general = NULL, warmstarts = NULL))[rep(1, len)]
+  ret_list <- list(list(specific = NULL, general = NULL, 
+                        warmstarts = NULL, shared_layers = NULL))[rep(1, len)]
   
   for(i in 1:length(ret_list)){
   
     ret_list[[i]]$specific <- specific_weight_options[[i]]
     ret_list[[i]]$general <- general_weight_options
     ret_list[[i]]$warmstarts <- warmstart_weights[[i]]
+    ret_list[[i]]$shared_layers <- shared_layers[[i]]
     
   }
   
