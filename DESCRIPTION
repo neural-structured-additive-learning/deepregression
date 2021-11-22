@@ -1,6 +1,6 @@
 Package: deepregression
 Title: Fitting Deep Distributional Regression
-Version: 0.1
+Version: 0.1.0-9000
 Authors@R: c(
     person("David", "Ruegamer", , "david.ruegamer@gmail.com", role = c("aut", "cre")),
     person("Florian", "Pfisterer", , "florian.pfisterer@stat.uni-muenchen.de", role = c("ctb")),
@@ -21,7 +21,8 @@ Config/reticulate:
 Depends: R (>= 4.0.0)
 Suggests:
     testthat,
-    knitr
+    knitr,
+    covr
 Imports:
     tensorflow (>= 2.2.0),
     tfprobability,
