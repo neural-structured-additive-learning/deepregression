@@ -1,4 +1,8 @@
-# used by gam_processor
+#' used by gam_processor
+#' @param pp processed term
+#' @param weights layer weights
+#' @param grid_length length for grid for evaluating basis
+#' @param pe_fun function used to generate partial effects
 #' @export
 gam_plot_data <- function(pp, weights, grid_length = 40, pe_fun = pe_gen)
 {
@@ -84,6 +88,8 @@ tp_penalty <- function(P1,P2,lambda1,lambda2=NULL)
   
 }
 
+#' Convenience function to extract penalty matrix and value
+#' @param x evaluated smooth term object
 #' @export
 extract_sp_S <- function(x)
 {

@@ -105,7 +105,7 @@ orthog_control <- function(split_fun = split_model,
 #' weight terms; must be a list of length \code{length(list_of_formulas)} and
 #' each element in turn a named list (names are term names as in the formula)
 #' with specific options in a list
-#' @param general_layer_options default options for layers
+#' @param general_weight_options default options for layers
 #' @param warmstart_weights While all keras layer options are availabe,
 #' the user can further specify a list for each distribution parameter
 #' with list elements corresponding to term names with values as vectors

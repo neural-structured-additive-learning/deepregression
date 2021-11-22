@@ -118,12 +118,12 @@ process_terms <- function(
 #' layer if \code{controls$with_layer} is FALSE
 #' @param name character; name of layer. 
 #' if NULL, \code{makelayername} will be used to create layer name
-#' @param use_bias logical; use bias in layer. Default is FALSE
 #' @param further_layer_args named list; further arguments passed to
 #' the layer
 #' @param layer_args_names character vector; if NULL, default
 #' layer args will be used. Needs to be set for layers that do not
 #' provide the arguments of a default Dense layer.
+#' @param units integer; number of units for layer
 #' @param ... other keras layer parameters
 #' 
 #' @return a basic processor list structure

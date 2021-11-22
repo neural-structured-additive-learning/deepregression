@@ -495,7 +495,7 @@ distfun_to_dist <- function(dist_fun, preds)
 #' 
 #' # change loss to mse and adapt
 #' # \code{from_preds_to_output} to work 
-#' only on the first output column
+#' # only on the first output column
 #' mod <- deepregression(
 #'  y = y,
 #'  data = data,
