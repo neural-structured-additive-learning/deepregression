@@ -295,5 +295,24 @@ test_that("GAMs with fixed weights", {
   
   expect_equal(c(coef(mod, which_param = 2)[[2]]), 5)
   
+  ### fix intercept (relevant for deeptrafo)
+  
+  mod <- deepregression(
+    y = y,
+    data = data,
+    list_of_formulas = list(loc = ~ 1 + s(X3) + g(X2), scale = ~1 + s(X1) + X2),
+    list_of_deep_models = list(d = deep_model, g = deep_model),
+    weight_options = weight_control(
+      warmstart_weights = list(list("1" = 0), NULL),
+      specific_weight_options = list(list("1" = list(trainable = FALSE)),
+                                     NULL)
+    )
+  )
+  
+  expect_is(mod, "deepregression")
+  
+  expect_equal(c(coef(mod, which_param = 1)$`(Intercept)`), 0)
+  mod %>% fit(epochs = 2)
+  expect_equal(c(coef(mod, which_param = 1)$`(Intercept)`), 0)
   
 })

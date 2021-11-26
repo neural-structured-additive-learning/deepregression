@@ -84,19 +84,41 @@ plot.deepregression <- function(
         
         for(k in 1:NCOL(plotData[[name]]$partial_effect)){
           
-          suppressWarnings(
-            filled.contour(
-              plotData[[name]]$x,
-              plotData[[name]]$y,
-              matrix(plotData[[name]]$partial_effect[,k], 
-                     ncol=length(plotData[[name]]$y)),
-              ...,
-              xlab = colnames(plotData[[name]]$df)[1],
-              ylab = colnames(plotData[[name]]$df)[2],
-              # zlab = "partial effect",
-              main = name
+          if(is.factor(plotData[[name]]$y)){
+            
+            ind <- rep(levels(plotData[[name]]$y), 
+                       each = length(plotData[[name]]$x))
+            
+            for(lev in levels(plotData[[name]]$y))
+              suppressWarnings(
+                plot(
+                  plotData[[name]]$x,
+                  plotData[[name]]$partial_effect[ind==lev],
+                  type = type,
+                  xlab = colnames(plotData[[name]]$df)[1],
+                  ylab = "partial effect",
+                  main = gsub(colnames(plotData[[name]]$df)[2], lev, name),
+                  ...
+                )
+              )
+            
+          }else{
+            
+            suppressWarnings(
+              filled.contour(
+                plotData[[name]]$x,
+                plotData[[name]]$y,
+                matrix(plotData[[name]]$partial_effect[,k], 
+                       ncol=length(plotData[[name]]$y)),
+                ...,
+                xlab = colnames(plotData[[name]]$df)[1],
+                ylab = colnames(plotData[[name]]$df)[2],
+                # zlab = "partial effect",
+                main = name
+              )
             )
-          )
+            
+          }
           
         }
         
