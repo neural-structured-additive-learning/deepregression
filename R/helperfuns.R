@@ -28,6 +28,29 @@ NCOL0 <- function(x)
   return(NCOL(x))
 }
 
+get_mod_names <- function(x)
+{
+  
+  sapply(x$model$layers,"[[","name")
+  
+}
+
+get_weight_by_opname <- function(mod, name)
+{
+  
+  names <- get_mod_names(mod)
+  w <- which(name==names)
+  if(length(w)==0)
+    stop("Cannot find specified ", name, " in model weights.")
+  wgts <- mod$model$layers[[w]]$weights
+  if(is.list(wgts) & length(wgts)==1)
+    return(as.matrix(wgts[[1]]))
+  return(wgts)
+  
+}
+
+get_names_mod <- function(mod, which_param=1)
+  get_names_pfc(mod$init_params$parsed_formulas_contents[[which_param]])
 
 fac_to_int_representation <- function(data)
 {

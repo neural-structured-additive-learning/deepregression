@@ -30,7 +30,7 @@ test_that("subnetwork_init", {
                   controls = controls)
   )
   
-  res <- suppressWarnings(subnetwork_init(pp))
+  res <- suppressWarnings(subnetwork_init(list(pp)))
   expect_true(all(sapply(res[[1]], function(x) "python.builtin.object" %in% class(x))))
   expect_true("python.builtin.object" %in% class(res[[2]]))
   # does not work -- depending on the platform and tf version: 
@@ -70,7 +70,7 @@ test_that("shared layer within formula", {
                   controls = controls)
   )
   
-  res <- suppressWarnings(subnetwork_init(pp))
+  res <- suppressWarnings(subnetwork_init(list(pp)))
   expect_is(res, class = "list")
   
 })

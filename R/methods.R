@@ -669,10 +669,11 @@ log_score <- function(
 #' @param mod fitted deepregression object
 #' @param name name of partial effect
 #' @param param_nr distribution parameter number
+#' @param postfixes character (vector) appended to layer name
 #' @return weight matrix
 #' 
 #' 
-get_weight_by_name <- function(mod, name, param_nr=1)
+get_weight_by_name <- function(mod, name, param_nr=1, postfixes="")
 {
 
   # check for shared layer  
@@ -680,17 +681,16 @@ get_weight_by_name <- function(mod, name, param_nr=1)
   names_pfc[names_pfc=="(Intercept)"] <- "1"
   pfc_term <- mod$init_params$parsed_formulas_contents[[param_nr]][[which(names_pfc==name)]]
   if(!is.null(pfc_term$shared_name)){
-    name <- pfc_term$shared_name
+    this_name <- paste0(pfc_term$shared_name, postfixes)
   }else{
-    name <- makelayername(name, param_nr) 
+    this_name <- paste0(makelayername(name, param_nr), postfixes)
   }
-  names <- sapply(mod$model$layers,"[[","name")
-  w <- which(name==names)
-  if(length(w)==0)
-    stop("Cannot find specified name in additive predictor #", param_nr,".")
-  wgts <- mod$model$layers[[w]]$weights
-  if(is.list(wgts) & length(wgts)==1)
-    return(as.matrix(wgts[[1]]))
+  names <- get_mod_names(mod)
+  if(length(this_name)>1){
+    wgts <- lapply(this_name, function(name) get_weight_by_opname(mod, name))
+  }else{
+    wgts <- get_weight_by_opname(mod, this_name)
+  }
   return(wgts)
   
 }
@@ -704,15 +704,15 @@ get_weight_by_name <- function(mod, name, param_nr=1)
 #' @param which_param integer; which distribution parameter
 #' the partial effect (\code{FALSE}, default)
 #' @param newdata data.frame; new data (optional)
+#' @param ... arguments passed to \code{get_weight_by_name}
 #' 
 #' @export
 #' 
 get_partial_effect <- function(object, names=NULL, return_matrix = FALSE, 
-                               which_param = 1, newdata = NULL)
+                               which_param = 1, newdata = NULL, ...)
 {
   
-  pfc <- object$init_params$parsed_formulas_contents[[which_param]]
-  names_pfc <- get_names_pfc(pfc)
+  names_pfc <- get_names_mod(object, which_param)
   names <- if(!is.null(names)) intersect(names, names_pfc) else names_pfc
   
   if(length(names)==0)
@@ -722,7 +722,7 @@ get_partial_effect <- function(object, names=NULL, return_matrix = FALSE,
     w <- which(name==names_pfc)
     
     if(name=="(Intercept)") name <- "1"
-    weights <- get_weight_by_name(object, name = name, param_nr = which_param)
+    weights <- get_weight_by_name(object, name = name, param_nr = which_param, ...)
     
     pe_fun <- object$init_params$parsed_formulas_contents[[which_param]][[w]]$partial_effect
     if(is.null(pe_fun)){

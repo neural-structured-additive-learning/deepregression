@@ -268,7 +268,7 @@ deepregression <- function(
   if(verbose) cat("Preparing subnetworks...")
   # create additive predictor per formula
   additive_predictors <- lapply(1:length(parsed_formulas_contents), function(i)
-    subnetwork_builder[[i]](parsed_formulas_contents[[i]], 
+    subnetwork_builder[[i]](parsed_formulas_contents, 
                             deep_top = orthog_options$deep_top,
                             orthog_fun = orthog_options$orthog_fun, 
                             split_fun = orthog_options$split_fun,
