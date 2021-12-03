@@ -9,7 +9,8 @@ get_partial_effect(
   names = NULL,
   return_matrix = FALSE,
   which_param = 1,
-  newdata = NULL
+  newdata = NULL,
+  ...
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ get_partial_effect(
 the partial effect (\code{FALSE}, default)}
 
 \item{newdata}{data.frame; new data (optional)}
+
+\item{...}{arguments passed to \code{get_weight_by_name}}
 }
 \description{
 Return partial effect of one smooth term

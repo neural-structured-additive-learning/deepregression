@@ -44,9 +44,9 @@ the layer}
 layer args will be used. Needs to be set for layers that do not
 provide the arguments of a default Dense layer.}
 
-\item{...}{other keras layer parameters}
+\item{units}{integer; number of units for layer}
 
-\item{use_bias}{logical; use bias in layer. Default is FALSE}
+\item{...}{other keras layer parameters}
 }
 \value{
 a basic processor list structure

@@ -4,7 +4,7 @@
 \alias{get_weight_by_name}
 \title{Function to retrieve the weights of a structured layer}
 \usage{
-get_weight_by_name(mod, name, param_nr = 1)
+get_weight_by_name(mod, name, param_nr = 1, postfixes = "")
 }
 \arguments{
 \item{mod}{fitted deepregression object}
@@ -12,6 +12,8 @@ get_weight_by_name(mod, name, param_nr = 1)
 \item{name}{name of partial effect}
 
 \item{param_nr}{distribution parameter number}
+
+\item{postfixes}{character (vector) appended to layer name}
 }
 \value{
 weight matrix

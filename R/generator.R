@@ -207,7 +207,7 @@ prepare_generator_deepregression <- function(
   
 }
 
-predict_generator.deepregression <- function(
+predict_gen <- function(
   object,
   newdata = NULL,
   batch_size = NULL,

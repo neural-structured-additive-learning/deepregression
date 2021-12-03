@@ -221,7 +221,7 @@ test_that("GAMs with shared weights", {
                             scale = ~1 + s(X1) + X2),
     list_of_deep_models = list(d = deep_model, g = deep_model),
     weight_options = weight_control(
-      shared_layers = list(list(c("s(X3)","s(X2)")),NULL)
+      shared_layers = list(list(c("s(X3)","s(X2)")), NULL)
     )
   )
 
@@ -272,13 +272,15 @@ test_that("GAMs with fixed weights", {
   
   data = data.frame(matrix(x, ncol=3))
   y <- true_mean_fun(data)
+  
   mod <- deepregression(
     y = y,
     data = data,
     list_of_formulas = list(loc = ~ s(X3) + g(X2), scale = ~1 + s(X1) + X2),
     list_of_deep_models = list(d = deep_model, g = deep_model),
     weight_options = weight_control(
-      warmstart_weights = list(list("s(X3)" = -4:4), list("s(X1)" = rep(1,9), "X2" = 5)),
+      warmstart_weights = list(list("s(X3)" = -4:4), 
+                               list("s(X1)" = rep(1,9), "X2" = 5)),
       specific_weight_options = list(list("s(X3)" = list(trainable = FALSE)),
                                      list("X2" = list(trainable = FALSE)))
     )

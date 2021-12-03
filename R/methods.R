@@ -162,7 +162,7 @@ predict.deepregression <- function(
   # image case
   if(length(object$init_params$image_var)>0 | !is.null(batch_size)){
     
-    return(predict_generator.deepregression(object, newdata, batch_size, apply_fun, convert_fun))
+    return(predict_gen(object, newdata, batch_size, apply_fun, convert_fun))
   
   }else{
     

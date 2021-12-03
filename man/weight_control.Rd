@@ -20,6 +20,8 @@ weight terms; must be a list of length \code{length(list_of_formulas)} and
 each element in turn a named list (names are term names as in the formula)
 with specific options in a list}
 
+\item{general_weight_options}{default options for layers}
+
 \item{warmstart_weights}{While all keras layer options are availabe,
 the user can further specify a list for each distribution parameter
 with list elements corresponding to term names with values as vectors
@@ -30,8 +32,6 @@ each list item can be again a list of character vectors specifying terms
 which share layers}
 
 \item{len}{integer; the length of \code{list_of_formulas}}
-
-\item{general_layer_options}{default options for layers}
 }
 \value{
 Returns a list with options

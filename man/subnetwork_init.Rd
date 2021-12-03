@@ -10,11 +10,13 @@ subnetwork_init(
   orthog_fun = orthog_tf,
   split_fun = split_model,
   shared_layers = NULL,
-  param_nr = 1
+  param_nr = 1,
+  pp_input_subset = param_nr,
+  pp_layer_subset = param_nr
 )
 }
 \arguments{
-\item{pp}{processed predictor list from \code{processor}}
+\item{pp}{list of processed predictor lists from \code{processor}}
 
 \item{deep_top}{keras layer if the top part of the deep network after orthogonalization
 is different to the one extracted from the provided network}
@@ -27,6 +29,9 @@ is different to the one extracted from the provided network}
 each list item is a vector of characters of terms as given in the parameter formula}
 
 \item{param_nr}{integer number for the distribution parameter}
+
+\item{pp_input_subset, pp_layer_subset}{indices defining which subset of pp to
+take as inputs and layers for this subnetwork; per default \code{param_nr}}
 }
 \value{
 returns a list of input and output for this additive predictor
