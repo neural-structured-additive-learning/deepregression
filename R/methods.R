@@ -457,7 +457,8 @@ cv.deepregression <- function(
     train_ind <- this_fold[[1]]
     test_ind <- this_fold[[2]]
 
-    x_train <- prepare_data(x$init_params$parsed_formulas_content)
+    x_train <- prepare_data(x$init_params$parsed_formulas_content,
+                            gamdata = x$init_params$gamdata$data_trafos)
     
     train_data <- lapply(x_train, function(x)
         subset_array(x, train_ind))
