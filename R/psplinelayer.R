@@ -379,12 +379,9 @@ precalc_gam <- function(lof, data, controls)
   
   tfs <- lapply(lof, function(form) terms.formula(form, specials = c("s", "te", "ti")))
   termstrings <- lapply(tfs, function(tf) trmstrings <- attr(tf, "term.labels"))
-  # split OZ parts
+  # split % % parts
   termstrings <- lapply(termstrings, function(tfs) unlist(sapply(tfs, function(tf) 
-    trimws(strsplit(tf, split = "%OZ%")[[1]]))))
-  # split RWT parts
-  termstrings <- lapply(termstrings, function(tfs) unlist(sapply(tfs, function(tf) 
-    trimws(strsplit(tf, split = "%X%")[[1]]))))
+    trimws(strsplit(tf, split = "%.*%")[[1]]))))
   # split terms in brackets and remove leading brackets
   termstrings <- lapply(termstrings, function(tfs) unlist(sapply(tfs, function(tf) 
     gsub("^\\(", "", trimws(strsplit(tf, split = "+", fixed = T)[[1]])))))
