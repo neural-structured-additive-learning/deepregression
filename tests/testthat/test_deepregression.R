@@ -116,6 +116,8 @@ test_that("Generalized additive model", {
   expect_is(mod, "deepregression")
   
   mod %>% fit(epochs = 2)
+  
+  pred <- mod %>% predict(data)
 })
 
 

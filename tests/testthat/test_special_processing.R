@@ -21,7 +21,7 @@ test_that("lin_processor", {
 
 test_that("process_terms", {
   
-  form = ~ 1 + d(x) + s(x) + lasso(z) + ridge(z) + te(y) %OZ% (y + s(x)) + d(z) %OZ% s(x) + u
+  form = ~ 1 + d(x) + s(x) + lasso(z) + ridge(z) + te(y, df = 5) %OZ% (y + s(x)) + d(z) %OZ% s(x) + u
   data = data.frame(x = rnorm(100), y = rnorm(100), z = rnorm(100), u = rnorm(100))
   controls = penalty_control()
   controls$with_layer <- TRUE
@@ -30,7 +30,7 @@ test_that("process_terms", {
   d = dnn_placeholder_processor(function(x) layer_dense(x, units=1L))
   specials = c("s", "te", "ti", "lasso", "ridge", "offset")
   specials_to_oz = c("d")
-  
+  controls$gamdata <- precalc_gam(list(form), data, controls)
   
   res1 <- suppressWarnings(
     process_terms(form = form, 
@@ -63,7 +63,7 @@ test_that("rwt", {
   d = dnn_placeholder_processor(function(x) layer_dense(x, units=1L))
   specials = c("s", "te", "ti", "lasso", "ridge", "offset", "rwt")
   specials_to_oz = c("d")
-  
+  controls$gamdata <- precalc_gam(list(form), data, controls)
   
   res1 <- suppressWarnings(
     process_terms(form = form, 
@@ -97,7 +97,7 @@ test_that("fixed weights", {
   d = dnn_placeholder_processor(function(x) layer_dense(x, units=1L))
   specials = c("s", "te", "ti", "lasso", "ridge", "offset", "rwt")
   specials_to_oz = c("d")
-  
+  controls$gamdata <- precalc_gam(list(form), data, controls)
   
   res1 <- suppressWarnings(
     process_terms(form = form, 

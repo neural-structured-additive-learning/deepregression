@@ -26,11 +26,11 @@ remove_brackets <- function(x)
 
 remove_intercept <- function(form) update(form, ~ 0 + . )
 
-mismatch_brackets <- function(x, logical=TRUE)
+mismatch_brackets <- function(x, logical=TRUE, bracket_set = c("\\{", "\\}"))
 {
   
-  open_matches <- lengths(regmatches(x, gregexpr("\\{", x)))
-  close_matches <- lengths(regmatches(x, gregexpr("\\}", x)))
+  open_matches <- lengths(regmatches(x, gregexpr(bracket_set[1], x)))
+  close_matches <- lengths(regmatches(x, gregexpr(bracket_set[2], x)))
   
   if(logical) return(open_matches!=close_matches) else
     return(c(open_matches, close_matches))
@@ -49,7 +49,7 @@ make_valid_layername <- function(string)
 
 
 #' @export
-makelayername <- function(term, param_nr, truncate = 30)
+makelayername <- function(term, param_nr, truncate = 60)
 {
   
   if(class(term)=="formula") term <- form2text(term)

@@ -246,37 +246,8 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
   
   output_dim <- as.integer(output_dim)
   # extract mgcv smooth object
-  evaluated_gam_term <- handle_gam_term(object = term, 
-                                        data = data, 
-                                        controls = controls)
-  # get sp and S
-  sp_and_S <- extract_sp_S(evaluated_gam_term)
-  # extract Xs
-  if(length(evaluated_gam_term)==1){
-    thisX <- evaluated_gam_term[[1]]$X
-  }else{
-    thisX <- do.call("cbind", lapply(evaluated_gam_term, "[[", "X"))
-  }
-  # get default Z matrix, which is possibly overwritten afterwards
-  Z <- diag(rep(1,ncol(thisX)))
-  # constraint
-  if(controls$zero_constraint_for_smooths & 
-     length(evaluated_gam_term)==1 & 
-     !evaluated_gam_term[[1]]$dim>1){
-    Z <- orthog_structured_smooths_Z(
-      evaluated_gam_term[[1]]$X,
-      matrix(rep(1,NROW(evaluated_gam_term[[1]]$X)), ncol=1)
-    )
-    sp_and_S[[2]][[1]] <- orthog_P(sp_and_S[[2]][[1]],Z)
-  }else if(evaluated_gam_term[[1]]$dim>1 & 
-           length(evaluated_gam_term)==1){
-    # tensor product -> merge and keep dummy
-    sp_and_S <- list(sp = 1, 
-                     S = list(do.call("+", lapply(1:length(sp_and_S[[2]]), function(i)
-                       sp_and_S[[1]][[1]][i] * sp_and_S[[2]][[i]]))))
-  }
-  P <- as.matrix(bdiag(lapply(1:length(sp_and_S[[1]]), function(i) 
-    controls$sp_scale(data) * sp_and_S[[1]][[i]] * sp_and_S[[2]][[i]])))
+  P <- create_P(get_gamdata(term, param_nr, controls$gamdata, what="sp_and_S"),
+                controls$sp_scale)
   
   layer <- layer_generator(term = term, 
                            output_dim = output_dim, 
@@ -289,19 +260,17 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
                            )
 
   list(
-    data_trafo = function() thisX %*% Z,
-    predict_trafo = function(newdata) predict_gam_handler(evaluated_gam_term, newdata = newdata) %*% Z,
-    input_dim = as.integer(ncol(thisX %*% Z)),
+    data_trafo = get_gamdata(term, param_nr, controls$gamdata, what="data_trafo"),
+    predict_trafo = get_gamdata(term, param_nr, controls$gamdata, what="predict_trafo"),
+    input_dim = get_gamdata(term, param_nr, controls$gamdata, what="input_dim"),
     layer = layer,
     coef = function(weights)  as.matrix(weights),
-    partial_effect = function(weights, newdata=NULL){
-      if(is.null(newdata))
-        return(thisX %*% Z %*% weights)
-      return(predict_gam_handler(evaluated_gam_term, newdata = newdata) %*% Z %*% weights)
-    },
+    partial_effect = get_gamdata(term, param_nr, controls$gamdata, what="partial_effect"),
     plot_fun = function(self, weights, grid_length) gam_plot_data(self, weights, grid_length),
     get_org_values = function() data[extractvar(term)],
-    penalty = list(type = "spline", values = P, dim = output_dim)
+    penalty = list(type = "spline", values = P, dim = output_dim),
+    gamdata_nr = get_gamdata_reduced_nr(term, param_nr, controls$gamdata),
+    gamdata_combined = FALSE
   )
 }
 

@@ -167,12 +167,14 @@ predict.deepregression <- function(
   }else{
     
     if(is.null(newdata)){
-      yhat <- object$model(prepare_data(object$init_params$parsed_formulas_contents))
+      yhat <- object$model(prepare_data(object$init_params$parsed_formulas_contents,
+                                        gamdata = object$init_params$gamdata$data_trafos))
     }else{
       # preprocess data
       if(is.data.frame(newdata)) newdata <- as.list(newdata)
       newdata_processed <- prepare_newdata(object$init_params$parsed_formulas_contents, 
-                                           newdata)
+                                           newdata, 
+                                           gamdata = object$init_params$gamdata$data_trafos)
       yhat <- object$model(newdata_processed)
     }
   }
@@ -258,14 +260,16 @@ fit.deepregression <- function(
   
   args <- list(...)
 
-  input_x <- prepare_data(object$init_params$parsed_formulas_content)
+  input_x <- prepare_data(object$init_params$parsed_formulas_content, 
+                          gamdata = object$init_params$gamdata$data_trafos)
   input_y <- as.matrix(object$init_params$y)
   
   if(!is.null(validation_data))
     validation_data <- 
     list(
       x = prepare_newdata(object$init_params$parsed_formulas_content, 
-                          validation_data[[1]]),
+                          validation_data[[1]], 
+                          gamdata = object$init_params$gamdata$data_trafos),
       y = as.matrix(validation_data[[2]], ncol=1)
     )
 
@@ -609,12 +613,14 @@ get_distribution <- function(
 )
 {
   if(is.null(data)){
-    disthat <- x$model(prepare_data(x$init_params$parsed_formulas_content))
+    disthat <- x$model(prepare_data(x$init_params$parsed_formulas_content, 
+                                    gamdata = x$init_params$gamdata$data_trafos))
   }else{
     # preprocess data
     if(is.data.frame(data)) data <- as.list(data)
     newdata_processed <- prepare_newdata(x$init_params$parsed_formulas_content, 
-                                         data)
+                                         data, 
+                                         gamdata = x$init_params$gamdata$data_trafos)
     disthat <- x$model(newdata_processed)
   }
   return(disthat)
@@ -643,13 +649,15 @@ log_score <- function(
 
   if(is.null(data)){
     
-    this_data <- prepare_data(x$init_params$parsed_formulas_content)
+    this_data <- prepare_data(x$init_params$parsed_formulas_content, 
+                              gamdata = x$init_params$gamdata$data_trafos)
   
   }else{
     
     if(is.data.frame(data)) data <- as.list(data)
     this_data <- prepare_newdata(x$init_params$parsed_formulas_content, 
-                                 data)
+                                 data, 
+                                 gamdata = x$init_params$gamdata$data_trafos)
     
   }
   

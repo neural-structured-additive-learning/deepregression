@@ -17,7 +17,7 @@ test_that("subnetwork_init", {
                                   layer_dense(units=1L))
   specials = c("s", "te", "ti", "vc", "lasso", "ridge", "offset", "vi", "fm", "vfm")
   specials_to_oz = c("d")
-  
+  controls$gamdata <- precalc_gam(list(form), data, controls)
   
   pp <- suppressWarnings(
     process_terms(form = form, 
@@ -30,7 +30,8 @@ test_that("subnetwork_init", {
                   controls = controls)
   )
   
-  res <- suppressWarnings(subnetwork_init(list(pp)))
+  gaminputs <- gaminputs <- makeInputs(controls$gamdata$data_trafos, "gam_inp")
+  res <- suppressWarnings(subnetwork_init(list(pp), gaminputs = gaminputs))
   expect_true(all(sapply(res[[1]], function(x) "python.builtin.object" %in% class(x))))
   expect_true("python.builtin.object" %in% class(res[[2]]))
   # does not work -- depending on the platform and tf version: 
@@ -57,7 +58,7 @@ test_that("shared layer within formula", {
                                   layer_dense(units=1L))
   specials = c("s", "te", "ti", "vc", "lasso", "ridge", "offset", "vi", "fm", "vfm")
   specials_to_oz = c("d")
-  
+  controls$gamdata <- precalc_gam(list(form), data, controls)
   
   pp <- suppressWarnings(
     process_terms(form = form, 
@@ -70,7 +71,8 @@ test_that("shared layer within formula", {
                   controls = controls)
   )
   
-  res <- suppressWarnings(subnetwork_init(list(pp)))
+  gaminputs <- gaminputs <- makeInputs(controls$gamdata$data_trafos, "gam_inp")
+  res <- suppressWarnings(subnetwork_init(list(pp), gaminputs = gaminputs))
   expect_is(res, class = "list")
   
 })

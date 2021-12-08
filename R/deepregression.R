@@ -208,18 +208,17 @@ deepregression <- function(
   if(length(weight_options)!=length(list_of_formulas))
     weight_options <- weight_options[rep(1, length(list_of_formulas))]
 
-  if(verbose) cat("Preparing additive formula(e)...")
+  if(verbose) cat("Pre-calculate GAM terms...")
+  so <- penalty_options
+  so$gamdata <- precalc_gam(list_of_formulas, data, so)
+  
   # parse formulas
+  if(verbose) cat("Preparing additive formula(s)...")
   parsed_formulas_contents <- lapply(1:length(list_of_formulas),
                                      function(i){
                                        
-                                       so <- penalty_options
                                        if(!is.null(attr(additional_processors, "controls")))
                                          so <- c(so, attr(additional_processors, "controls"))
-                                       if(!is.null(so$df) && length(so$df)>1) so$df <- so$df[[i]]
-                                       if(length(so$zero_constraint_for_smooths)>1) 
-                                         so$zero_constraint_for_smooths <- 
-                                           so$zero_constraint_for_smooths[i]
                                        if(!is.null(attr(list_of_formulas[[i]], "with_layer"))){
                                          so$with_layer <- attr(list_of_formulas[[i]], "with_layer")
                                        }else{
@@ -266,6 +265,12 @@ deepregression <- function(
   }
   
   if(verbose) cat("Preparing subnetworks...")
+  
+  # create gam data inputs
+  if(!is.null(so$gamdata)){
+    gaminputs <- makeInputs(so$gamdata$data_trafos, "gam_inp")
+  }
+  
   # create additive predictor per formula
   additive_predictors <- lapply(1:length(parsed_formulas_contents), function(i)
     subnetwork_builder[[i]](parsed_formulas_contents, 
@@ -273,11 +278,20 @@ deepregression <- function(
                             orthog_fun = orthog_options$orthog_fun, 
                             split_fun = orthog_options$split_fun,
                             shared_layers = weight_options[[i]]$shared_layers,
-                            param_nr = i)
+                            param_nr = i,
+                            gaminputs = gaminputs
+                            )
   )
   if(verbose) cat(" Done.\n")
     
   names(additive_predictors) <- names(list_of_formulas)
+  if(!is.null(so$gamdata)){
+    gaminputs <- list(gaminputs)
+    names(gaminputs) <- "gaminputs"
+    additive_predictors <- c(gaminputs, additive_predictors)
+  }else{
+    additive_predictors <- c(list(NULL), additive_predictors)
+  }
   
   # initialize model
   if(verbose) cat("Building model...")
@@ -291,6 +305,7 @@ deepregression <- function(
               init_params = 
                 list(
                   list_of_formulas = list_of_formulas,
+                  gamdata = so$gamdata,
                   additive_predictors = additive_predictors,
                   parsed_formulas_contents = parsed_formulas_contents,
                   y = y,
@@ -524,14 +539,24 @@ keras_dr <- function(
 )
 {
 
+  if(!is.null(list_pred_param[[1]])){
+    inputs_gam <- unlist(list_pred_param[[1]])
+  }else{
+    inputs_gam <- NULL
+  }
+  list_pred_param <- list_pred_param[-1]
   # extract predictor inputs
   inputs <- lapply(list_pred_param, function(x) x[1:(length(x)-1)])
+  inputs <- unname(unlist(inputs, recursive = TRUE))
+  if(!is.null(inputs_gam)){
+    inputs <- unname(c(inputs_gam, unlist(inputs)))
+  }
   # extract predictor outputs
   outputs <- lapply(list_pred_param, function(x) x[[length(x)]])
   # define single output of network
   out <- from_preds_to_output(outputs, ...)
   # define model
-  model <- model_fun(inputs = unname(unlist(inputs, recursive = TRUE)),
+  model <- model_fun(inputs = inputs,
                      outputs = out)
   # additional loss
   if(!is.null(additional_penalty)){

@@ -10,6 +10,7 @@
 #' @param param_nr integer number for the distribution parameter
 #' @param pp_input_subset,pp_layer_subset indices defining which subset of pp to
 #' take as inputs and layers for this subnetwork; per default \code{param_nr}
+#' @param gaminputs input tensors for gam terms
 #' @return returns a list of input and output for this additive predictor
 #' 
 #' @export
@@ -20,7 +21,8 @@ subnetwork_init <- function(pp, deep_top = NULL,
                             shared_layers = NULL,
                             param_nr = 1,
                             pp_input_subset = param_nr,
-                            pp_layer_subset = param_nr)
+                            pp_layer_subset = param_nr,
+                            gaminputs)
 {
   
   # instead of passing the respective pp,
@@ -31,7 +33,47 @@ subnetwork_init <- function(pp, deep_top = NULL,
   pp_lay <- pp[[pp_layer_subset]]
   
   # generate pp parts
+  gaminput_nrs <- sapply(pp_in, "[[", "gamdata_nr")
+  has_gaminp <- !sapply(gaminput_nrs,is.null)
+  gaminput_comb <- sapply(pp_in[which(has_gaminp)], "[[", "gamdata_combined")
   inputs <- makeInputs(pp_in, param_nr = param_nr)
+  org_inputs_for_concat <- list()
+  
+  if(sum(has_gaminp)){
+    
+    for(i in 1:sum(has_gaminp)){
+      
+      # concatenate inputs or replace?
+      concat <- gaminput_comb[[i]]
+      nr <- which(has_gaminp)[i]
+      
+      if(!is.null(concat) && concat){
+        
+        org_inputs_for_concat <- c(
+          org_inputs_for_concat,
+          inputs[[nr]]
+        )
+        inputs[[nr]] <- layer_concatenate_identity(
+          list(gaminputs[[gaminput_nrs[[nr]]]], inputs[[nr]])
+        )
+        
+      }else{
+        
+        inputs[[nr]] <- gaminputs[[gaminput_nrs[[nr]]]]
+        
+      }
+      
+    }
+    
+    inputs_to_replace <- which(has_gaminp)[gaminput_comb]
+    keep_inputs_in_return <- setdiff(1:length(inputs), (which(has_gaminp)[!gaminput_comb]))
+    
+  }else{
+    
+   inputs_to_replace <-  c()
+   keep_inputs_in_return <- 1:length(inputs)
+    
+  }
   
   layer_matching <- 1:length(pp_in)
   names(layer_matching) <- layer_matching
@@ -62,7 +104,11 @@ subnetwork_init <- function(pp, deep_top = NULL,
     
     outputs <- lapply(1:length(pp_in), function(i) pp_lay[[layer_matching[i]]]$layer(inputs[[i]]))
     outputs <- layer_add_identity(outputs)
-    return(list(inputs, outputs))
+    
+    # replace original inputs
+    if(length(org_inputs_for_concat)>0)
+      inputs[inputs_to_replace] <- org_inputs_for_concat
+    return(list(inputs[keep_inputs_in_return], outputs))
   
   }else{
     
@@ -96,8 +142,10 @@ subnetwork_init <- function(pp, deep_top = NULL,
     }
     
     if(length(ox_outputs)>0) outputs <- layer_add_identity(c(outputs, ox_outputs))
-     
-    return(list(inputs, outputs))
+    
+    if(length(org_inputs_for_concat)>0)
+      inputs[inputs_to_replace] <- org_inputs_for_concat
+    return(list(inputs[keep_inputs_in_return], outputs))
      
   }
   
@@ -154,7 +202,7 @@ makeInputs <- function(pp, param_nr)
       return(
         tf$keras$Input(
           shape = inp,
-          name = paste0("input_", strtrim(make_valid_layername(ap$term), 30),
+          name = paste0("input_", strtrim(make_valid_layername(ap$term), 60),
                         "_", param_nr))
       )
   }

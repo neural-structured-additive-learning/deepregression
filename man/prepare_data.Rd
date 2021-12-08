@@ -4,10 +4,12 @@
 \alias{prepare_data}
 \title{Function to prepare data based on parsed formulas}
 \usage{
-prepare_data(pfc)
+prepare_data(pfc, gamdata = NULL)
 }
 \arguments{
 \item{pfc}{list of processor transformed formulas}
+
+\item{gamdata}{processor for gam part}
 }
 \value{
 list of matrices or arrays

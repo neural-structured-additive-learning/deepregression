@@ -12,7 +12,8 @@ subnetwork_init(
   shared_layers = NULL,
   param_nr = 1,
   pp_input_subset = param_nr,
-  pp_layer_subset = param_nr
+  pp_layer_subset = param_nr,
+  gaminputs
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ each list item is a vector of characters of terms as given in the parameter form
 
 \item{pp_input_subset, pp_layer_subset}{indices defining which subset of pp to
 take as inputs and layers for this subnetwork; per default \code{param_nr}}
+
+\item{gaminputs}{input tensors for gam terms}
 }
 \value{
 returns a list of input and output for this additive predictor

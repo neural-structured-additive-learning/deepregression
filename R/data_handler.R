@@ -14,6 +14,10 @@ loop_through_pfc_and_call_trafo <- function(pfc, newdata = NULL)
     
     for(j in 1:length(pfc[[i]])){
       
+      # skip those which are already set up by the gamdata
+      if(!is.null(pfc[[i]][[j]]$gamdata_nr))
+        if(!pfc[[i]][[j]]$gamdata_combined) next
+      
       if(is.null(newdata)){
         data_list[[k]] <- to_matrix(pfc[[i]][[j]]$data_trafo())
       }else{
@@ -32,14 +36,17 @@ loop_through_pfc_and_call_trafo <- function(pfc, newdata = NULL)
 #' Function to prepare data based on parsed formulas
 #' 
 #' @param pfc list of processor transformed formulas 
+#' @param gamdata processor for gam part
 #' @return list of matrices or arrays
 #' 
-prepare_data <- function(pfc)
+prepare_data <- function(pfc, gamdata = NULL)
 {
   
-  return(
-    loop_through_pfc_and_call_trafo(pfc = pfc, newdata = NULL)
-  )
+  ret_list <- loop_through_pfc_and_call_trafo(pfc = pfc, newdata = NULL)
+  if(!is.null(gamdata))
+    ret_list <- c(prepare_gamdata(gamdata), ret_list)
+  
+  return(ret_list)
   
 }
 
@@ -47,13 +54,32 @@ prepare_data <- function(pfc)
 #' 
 #' @param pfc list of processor transformed formulas 
 #' @param newdata list in the same format as the original data
+#' @param gamdata processor for gam part
 #' @return list of matrices or arrays
 #' 
-prepare_newdata <- function(pfc, newdata)
+prepare_newdata <- function(pfc, newdata, gamdata = NULL)
 {
   
+  ret_list <- loop_through_pfc_and_call_trafo(pfc = pfc, newdata = newdata)
+  
+  if(!is.null(gamdata))
+    ret_list <- c(prepare_gamdata(gamdata, newdata), ret_list)
+  
+  return(ret_list)
+  
+}
+
+prepare_gamdata <- function(gamdata, newdata = NULL){
+  
+  if(is.null(newdata))
+    return(
+      unname(lapply(gamdata, function(x) 
+        to_matrix(x$data_trafo())))
+    )
+  
   return(
-    loop_through_pfc_and_call_trafo(pfc = pfc, newdata = newdata)
+    unname(lapply(gamdata, function(x) 
+      to_matrix(x$predict_trafo(newdata))))
   )
   
 }

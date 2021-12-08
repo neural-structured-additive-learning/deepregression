@@ -11,14 +11,13 @@ test_that("penalty_control", {
   expect_true(sc$zero_constraint_for_smooths)
   expect_is(sc$df, "numeric")
   
-  evaluated_smooth <- sc$defaultSmoothing(
+  evaluated_smooth <- suppressWarnings(sc$defaultSmoothing(
     smoothCon(s(x),
               data=data,
               absorb.cons = sc$absorb_cons,
               null.space.penalty = sc$null_space_penalty
-    ), df=5)
-  expect_is(evaluated_smooth, "list")
-  expect_is(evaluated_smooth[[1]], "mgcv.smooth")
+    ), df=6))
+  expect_is(evaluated_smooth, "numeric")
   
 })
 

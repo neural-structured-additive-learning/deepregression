@@ -91,7 +91,7 @@ tp_penalty <- function(P1,P2,lambda1,lambda2=NULL)
 #' Convenience function to extract penalty matrix and value
 #' @param x evaluated smooth term object
 #' @export
-extract_sp_S <- function(x)
+extract_S <- function(x)
 {
   
   if((length(x[[1]]$S)==1 & is.null(x[[1]]$by.level)) | 
@@ -104,10 +104,8 @@ extract_sp_S <- function(x)
     S <- lapply(x,function(y) y$S[[1]])
     
   }
-  
-  sp <- lapply(x, "[[", "sp")
-  
-  return(list(sp = sp, S = S))
+
+  return(S = S)
   
 }
 
@@ -141,24 +139,23 @@ defaultSmoothingFun <- function(st, this_df, hat1, sp_scale,
   }else{ 
     if(anisotropic){
       if(length(this_df)==1) this_df <- rep(this_df, length(st[[1]]$margin))
-      st[[1]]$sp <- sapply(1:length(st[[1]]$margin), function(i)
+      sp <- sapply(1:length(st[[1]]$margin), function(i)
       { 
         DRO(st[[1]]$margin[[i]]$X, 
             df = this_df[i], 
             dmat = st[[1]]$margin[[i]]$S[[1]], 
             hat1 = hat1
-        )["lambda"]/sp_scale(st[[1]]$margin[[i]]$X) + 
+        )["lambda"] + 
           null_space_penalty
       })
-      return(st)
+      return(sp)
     }else{
       X <- do.call("cbind", lapply(st,"[[","X"))
     }
   }
-  st[[1]]$sp = DRO(X, df = this_df, dmat = S, hat1 = hat1)["lambda"] * 
-    sp_scale(X) + 
+  sp = DRO(X, df = this_df, dmat = S, hat1 = hat1)["lambda"] + 
     null_space_penalty
-  return(st)
+  return(sp)
 }
 
 #' Function to define smoothness and call mgcv's smooth constructor
@@ -179,28 +176,36 @@ handle_gam_term <- function(
 {
   
   # check for df argument and remove
-  df <- suppressWarnings(extractval(object, "df"))
-  if(!is.null(df)){ 
-    object <- remove_df(object)
-  }else{
-    df <- controls$df
-  }
+  object <- remove_df_wrapper(object)
   names_s <- all.vars(as.formula(paste0("~", object)))
   sterm <- smoothCon(eval(parse(text=object)),
                      data=data.frame(data[names_s]),
                      absorb.cons = controls$absorb_cons,
                      null.space.penalty = controls$null_space_penalty
   )
-  sterm <- controls$defaultSmoothing(sterm, df)
+  # sterm <- controls$defaultSmoothing(sterm, df)
   return(sterm)
   
 }
-
 
 remove_df <- function(object)
 {
   
   gsub(",\\s?df\\s?=\\s?[0-9.-]+","",object)
+  
+}
+
+remove_zerocons <- function(object)
+{
+  
+  gsub(",\\s?zerocons\\s?=\\s?(TRUE|FALSE)","",object)
+  
+}
+
+remove_la <- function(object)
+{
+  
+  gsub(",\\s?la\\s?=\\s?[0-9.-]+","",object)
   
 }
 
@@ -232,5 +237,289 @@ squaredPenalty <- function(P, strength)
   splines <- reticulate::import_from_path("psplines", path = python_path)
   
   return(splines$squaredPenalty(P = as.matrix(P), strength = strength))
+  
+}
+
+remove_df_wrapper <- function(object){
+  
+  df <- suppressWarnings(extractval(object, "df"))
+  if(!is.null(df)){ 
+    return(remove_df(object))
+  }else{
+    return(object)
+  }
+  
+}
+
+remove_zerocons_wrapper <- function(object){
+  
+  zerocons <- suppressWarnings(extractval(object, "zerocons"))
+  if(!is.null(zerocons)){ 
+    return(remove_zerocons(object))
+  }else{
+    return(object)
+  }
+  
+}
+
+remove_la_wrapper <- function(object){
+  
+  la <- suppressWarnings(extractval(object, "la"))
+  if(!is.null(la)){ 
+    return(remove_la(object))
+  }else{
+    return(object)
+  }
+  
+}
+
+fix_bracket_mismatch <- function(x)
+{
+  
+  open_matches <- lengths(regmatches(x, gregexpr("\\(", x)))
+  close_matches <- lengths(regmatches(x, gregexpr("\\)", x)))
+  if(open_matches==close_matches) return(x)
+  if(open_matches < close_matches) stop("Too many closing brackets")
+  if(open_matches > close_matches)
+    fix_bracket_mismatch(paste0(x,")"))
+  
+}
+
+#'
+#' @export
+extract_pure_gam_part <- function(term, remove_other_options=TRUE){
+  
+  term <- gsub(".*(^|\\()(s|te|ti)\\((.*)", "\\2(\\3", term)
+  term <- gsub("(s|te|ti)(\\()(.*?)(\\))(.*)", "\\1\\2\\3\\4", term)
+  term <- fix_bracket_mismatch(term)
+  if(remove_other_options){
+    term <- remove_df_wrapper(term)
+    term <- remove_zerocons_wrapper(term)
+    term <- remove_la_wrapper(term)
+  }
+    
+  return(term)
+  
+}
+
+create_data_trafos <- function(evaluated_gam_term, controls)
+{
+ 
+  # extract Xs
+  if(length(evaluated_gam_term)==1){
+    thisX <- evaluated_gam_term[[1]]$X
+  }else{
+    thisX <- do.call("cbind", lapply(evaluated_gam_term, "[[", "X"))
+  }
+  # get default Z matrix, which is possibly overwritten afterwards
+  Z <- diag(rep(1,ncol(thisX)))
+  # constraint
+  if(controls$zero_constraint_for_smooths & 
+     length(evaluated_gam_term)==1 & 
+     !evaluated_gam_term[[1]]$dim>1)
+    Z <- orthog_structured_smooths_Z(
+      evaluated_gam_term[[1]]$X,
+      matrix(rep(1,NROW(evaluated_gam_term[[1]]$X)), ncol=1)
+    )
+  
+  return(
+    list(data_trafo = function() thisX %*% Z,
+         predict_trafo = function(newdata) predict_gam_handler(evaluated_gam_term, 
+                                                               newdata = newdata) %*% Z,
+         input_dim = as.integer(ncol(thisX %*% Z)),
+         partial_effect = function(weights, newdata=NULL){
+           if(is.null(newdata))
+             return(thisX %*% Z %*% weights)
+           return(predict_gam_handler(evaluated_gam_term, newdata = newdata) %*% Z %*% weights)
+         },
+         Z = Z)
+  )
+   
+}
+
+create_penalty <- function(evaluated_gam_term, df, controls, Z = NULL)
+{
+  
+  # get sp and S
+  sp_and_S <- list(
+    sp = controls$defaultSmoothing(evaluated_gam_term, df),
+    S = extract_S(evaluated_gam_term)
+  )
+  
+  if(controls$zero_constraint_for_smooths & 
+     length(evaluated_gam_term)==1 & 
+     !evaluated_gam_term[[1]]$dim>1 & !is.null(Z)){
+    
+    sp_and_S[[2]][[1]] <- orthog_P(sp_and_S[[2]][[1]],Z)
+  
+  }else if(evaluated_gam_term[[1]]$dim>1 & 
+           length(evaluated_gam_term)==1){
+    # tensor product -> merge and keep dummy
+    sp_and_S <- list(sp = 1, 
+                     S = list(do.call("+", lapply(1:length(sp_and_S[[2]]), function(i)
+                       sp_and_S[[1]][i] * sp_and_S[[2]][[i]]))))
+  }
+
+  return(list(sp_and_S = sp_and_S))
+  
+}
+
+#' Pre-calculate all gam parts from the list of formulas
+#' @param lof list of formulas
+#' @param data the data list
+#' @param controls controls from deepregression
+#' 
+#' @return a list of length 2 with a matching table to
+#' link every unique gam term to formula entries and the respective
+#' data transformation functions
+#' @export
+#' 
+precalc_gam <- function(lof, data, controls)
+{
+  
+  tfs <- lapply(lof, function(form) terms.formula(form, specials = c("s", "te", "ti")))
+  termstrings <- lapply(tfs, function(tf) trmstrings <- attr(tf, "term.labels"))
+  # split OZ parts
+  termstrings <- lapply(termstrings, function(tfs) unlist(sapply(tfs, function(tf) 
+    trimws(strsplit(tf, split = "%OZ%")[[1]]))))
+  # split RWT parts
+  termstrings <- lapply(termstrings, function(tfs) unlist(sapply(tfs, function(tf) 
+    trimws(strsplit(tf, split = "%X%")[[1]]))))
+  # split terms in brackets and remove leading brackets
+  termstrings <- lapply(termstrings, function(tfs) unlist(sapply(tfs, function(tf) 
+    gsub("^\\(", "", trimws(strsplit(tf, split = "+", fixed = T)[[1]])))))
+  gam_terms <- lapply(termstrings, function(tf) tf[grepl("(^|\\()(s|te|ti)\\(", tf)])
+  
+  # bracket_mismatch <- mismatch_brackets(ul_gam_terms,
+  #                                       bracket_set = c("\\(", "\\)"))
+  # ul_gam_terms[bracket_mismatch] <- gsub("\\)\\)$", ")", ul_gam_terms[bracket_mismatch])
+  gam_terms <- lapply(gam_terms, function(gts) 
+    sapply(gts, function(gt) gsub(" ", "", extract_pure_gam_part(gt, FALSE), 
+                                  fixed = TRUE))
+  )
+  gam_terms <- lapply(gam_terms, unique)
+  if(all(sapply(gam_terms, length)==0)) return(NULL)
+  len_lists <- rep(1:length(lof), sapply(gam_terms, length))
+  ul_gam_terms <- unlist(gam_terms)
+  
+  if(length(controls$zero_constraint_for_smooths) > 1) 
+    stop("Different Zero-Constraints for different Predictors not implemented yet.")
+  
+  if(!is.null(controls$df) && length(controls$df)==1)
+    controls$df <- rep(controls$df, length(gam_terms))
+  
+  # create relevant matching table
+  matching_table <- lapply(1:length(ul_gam_terms), function(i){
+    
+    df <- suppressWarnings(extractval(ul_gam_terms[i], "df"))
+    if(is.null(df)) df <- controls$df[len_lists[i]]
+    zerocons <- suppressWarnings(extractval(ul_gam_terms[i], "zerocons"))
+    if(is.null(zerocons)) zerocons <- controls$zero_constraint_for_smooths
+    
+    return(
+      list(
+        term = ul_gam_terms[i],
+        param_nr = len_lists[i],
+        reduced_gam_term = extract_pure_gam_part(ul_gam_terms[i]),
+        zero_constraint = zerocons,
+        df = df
+      )
+    )
+  })
+  names(matching_table) <- ul_gam_terms
+  
+  unique_gam_terms <- unique(
+    paste0(
+      sapply(matching_table, "[[", "reduced_gam_term"),
+      "+", 
+      sapply(matching_table, "[[", "zero_constraint"))
+  )
+  
+  unique_gam_terms_wo_zc <- unique(
+    sapply(matching_table, "[[", "reduced_gam_term")
+  )
+  
+  sterms <- lapply(unique_gam_terms_wo_zc, function(term)
+    handle_gam_term(object = term, 
+                    data = data, 
+                    controls = controls)
+  )
+  names(sterms) <- unique_gam_terms_wo_zc
+  
+  data_trafos <- lapply(unique_gam_terms, function(ugt){
+    parts <- strsplit(ugt,"+",fixed=T)[[1]]
+    w <- which(names(sterms)==parts[1])
+    sterm <- sterms[[w]]
+    controls$zero_constraint_for_smooths <- as.logical(parts[2])
+    ret <- create_data_trafos(sterm, controls)
+    ret$term <- ugt
+    return(ret)
+  })
+  names(data_trafos) <- unique_gam_terms
+  
+  for(i in 1:length(matching_table)){
+    controls$zero_constraint_for_smooths <- as.logical(matching_table[[i]]$zero_constraint)
+    
+    w <- which(names(sterms) == matching_table[[i]]$reduced_gam_term)
+    
+    this_penalty <- create_penalty(sterms[[w]], 
+                                   df = matching_table[[i]]$df,
+                                   controls = controls, 
+                                   Z = data_trafos[[w]]$Z)
+    matching_table[[i]] <- c(matching_table[[i]], this_penalty)
+  }
+
+  rm(sterms)
+  
+  return(list(matching_table = matching_table, 
+              data_trafos = data_trafos))
+  
+}
+
+get_gamdata_nr <- function(term, param_nr, gamdata)
+{
+  
+  which(sapply(gamdata$matching_table, "[[", "term") == gsub(" ", "", term, fixed=T) & 
+          sapply(gamdata$matching_table, "[[", "param_nr") == param_nr
+  )
+  
+}
+
+get_gamdata_reduced_nr <- function(term, param_nr, gamdata){
+  
+  gamdata_nr <- get_gamdata_nr(term, param_nr, gamdata)
+  
+  which(paste0(gamdata$matching_table[[gamdata_nr]]$reduced_gam_term, "+",
+               gamdata$matching_table[[gamdata_nr]]$zero_constraint) == 
+          names(gamdata$data_trafos))
+  
+}
+
+get_gamdata <- function(term, param_nr, gamdata, 
+                        what = c("data_trafo", 
+                                 "predict_trafo",
+                                 "input_dim",
+                                 "partial_effect",
+                                 "sp_and_S",
+                                 "df")){
+
+  if(what %in% c("sp_and_S", "df"))
+    return(gamdata$matching_table[[
+      get_gamdata_nr(term, param_nr, gamdata)
+    ]][[what]])
+  # else
+  return(
+    gamdata$data_trafos[[
+      get_gamdata_reduced_nr(term, param_nr, gamdata)
+      ]][[what]]
+  )
+  
+}
+
+create_P <- function(sp_and_S, scale)
+{
+  
+  as.matrix(bdiag(lapply(1:length(sp_and_S[[1]]), function(i) 
+    scale(data) * sp_and_S[[1]][[i]] * sp_and_S[[2]][[i]])))
   
 }
