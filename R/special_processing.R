@@ -220,21 +220,20 @@ lin_processor <- function(term, data, output_dim, param_nr, controls){
                            param_nr = param_nr, 
                            controls = controls)
   
-  if(grepl("lin(.*)", term)) term <- paste0(paste(extractvar(term),
-                                                  collapse = " + "),
-                                            " + 0 ")
+  if(grepl("lin(.*)", term)) term <- paste(extractvar(term),
+                                           collapse = " + ")
   
   list(
-    data_trafo = function() model.matrix(object = as.formula(paste0("~ -1 + ", term)), 
-                                         data = data),
+    data_trafo = function() model.matrix(object = as.formula(paste0("~ 1 + ", term)), 
+                                         data = data)[,-1,drop=FALSE],
     predict_trafo = function(newdata){ 
       return(
-        model.matrix(object = as.formula(paste0("~ -1 + ", term)),
-                     data = as.data.frame(newdata))
+        model.matrix(object = as.formula(paste0("~ 1 + ", term)),
+                     data = as.data.frame(newdata))[,-1,drop=FALSE]
       )
     },
-    input_dim = as.integer(ncol(model.matrix(object = as.formula(paste0("~ -1 +", term)), 
-                                  data = data))),
+    input_dim = as.integer(ncol(model.matrix(object = as.formula(paste0("~ 1 +", term)), 
+                                  data = data))-1),
     layer = layer,
     coef = function(weights)  as.matrix(weights),
     penalty = NULL

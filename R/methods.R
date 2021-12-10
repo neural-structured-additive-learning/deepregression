@@ -254,9 +254,12 @@ fit.deepregression <- function(
   }
   if(early_stopping & length(callbacks)==0)
     callbacks <- append(callbacks,
-                        callback_early_stopping(patience = patience,
-                                                restore_best_weights = TRUE,
-                                                monitor = early_stopping_metric))
+                        list(callback_terminate_on_naan(),
+                             callback_early_stopping(patience = patience,
+                                                     restore_best_weights = TRUE,
+                                                     monitor = early_stopping_metric)
+                             )
+    )
   
   args <- list(...)
 

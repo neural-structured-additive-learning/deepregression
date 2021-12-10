@@ -342,6 +342,8 @@ deepregression <- function(
 #' @param from_distfun_to_dist function creating a tfp distribution based on the
 #' prediction tensors and \code{dist_fun}. See \code{?distfun_to_dist}
 #' @param add_layer_shared_pred layer to extend shared layers defined in \code{mapping}
+#' @param trafo_list a list of transformation function to convert the scale of the 
+#' additive predictors to the respective distribution parameter
 #' @return a list with input tensors and output tensors that can be passed
 #' to, e.g., \code{keras_model}
 #'
@@ -353,7 +355,8 @@ from_preds_to_dist <- function(
   mapping = NULL,
   from_distfun_to_dist = distfun_to_dist,
   add_layer_shared_pred = function(x, units) layer_dense(x, units = units, 
-                                                         use_bias = FALSE)
+                                                         use_bias = FALSE),
+  trafo_list = NULL
 )
 {
   
@@ -422,7 +425,8 @@ from_preds_to_dist <- function(
         
       }else{
         
-        dist_fun <- make_tfd_dist(family, output_dim = output_dim)
+        dist_fun <- make_tfd_dist(family, output_dim = output_dim, 
+                                  trafo_list = trafo_list)
         
       }
     }else{ # assuming that family is a dist_fun already

@@ -44,7 +44,7 @@ test_that("array inputs", {
     expect_true(!any(is.nan(x$metrics$loss)))
   })
 
-  expect_equal(dim(coef(mod)[[1]]), c(4, 10))
+  expect_equal(dim(coef(mod)[[1]]), c(3, 10))
   mod %>% fit(epochs = 2,
               batch_size=100,
               view_metrics=FALSE,
