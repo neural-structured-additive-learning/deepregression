@@ -218,9 +218,11 @@ predict_gen <- function(
   
   if(!is.null(newdata)){
     newdata_processed <- prepare_newdata(object$init_params$parsed_formulas_contents, 
-                                         newdata)
+                                         newdata, 
+                                         gamdata = object$init_params$gamdata$data_trafos)
   }else{
-    newdata_processed <- prepare_data(object$init_params$parsed_formulas_contents)
+    newdata_processed <- prepare_data(object$init_params$parsed_formulas_contents,
+                                      gamdata = object$init_params$gamdata$data_trafos)
   }
   # prepare generator
   max_data <- NROW(newdata_processed[[1]])
