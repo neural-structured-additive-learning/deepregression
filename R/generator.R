@@ -212,7 +212,8 @@ predict_gen <- function(
   newdata = NULL,
   batch_size = NULL,
   apply_fun = tfd_mean,
-  convert_fun = as.matrix
+  convert_fun = as.matrix,
+  ret_dist = FALSE
 )
 {
   
