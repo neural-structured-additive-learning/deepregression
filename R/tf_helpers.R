@@ -19,6 +19,17 @@ tf_stride_cols <- function(A, start, end=NULL)
   
 }
 
+#' @export
+#'
+#'
+tf_split_multiple <- function(A, len){
+  
+  ends <- cumsum(len)
+  starts <- c(1, ends[-length(ends)]+1)
+  lapply(1:length(starts), function(i) tf_stride_cols(A, starts[i], ends[i]))
+  
+}
+
 # function to convert constant to TF float32 tensor
 convertfun_tf <- function(x) tf$constant(x, dtype="float32")
 

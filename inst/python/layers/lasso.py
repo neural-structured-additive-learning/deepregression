@@ -32,10 +32,10 @@ class TibLinearLasso(tf.keras.layers.Layer):
     super(TibLinearLasso, self).__init__()
     self.units = units
     self.la = la
-    if self.units > 1:
-      self.reg = inverse_group_lasso_pen(self.la)
-    else:
-      self.reg = tf.keras.regularizers.l2(self.la)
+    # if self.units > 1:
+    #  self.reg = inverse_group_lasso_pen(self.la)
+    # else:
+    self.reg = tf.keras.regularizers.l2(self.la)
     self._name = name
       
   def build(self, input_shape):

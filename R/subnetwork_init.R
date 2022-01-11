@@ -8,9 +8,10 @@
 #' @param shared_layers list defining shared weights within one predictor;
 #' each list item is a vector of characters of terms as given in the parameter formula
 #' @param param_nr integer number for the distribution parameter
-#' @param pp_input_subset,pp_layer_subset indices defining which subset of pp to
-#' take as inputs and layers for this subnetwork; per default \code{param_nr}
+#' @param selectfun_in,selectfun_lay functions defining which subset of pp to
+#' take as inputs and layers for this subnetwork; per default the \code{param_nr}'s entry
 #' @param gaminputs input tensors for gam terms
+#' @param summary_layer keras layer that combines inputs (typically adding or concatenating)
 #' @return returns a list of input and output for this additive predictor
 #' 
 #' @export
@@ -20,17 +21,18 @@ subnetwork_init <- function(pp, deep_top = NULL,
                             split_fun = split_model,
                             shared_layers = NULL,
                             param_nr = 1,
-                            pp_input_subset = param_nr,
-                            pp_layer_subset = param_nr,
-                            gaminputs)
+                            selectfun_in = function(pp) pp[[param_nr]],
+                            selectfun_lay = function(pp) pp[[param_nr]],
+                            gaminputs,
+                            summary_layer = layer_add_identity)
 {
   
   # instead of passing the respective pp,
   # subsetting is done within subnetwork_init
   # to allow other subnetwork_builder to 
   # potentially access all pp entries
-  pp_in <- pp[[pp_input_subset]]
-  pp_lay <- pp[[pp_layer_subset]]
+  pp_in <- selectfun_in(pp)
+  pp_lay <- selectfun_lay(pp)
   
   # generate pp parts
   gaminput_nrs <- sapply(pp_in, "[[", "gamdata_nr")
@@ -103,7 +105,7 @@ subnetwork_init <- function(pp, deep_top = NULL,
   if(all(sapply(pp_in, function(x) is.null(x$right_from_oz)))){ # if there is no term to orthogonalize
     
     outputs <- lapply(1:length(pp_in), function(i) pp_lay[[layer_matching[i]]]$layer(inputs[[i]]))
-    outputs <- layer_add_identity(outputs)
+    outputs <- summary_layer(outputs)
     
     # replace original inputs
     if(length(org_inputs_for_concat)>0)
@@ -141,7 +143,7 @@ subnetwork_init <- function(pp, deep_top = NULL,
 
     }
     
-    if(length(ox_outputs)>0) outputs <- layer_add_identity(c(outputs, ox_outputs))
+    if(length(ox_outputs)>0) outputs <- summary_layer(c(outputs, ox_outputs))
     
     if(length(org_inputs_for_concat)>0)
       inputs[inputs_to_replace] <- org_inputs_for_concat
