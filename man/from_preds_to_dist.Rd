@@ -11,7 +11,8 @@ from_preds_to_dist(
   mapping = NULL,
   from_distfun_to_dist = distfun_to_dist,
   add_layer_shared_pred = function(x, units) layer_dense(x, units = units, use_bias =
-    FALSE)
+    FALSE),
+  trafo_list = NULL
 )
 }
 \arguments{
@@ -35,6 +36,9 @@ once to \code{list_pred_param[[2]]})}
 prediction tensors and \code{dist_fun}. See \code{?distfun_to_dist}}
 
 \item{add_layer_shared_pred}{layer to extend shared layers defined in \code{mapping}}
+
+\item{trafo_list}{a list of transformation function to convert the scale of the 
+additive predictors to the respective distribution parameter}
 }
 \value{
 a list with input tensors and output tensors that can be passed

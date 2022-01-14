@@ -11,9 +11,10 @@ subnetwork_init(
   split_fun = split_model,
   shared_layers = NULL,
   param_nr = 1,
-  pp_input_subset = param_nr,
-  pp_layer_subset = param_nr,
-  gaminputs
+  selectfun_in = function(pp) pp[[param_nr]],
+  selectfun_lay = function(pp) pp[[param_nr]],
+  gaminputs,
+  summary_layer = layer_add_identity
 )
 }
 \arguments{
@@ -31,10 +32,12 @@ each list item is a vector of characters of terms as given in the parameter form
 
 \item{param_nr}{integer number for the distribution parameter}
 
-\item{pp_input_subset, pp_layer_subset}{indices defining which subset of pp to
-take as inputs and layers for this subnetwork; per default \code{param_nr}}
+\item{selectfun_in, selectfun_lay}{functions defining which subset of pp to
+take as inputs and layers for this subnetwork; per default the \code{param_nr}'s entry}
 
 \item{gaminputs}{input tensors for gam terms}
+
+\item{summary_layer}{keras layer that combines inputs (typically adding or concatenating)}
 }
 \value{
 returns a list of input and output for this additive predictor
