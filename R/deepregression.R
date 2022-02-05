@@ -571,6 +571,10 @@ keras_dr <- function(
     model$add_loss(add_loss)
     
   }
+  # allow for optimizer as a function of the model
+  if(is.function(optimizer)){
+    optimizer <- optimizer(model)
+  }
   # compile model
   model %>% compile(optimizer = optimizer,
                     loss = loss,
