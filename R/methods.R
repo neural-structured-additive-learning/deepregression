@@ -10,6 +10,8 @@
 #' @param grid_length the length of an equidistant grid at which a two-dimensional function
 #' is evaluated for plotting.
 #' @param type the type of plot (see generic \code{plot} function)
+#' @param get_weight_fun function to extract weight from model given \code{x},
+#' a \code{name} and \code{param_nr}
 #' @param ... further arguments, passed to fit, plot or predict function
 #'
 #' @method plot deepregression
@@ -24,6 +26,7 @@ plot.deepregression <- function(
   only_data = FALSE,
   grid_length = 40,
   type = "b",
+  get_weight_fun = get_weight_by_name,
   ... # passed to plot function
 )
 {
@@ -53,8 +56,8 @@ plot.deepregression <- function(
     
     pp <- pfc[[which(names_all==name)]]
     plotData[[name]] <- pp$plot_fun(pp, 
-                                    weights = get_weight_by_name(x, name = name , 
-                                                                 param_nr = which_param), 
+                                    weights = get_weight_fun(x, name = name , 
+                                                             param_nr = which_param), 
                                     grid_length = grid_length)
     
     dims <- NCOL(plotData[[name]]$value)
@@ -697,7 +700,7 @@ get_weight_by_name <- function(mod, name, param_nr=1, postfixes="")
   }else{
     this_name <- paste0(makelayername(name, param_nr), postfixes)
   }
-  names <- get_mod_names(mod)
+  # names <- get_mod_names(mod)
   if(length(this_name)>1){
     wgts <- lapply(this_name, function(name) get_weight_by_opname(mod, name))
   }else{

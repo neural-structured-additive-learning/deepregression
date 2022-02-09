@@ -35,19 +35,66 @@ get_mod_names <- function(x)
   
 }
 
-get_weight_by_opname <- function(mod, name)
+#' Function to return weight given model and name
+#'
+#' @param mod deepregression model
+#' @param name character
+#' @param partial_match logical; whether to also check for a partial match
+#' @export
+get_weight_by_opname <- function(mod, name, partial_match = FALSE)
 {
   
-  names <- get_mod_names(mod)
-  w <- which(name==names)
-  if(length(w)==0)
-    stop("Cannot find specified ", name, " in model weights.")
-  wgts <- mod$model$layers[[w]]$weights
+  lay <- get_layer_by_opname(mod, name, partial_match = partial_match)
+  wgts <- lay$weights
   if(is.list(wgts) & length(wgts)==1)
     return(as.matrix(wgts[[1]]))
   return(wgts)
   
 }
+
+#' Function to return layer given model and name
+#'
+#' @param mod deepregression model
+#' @param name character
+#' @param partial_match logical; whether to also check for a partial match
+#' @export
+get_layer_by_opname <- function(mod, name, partial_match = FALSE)
+{
+  
+  names <- get_mod_names(mod)
+  w <- get_layernr_by_opname(mod, name, partial_match = partial_match)
+  if(length(w)==0)
+    stop("Cannot find specified ", name, " in model weights.")
+  return(mod$model$layers[[w]])
+  
+}
+
+#' Function to return layer number given model and name
+#'
+#' @param mod deepregression model
+#' @param name character
+#' @param partial_match logical; whether to also check for a partial match
+#' @export
+get_layernr_by_opname <- function(mod, name, partial_match = FALSE)
+{
+  
+  names <- get_mod_names(mod)
+  if(partial_match){
+    w <- grep(name, names)
+    if(length(w)>1){
+      # try to rescue assuming partial match 
+      # is not referring to input
+      win <- grep("input", names)
+      w <- setdiff(w, win)
+      if(length(w)>1) stop("Given name yields ambigious results")
+    }
+  }else{
+    w <- which(name==names)
+  }
+  return(w)
+  
+}
+
 
 get_names_mod <- function(mod, which_param=1)
   get_names_pfc(mod$init_params$parsed_formulas_contents[[which_param]])
