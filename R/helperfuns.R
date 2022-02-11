@@ -69,6 +69,24 @@ get_layer_by_opname <- function(mod, name, partial_match = FALSE)
   
 }
 
+#' Function to return layer numbers with trainable weights
+#'
+#' @param mod deepregression model
+#' @param logic logical; TRUE: return logical vector; FALSE (default) index
+#' @export
+get_layernr_trainable <- function(mod, logic = FALSE)
+{
+  
+  names <- get_mod_names(mod)
+  res <- (sapply(names, function(nm) 
+    length(mod$model$get_layer(
+      name = nm
+    )$trainable_weights)>0)
+  )
+  if(logic) return(res) else return(which(res))
+    
+}
+
 #' Function to return layer number given model and name
 #'
 #' @param mod deepregression model

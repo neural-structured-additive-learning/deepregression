@@ -34,6 +34,7 @@
 #' @param orthog_options options for the orthgonalization defined by \code{\link{orthog_control}}
 #' @param verbose logical; whether to print progress of model initialization to console
 #' @param weight_options options for layer weights defined by \code{\link{weight_control}}
+#' @param output_dim dimension of the output, per default 1L
 #' @param ... further arguments passed to the \code{model_builder} function
 #'
 #' @import tensorflow tfprobability keras mgcv dplyr R6 reticulate Matrix
@@ -109,6 +110,7 @@ deepregression <- function(
   penalty_options = penalty_control(),
   orthog_options = orthog_control(),
   weight_options = weight_control(),
+  output_dim = 1L,
   verbose = FALSE,
   ...
 )
@@ -187,7 +189,8 @@ deepregression <- function(
   n_obs <- NROW(y)
   
   # number of output dim
-  output_dim <- NCOL(y)
+  if(family=="multinoulli" | family=="multinomial")
+    output_dim <- NCOL(y)
 
   # check for lists in list
   if(is.list(data)){
