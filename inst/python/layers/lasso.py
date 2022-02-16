@@ -27,6 +27,19 @@ class inverse_group_lasso_pen(reg.Regularizer):
     def __call__(self, x):
         return self.la * tf.reduce_sum(tf.sqrt(tf.reduce_sum(tf.square(x), 1)))
 
+class ExplicitGroupLasso(reg.Regularizer):
+    
+    def __init__(self, la=0, group_idx=None):
+        super(ExplicitGroupLasso, self).__init__()
+        self.la = la
+        self.group_idx = group_idx
+        self.input_shapes = [len(gii) for gii in group_idx]
+    
+    def __call__(self, x):
+        self.gathered_inputs = [tf.gather(x, ind, axis=0) for ind in self.group_idx]
+        return self.la * tf.reduce_sum([tf.sqrt(tf.reduce_sum(tf.square(self.gathered_inputs[i]))) 
+                       for i in range(len(self.gathered_inputs))])
+    
 class TibLinearLasso(tf.keras.layers.Layer):
   def __init__(self, units=1, la=0, name="tib_lasso"):
     super(TibLinearLasso, self).__init__()
