@@ -1,4 +1,4 @@
-context("Model Builder")
+context("Deep ensembles")
 
 test_that("deep ensemble", {
 
