@@ -21,7 +21,7 @@ ensemble <- function (x, ...) {
 ensemble.deepregression <- function(
   x,
   n_ensemble = 5,
-  reinitialize = FALSE,
+  reinitialize = TRUE,
   mylapply = lapply,
   verbose = FALSE,
   patience = 20,
@@ -45,7 +45,7 @@ ensemble.deepregression <- function(
     else
       set_weights(x$model, original_weights)
 
-    if(print_members) cat("Fitting member ", iter, " ... ")
+    if(print_members) cat("Fitting member", iter, "...")
     st1 <- Sys.time()
 
     this_mod <- x$model
@@ -96,7 +96,7 @@ ensemble.deepregression <- function(
 
   class(res) <- c("drEnsemble", "list")
 
-  if (plot) try(plot.drEnsemble(res), silent = TRUE)
+  # if (plot) try(plot.drEnsemble(res), silent = TRUE)
 
   set_weights(x$model, original_weights)
 
@@ -116,19 +116,12 @@ reinit_weights <- function(object) {
 #' @method reinit_weights deepregression
 reinit_weights.deepregression <- function(object) {
   lapply(object$model$layers, function(x) {
-    x$build(x$input_shape)
-    # dtype <- x$dtype
-    # dshape <- try(x$kernel$shape)
-    # dweight <- try(x$kernel_initializer(shape = dshape, dtype = dtype))
-    # try(x$set_weights(weights = dweight))
+    # x$build(x$input_shape)
+    dtype <- x$dtype
+    dshape <- try(x$kernel$shape, silent = TRUE)
+    dweight <- try(x$kernel_initializer(shape = dshape, dtype = dtype), silent = TRUE)
+    try(x$set_weights(weights = list(dweight)), silent = TRUE)
   })
 
   return(invisible(object))
-}
-
-plot.drEnsemble <- function(x, ...) {
-  pdat <- lapply(x, as.data.frame)
-  dat <- do.call(rbind, pdat)
-  plot(dat$epoch, dat$value, lty = as.numeric(factor(dat$data)),
-       col = as.numeric(factor(dat$metric)), type = "l")
 }
