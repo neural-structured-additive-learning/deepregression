@@ -1,6 +1,6 @@
 context("Model Builder")
 
-test_that("model_builder", {
+test_that("deep ensemble", {
 
   n <- 1000
   data = data.frame(matrix(rnorm(4*n), c(n,4)))
@@ -19,11 +19,8 @@ test_that("model_builder", {
   mod <- deepregression(
     list_of_formulas = list(loc = ~ 1 + s(xa) + x1, scale = ~ 1),
     data = data, y = y,
-    list_of_deep_models = list(deep_model = deep_model),
-    model_fun = build_customKeras()
+    list_of_deep_models = list(deep_model = deep_model)
   )
-
-  expect_equal(class(mod$model)[1], "models.custom_train_step.customKeras")
 
   cf_init <- coef(mod)
   ret <- ensemble.deepregression(mod, epochs = 10, save_weights = TRUE)
@@ -32,7 +29,9 @@ test_that("model_builder", {
   expect_identical(cf_init, cf_post)
 
   edist <- get_ensemble_distribution(ret)
-  - mean(diag(tfd_log_prob(edist, y)$numpy()))
+  nll <- - mean(diag(tfd_log_prob(get_distribution(mod), y)$numpy()))
+  nlle <- - mean(diag(tfd_log_prob(edist, y)$numpy()))
+  expect_lte(nlle, nll)
 
 })
 

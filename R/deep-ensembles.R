@@ -58,11 +58,6 @@ ensemble.deepregression <- function(
     # make callbacks
     this_callbacks <- callbacks
 
-    if (save_weights) {
-      weighthistory <- WeightHistory$new()
-      this_callbacks <- append(this_callbacks, weighthistory)
-    }
-
     args <- list(...)
     args <- append(args,
                    list(object = this_mod,
@@ -79,7 +74,7 @@ ensemble.deepregression <- function(
     ret <- do.call(x$fit_fun, args)
 
     if (save_weights)
-      ret$weighthistory <- weighthistory
+      ret$weighthistory <- get_weights(x$model)
 
     if (!is.null(save_fun))
       ret$save_fun_result <- save_fun(this_mod)
@@ -124,7 +119,7 @@ get_ensemble_distribution <- function(object, data = NULL, topK = NULL, ...) {
     stop("Weights were not saved. Consider running `ensemble` with `save_weights = TRUE`.")
 
   ens_weights <- lapply(ens, function(x) {
-    get_weights(x$weighthistory$model)
+    x$weighthistory
   })
 
   dists <- lapply(ens_weights, function(x) {
