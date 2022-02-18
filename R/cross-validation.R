@@ -1,6 +1,6 @@
 make_cv_list_simple <- function(data_size, folds, seed = 42, shuffle = TRUE)
 {
-  
+
   set.seed(seed)
   suppressWarnings(
     mysplit <- split(sample(1:data_size),
@@ -9,20 +9,20 @@ make_cv_list_simple <- function(data_size, folds, seed = 42, shuffle = TRUE)
   lapply(mysplit, function(test_ind)
     list(train_ind = setdiff(1:data_size, test_ind),
          test_ind = test_ind))
-  
+
 }
 
 extract_cv_result <- function(res, name_loss = "loss", name_val_loss = "val_loss"){
-  
+
   losses <- sapply(res, "[[", "metrics")
   trainloss <- data.frame(losses[name_loss,])
   validloss <- data.frame(losses[name_val_loss,])
   weightshist <- lapply(res, "[[", "weighthistory")
-  
+
   return(list(trainloss=trainloss,
               validloss=validloss,
               weight=weightshist))
-  
+
 }
 
 #' Plot CV results from deepregression
@@ -35,19 +35,19 @@ extract_cv_result <- function(res, name_loss = "loss", name_val_loss = "val_loss
 #' @export
 #'
 plot_cv <- function(x, what=c("loss","weight"), ...){
-  
-  .pardefault <- par()
+
+  .pardefault <- par(no.readonly = TRUE)
   cres <- extract_cv_result(x)
-  
+
   what <- match.arg(what)
-  
+
   if(what=="loss"){
-    
+
     loss <- cres$trainloss
     mean_loss <- apply(loss, 1, mean)
     vloss <- cres$validloss
     mean_vloss <- apply(vloss, 1, mean)
-    
+
     oldpar <- par(no.readonly = TRUE)    # code line i
     on.exit(par(oldpar))            # code line i + 1
     par(mfrow=c(1,2))
@@ -59,15 +59,15 @@ plot_cv <- function(x, what=c("loss","weight"), ...){
     points(1:(nrow(vloss)), mean_vloss, type="l", col="red", lwd=2)
     abline(v=which.min(mean_vloss), lty=2)
     suppressWarnings(par(.pardefault))
-    
+
   }else{
-    
+
     stop("Not implemented yet.")
-    
+
   }
-  
+
   invisible(NULL)
-  
+
 }
 
 #' Function to get the stoppting iteration from CV
@@ -81,9 +81,9 @@ stop_iter_cv_result <- function(res, thisFUN = mean,
                                 loss = "validloss",
                                 whichFUN = which.min)
 {
-  
+
   whichFUN(apply(extract_cv_result(res)[[loss]], 1, FUN=thisFUN))
-  
+
 }
 
 #' Generate folds for CV out of one hot encoded matrix
@@ -99,10 +99,10 @@ stop_iter_cv_result <- function(res, thisFUN = mean,
 #' @export
 make_folds <- function(mat, val_train=0, val_test=1)
 {
-  
+
   apply(mat, 2, function(x){
     list(train = which(x %in% val_train),
          test = which(x %in% val_test))
   })
-  
+
 }

@@ -80,7 +80,7 @@ ensemble.deepregression <- function(
       ret$save_fun_result <- save_fun(this_mod)
 
     if(stop_if_nan && any(is.nan(ret$metrics$validloss)))
-      stop("Fold ", iter, " with NaN's in ")
+      stop("Member ", iter, " with NaN's in validation loss")
 
     this_mod$set_weights(old_weights)
     td <- Sys.time() - st1
