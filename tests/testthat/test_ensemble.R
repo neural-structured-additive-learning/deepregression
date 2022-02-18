@@ -26,10 +26,13 @@ test_that("model_builder", {
   expect_equal(class(mod$model)[1], "models.custom_train_step.customKeras")
 
   cf_init <- coef(mod)
-  ret <- ensemble.deepregression(mod, epochs = 10)
+  ret <- ensemble.deepregression(mod, epochs = 10, save_weights = TRUE)
   cf_post <- coef(mod)
 
   expect_identical(cf_init, cf_post)
+
+  edist <- get_ensemble_distribution(ret)
+  - mean(diag(tfd_log_prob(edist, y)$numpy()))
 
 })
 

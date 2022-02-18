@@ -45,7 +45,9 @@ ensemble.deepregression <- function(
     else
       set_weights(x$model, original_weights)
 
-    if(print_members) cat("Fitting member", iter, "...")
+    if (print_members)
+      cat("Fitting member", iter, "...")
+
     st1 <- Sys.time()
 
     this_mod <- x$model
@@ -56,7 +58,7 @@ ensemble.deepregression <- function(
     # make callbacks
     this_callbacks <- callbacks
 
-    if(save_weights){
+    if (save_weights) {
       weighthistory <- WeightHistory$new()
       this_callbacks <- append(this_callbacks, weighthistory)
     }
@@ -77,7 +79,7 @@ ensemble.deepregression <- function(
     ret <- do.call(x$fit_fun, args)
 
     if (save_weights)
-      ret$weighthistory <- weighthistory$weights_last_layer
+      ret$weighthistory <- weighthistory
 
     if (!is.null(save_fun))
       ret$save_fun_result <- save_fun(this_mod)
@@ -94,14 +96,51 @@ ensemble.deepregression <- function(
 
   })
 
-  class(res) <- c("drEnsemble", "list")
+  ret <- c(x, ensemble_results = list(res))
+
+  class(ret) <- c("drEnsemble", class(x))
 
   # if (plot) try(plot.drEnsemble(res), silent = TRUE)
 
   set_weights(x$model, original_weights)
 
-  invisible(return(res))
+  return(invisible(ret))
 
+}
+
+get_ensemble_distribution <- function(object, data = NULL, topK = NULL, ...) {
+
+  ens <- object$ensemble_results
+  n_ensemble <- length(ens)
+  original_weights <- get_weights(object$model)
+
+  if (is.null(topK))
+    topK <- n_ensemble
+
+  if (topK != n_ensemble)
+    stop("Not implemented yet.")
+
+  if (is.null(ens[[1]]$weighthistory))
+    stop("Weights were not saved. Consider running `ensemble` with `save_weights = TRUE`.")
+
+  ens_weights <- lapply(ens, function(x) {
+    get_weights(x$weighthistory$model)
+  })
+
+  dists <- lapply(ens_weights, function(x) {
+    set_weights(object$model, x)
+    get_distribution(object, data = data)
+  })
+
+  shp <- dists[[1]]$shape$as_list()
+  probs <- k_constant(1 / topK, shape = c(shp, n_ensemble))
+  dcat <- tfd_categorical(probs = probs)
+
+  mix_dist <- tfd_mixture(dcat, dists)
+
+  set_weights(object$model, original_weights)
+
+  return(mix_dist)
 }
 
 #' Re-intialize model weights
