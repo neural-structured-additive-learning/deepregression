@@ -6,7 +6,7 @@
 #'
 #' @export
 ensemble <- function (x, ...) {
-  UseMethod("cv", x)
+  UseMethod("ensemble", x)
 }
 
 #' Ensemblind deepregression models
@@ -14,17 +14,20 @@ ensemble <- function (x, ...) {
 #' @param x object of class \code{"deepregression"}
 #'
 #' @return Ensemble
+#'
+#' @method ensemble deepregression
+#'
 #' @export
 ensemble.deepregression <- function(
   x,
   n_ensemble = 5,
-  reinitialize = TRUE,
+  reinitialize = FALSE,
+  mylapply = lapply,
   verbose = FALSE,
   patience = 20,
   plot = TRUE,
   print_members = TRUE,
   stop_if_nan = TRUE,
-  mylapply = lapply,
   save_weights = FALSE,
   callbacks = list(),
   save_fun = NULL,
@@ -34,13 +37,13 @@ ensemble.deepregression <- function(
 
   original_weights <- x$model$get_weights()
 
-  res <- mylapply(1:n_ensemble, function(iter){
+  res <- mylapply(1:n_ensemble, function(iter) {
 
     # Randomly initialize weights
     if (reinitialize)
-      reinit_weights(x)
-
-    this_fold <- cv_folds[[iter]]
+      x <- reinit_weights(x)
+    else
+      set_weights(x$model, original_weights)
 
     if(print_members) cat("Fitting member ", iter, " ... ")
     st1 <- Sys.time()
@@ -61,7 +64,7 @@ ensemble.deepregression <- function(
     args <- list(...)
     args <- append(args,
                    list(object = this_mod,
-                        x = train_data,
+                        x = x_train,
                         y = x$init_params$y,
                         callbacks = this_callbacks,
                         verbose = verbose,
@@ -82,7 +85,6 @@ ensemble.deepregression <- function(
     if(stop_if_nan && any(is.nan(ret$metrics$validloss)))
       stop("Member ", iter, " with NaN's in validation loss")
 
-    this_mod$set_weights(old_weights)
     td <- Sys.time() - st1
 
     if (print_members)
@@ -94,9 +96,9 @@ ensemble.deepregression <- function(
 
   class(res) <- c("drEnsemble", "list")
 
-  if (plot) try(plot_cv(res), silent = TRUE)
+  if (plot) try(plot.drEnsemble(res), silent = TRUE)
 
-  x$model$set_weights(old_weights)
+  set_weights(x$model, original_weights)
 
   invisible(return(res))
 
@@ -115,6 +117,18 @@ reinit_weights <- function(object) {
 reinit_weights.deepregression <- function(object) {
   lapply(object$model$layers, function(x) {
     x$build(x$input_shape)
+    # dtype <- x$dtype
+    # dshape <- try(x$kernel$shape)
+    # dweight <- try(x$kernel_initializer(shape = dshape, dtype = dtype))
+    # try(x$set_weights(weights = dweight))
   })
-  return(invisible(NULL))
+
+  return(invisible(object))
+}
+
+plot.drEnsemble <- function(x, ...) {
+  pdat <- lapply(x, as.data.frame)
+  dat <- do.call(rbind, pdat)
+  plot(dat$epoch, dat$value, lty = as.numeric(factor(dat$data)),
+       col = as.numeric(factor(dat$metric)), type = "l")
 }
