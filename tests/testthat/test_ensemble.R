@@ -33,6 +33,12 @@ test_that("deep ensemble", {
   nlle <- - mean(diag(tfd_log_prob(edist, y)$numpy()))
   expect_lte(nlle, nll)
 
+  expect_length(cf <- coef.drEnsemble(ret), 3L)
+  expect_equal(dim(cf$x1), c(1, 5))
+
+  fitt <- fitted.drEnsemble(ret)
+  expect_is(fitt, "list")
+
 })
 
 test_that("reinitializing weights", {

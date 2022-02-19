@@ -118,14 +118,7 @@ get_ensemble_distribution <- function(object, data = NULL, topK = NULL, ...) {
   if (is.null(ens[[1]]$weighthistory))
     stop("Weights were not saved. Consider running `ensemble` with `save_weights = TRUE`.")
 
-  ens_weights <- lapply(ens, function(x) {
-    x$weighthistory
-  })
-
-  dists <- lapply(ens_weights, function(x) {
-    set_weights(object$model, x)
-    get_distribution(object, data = data)
-  })
+  dists <- .call_for_all_members(object, get_distribution, data = data)
 
   shp <- dists[[1]]$shape$as_list()
   probs <- k_constant(1 / topK, shape = c(shp, n_ensemble))
@@ -137,6 +130,34 @@ get_ensemble_distribution <- function(object, data = NULL, topK = NULL, ...) {
 
   return(mix_dist)
 }
+
+#' @method coef drEnsemble
+coef.drEnsemble <- function(object, which_param = 1, type = NULL, ...) {
+  ret <- .call_for_all_members(object, coef.deepregression,
+                               which_param = which_param, type = type,
+                               ... = ...)
+  # avoid purrr dependency
+  lapply(purrr::transpose(ret), function(x) do.call("cbind", x))
+}
+
+#' @method fitted drEnsemble
+fitted.drEnsemble <- function(object, apply_fun = tfd_mean, ...) {
+  .call_for_all_members(object, fitted.deepregression,
+                        apply_fun = apply_fun,
+                        ... = ...)
+}
+
+.call_for_all_members <- function(object, FUN, ...) {
+  ens_weights <- lapply(object$ensemble_results, function(x) {
+    x$weighthistory
+  })
+  lapply(ens_weights, function(x) {
+    set_weights(object$model, x)
+    FUN(object, ... = ...)
+  })
+}
+
+#' @method fitted drEnsemble
 
 #' Re-intialize model weights
 #' @param object model to re-initialize
