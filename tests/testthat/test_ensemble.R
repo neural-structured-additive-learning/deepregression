@@ -23,7 +23,7 @@ test_that("deep ensemble", {
   )
 
   cf_init <- coef(mod)
-  ret <- ensemble.deepregression(mod, epochs = 10, save_weights = TRUE)
+  ret <- ensemble(mod, epochs = 10, save_weights = TRUE)
   cf_post <- coef(mod)
 
   expect_identical(cf_init, cf_post)
@@ -68,11 +68,11 @@ test_that("reinitializing weights", {
   )
 
   cfa <- coef(mod)
-  reinit_weights.deepregression(mod)
+  reinit_weights(mod)
   cfb <- coef(mod)
 
   fit(mod, epochs = 2)
-  reinit_weights.deepregression(mod)
+  reinit_weights(mod)
   fit(mod, epochs = 2)
 
   expect_identical(cfa$x1, cfb$x1)
