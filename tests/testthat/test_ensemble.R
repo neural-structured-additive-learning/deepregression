@@ -29,8 +29,8 @@ test_that("deep ensemble", {
   expect_identical(cf_init, cf_post)
 
   edist <- get_ensemble_distribution(ret)
-  nll <- - mean(diag(tfd_log_prob(get_distribution(mod), y)$numpy()))
-  nlle <- - mean(diag(tfd_log_prob(edist, y)$numpy()))
+  nll <- - mean(tfd_log_prob(get_distribution(mod) %>% tfd_independent(), y)$numpy())
+  nlle <- - mean(tfd_log_prob(edist %>% tfd_independent(), y)$numpy())
   expect_lte(nlle, nll)
 
   expect_length(cf <- coef.drEnsemble(ret), 3L)

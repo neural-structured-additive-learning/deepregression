@@ -73,13 +73,10 @@ The following works are based on the ideas implemented in this package:
 
 Many thanks to following people for helpful comments, issues, suggestions for improvements and discussions: 
 
-* Philipp Baumann
 * Andreas Bender
 * Christina Bukas
 * Patrick Kaiser
 * Nadja Klein
-* Chris Kolb
-* Lucas Kook
 * Philipp Kopper
 * Christian Mueller
 * Julian Raith
