@@ -5,19 +5,31 @@
 #' @param ... further arguments passed to the class-specific function
 #'
 #' @export
+#'
 ensemble <- function (x, ...) {
   UseMethod("ensemble", x)
 }
 
 #' Ensemblind deepregression models
 #'
-#' @param x object of class \code{"deepregression"}
+#' @param x object of class \code{"deepregression"} to ensemble
+#' @param n_ensemble numeric; number of ensemble members to fit
+#' @param reinitialize logical; if \code{TRUE} (default), model weights are
+#'     initialized randomly prior to fitting each member. Fixed weights are
+#'     not affected
+#' @param print_members logical; print results for each member
+#' @inheritParams cv.deepregression
+#' @param ... further arguments passed to \code{object$fit_fun}
 #'
-#' @return Ensemble
+#' @return object of class \code{"drEnsemble"}, containing the original
+#'     \code{"deepregression"} model together with a list of ensembling
+#'     results (training history and, if \code{save_weights} is \code{TRUE},
+#'     the trained weights of each ensemble member)
 #'
 #' @method ensemble deepregression
 #'
 #' @export
+#'
 ensemble.deepregression <- function(
   x,
   n_ensemble = 5,
@@ -103,6 +115,18 @@ ensemble.deepregression <- function(
 
 }
 
+#' Obtain the conditional ensemble distribution
+#'
+#' @param object object of class \code{"drEnsemble"}
+#' @param data data for which to return the fitted distribution
+#' @param topK not implemented yet
+#' @param ... further arguments currently ignored
+#'
+#' @return \code{tfd_distribution} of the ensemble, i.e., a mixture of the
+#'     ensemble member's predicted distributions conditional on \code{data}
+#'
+#' @export
+#'
 get_ensemble_distribution <- function(object, data = NULL, topK = NULL, ...) {
 
   ens <- object$ensemble_results
@@ -131,16 +155,47 @@ get_ensemble_distribution <- function(object, data = NULL, topK = NULL, ...) {
   return(mix_dist)
 }
 
+#' Method for extracting ensemble coefficient estimates
+#'
+#' @param object object of class \code{"drEnsemble"}
+#' @param ... further arguments supplied to \code{coef.deepregression}
+#' @inheritParams coef.deepregression
+#'
+#' @return list of coefficient estimates of all ensemble members
+#'
 #' @method coef drEnsemble
+#'
+#' @export
+#'
 coef.drEnsemble <- function(object, which_param = 1, type = NULL, ...) {
-  ret <- .call_for_all_members(object, coef.deepregression,
-                               which_param = which_param, type = type,
-                               ... = ...)
-  # avoid purrr dependency
-  lapply(purrr::transpose(ret), function(x) do.call("cbind", x))
+  coefs <- .call_for_all_members(object, coef.deepregression,
+                                 which_param = which_param, type = type,
+                                 ... = ...)
+
+  nms <- names(coefs[[1]])
+
+  ret <- lapply(nms, function(nm) {
+    do.call("cbind", lapply(coefs, function(member) {
+      member[[nm]]
+    }))
+  })
+
+  names(ret) <- nms
+
+  ret
+
 }
 
+#' Method for extracting the fitted values of an ensemble
+#'
+#' @inheritParams fitted.deepregression
+#'
+#' @return list of fitted values for each ensemble member
+#'
 #' @method fitted drEnsemble
+#'
+#' @export
+#'
 fitted.drEnsemble <- function(object, apply_fun = tfd_mean, ...) {
   .call_for_all_members(object, fitted.deepregression,
                         apply_fun = apply_fun,
@@ -157,18 +212,25 @@ fitted.drEnsemble <- function(object, apply_fun = tfd_mean, ...) {
   })
 }
 
-#' @method fitted drEnsemble
-
-#' Re-intialize model weights
+#' Genereic function to re-intialize model weights
+#'
 #' @param object model to re-initialize
 #' @export
+#'
 reinit_weights <- function(object) {
   UseMethod("reinit_weights")
 }
 
-#' Re-initialize deepregression weights
+#' Method to re-initialize weights of a \code{"deepregression"} model
+#'
+#' @param object object of class \code{"deepregression"}
+#'
 #' @return invisible \code{NULL}
+#'
 #' @method reinit_weights deepregression
+#'
+#' @export
+#'
 reinit_weights.deepregression <- function(object) {
   lapply(object$model$layers, function(x) {
     # x$build(x$input_shape)
