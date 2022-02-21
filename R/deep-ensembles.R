@@ -17,6 +17,8 @@ ensemble <- function (x, ...) {
 #' @param reinitialize logical; if \code{TRUE} (default), model weights are
 #'     initialized randomly prior to fitting each member. Fixed weights are
 #'     not affected
+#' @param save_weights whether to save final weights of each ensemble member;
+#'     defaults to \code{TRUE}
 #' @param print_members logical; print results for each member
 #' @inheritParams cv.deepregression
 #' @param ... further arguments passed to \code{object$fit_fun}
