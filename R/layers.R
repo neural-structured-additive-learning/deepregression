@@ -27,3 +27,15 @@ tibgroup_layer = function(units, group_idx, la, ...) {
   layers <- reticulate::import_from_path("layers", path = python_path)
   layers$TibGroupLasso(units = units, group_idx = group_idx, la = la, ...)
 }
+
+layer_hadamard = function(units, la, depth, ...) {
+  python_path <- system.file("python", package = "deepregression")
+  layers <- reticulate::import_from_path("layers", path = python_path)
+  layers$HadamardLayer(units = units, la = la, depth = depth, ...)
+}
+
+layer_group_hadamard = function(units, la, group_idx, depth, ...) {
+  python_path <- system.file("python", package = "deepregression")
+  layers <- reticulate::import_from_path("layers", path = python_path)
+  layers$GroupHadamardLayer(units = units, la = la, group_idx = group_idx, depth = depth, ...)
+}
