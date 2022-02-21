@@ -40,7 +40,7 @@ ensemble.deepregression <- function(
   plot = TRUE,
   print_members = TRUE,
   stop_if_nan = TRUE,
-  save_weights = FALSE,
+  save_weights = TRUE,
   callbacks = list(),
   save_fun = NULL,
   ...
