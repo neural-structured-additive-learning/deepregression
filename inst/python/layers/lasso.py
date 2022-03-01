@@ -168,3 +168,30 @@ class ExplicitGroupLasso(reg.Regularizer):
         self.gathered_inputs = [tf.gather(x, ind, axis=0) for ind in self.group_idx]
         return self.la * tf.reduce_sum([tf.sqrt(tf.reduce_sum(tf.square(self.gathered_inputs[i]))) 
                        for i in range(len(self.gathered_inputs))])
+                       
+                       
+class HadamardDiffLayer(keras.layers.Layer):
+    def __init__(self, units=1, la=0, initu='glorot_uniform', initv='glorot_uniform'):
+        super(HadamardDiffLayer, self).__init__()
+        self.la = la
+        self.initu = initu
+        self.initv = initv
+        self.units = units
+        
+    def build(self, input_shape):
+        self.u = self.add_weight(
+            shape=(input_shape[-1], self.units),
+            initializer=self.initu,
+            regularizer=reg.l2(self.la),
+            trainable=True,
+        )
+        self.v = self.add_weight(
+            shape=(input_shape[-1], self.units),
+            initializer=self.initv,
+            regularizer=reg.l2(self.la),
+            trainable=True,
+        )
+        
+    def call(self, inputs):
+        beta = tf.subtract(tf.square(self.u), tf.square(self.v))
+        return tf.matmul(inputs, beta)

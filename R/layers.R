@@ -35,7 +35,11 @@ layer_hadamard = function(units, la, depth, ...) {
 }
 
 layer_group_hadamard = function(units, la, group_idx, depth, ...) {
+  layers$GroupHadamardLayer(units = units, la = la, group_idx = group_idx, depth = depth, ...)
+}
+
+layer_hadamard_diff = function(units, la, initu = "glorot_uniform", initv = "glorot_uniform", ...) {
   python_path <- system.file("python", package = "deepregression")
   layers <- reticulate::import_from_path("layers", path = python_path)
-  layers$GroupHadamardLayer(units = units, la = la, group_idx = group_idx, depth = depth, ...)
+  layers$HadamardDiffLayer(units = units, la = la, initu = initu, initv = initv, ...)
 }
