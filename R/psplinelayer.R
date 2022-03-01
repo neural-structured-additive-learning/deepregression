@@ -205,7 +205,8 @@ remove_zerocons <- function(object)
 remove_la <- function(object)
 {
 
-  gsub(",\\s?la\\s?=\\s?[0-9.-]+","",object)
+  gsub(",\\s?la\\s?=\\s?(-?[0-9]*)((\\.?[0-9]*[eE]?[-\\+]?[0-9]+)|(\\.[0-9]+))",
+       "",object)
 
 }
 

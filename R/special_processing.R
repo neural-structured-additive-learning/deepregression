@@ -276,7 +276,7 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
 
 l1_processor <- function(term, data, output_dim, param_nr, controls){
   # l1 (Tib)
-  lambda = controls$sp_scale(data) * extractval(term, "la")
+  lambda = controls$sp_scale(data) * as.numeric(extractval(term, "la"))
   
   layer <- layer_generator(term = term, 
                            output_dim = output_dim, 

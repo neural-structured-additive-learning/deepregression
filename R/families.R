@@ -243,6 +243,7 @@ family_to_tfd <- function(family)
                      laplace = tfd_laplace,
                      log_normal = tfd_log_normal,
                      logistic = tfd_logistic,
+                     mse = tfd_mse,
                      multinomial = function(probs)
                        tfd_multinomial(total_count = 1L,
                                        probs = probs),
@@ -340,6 +341,7 @@ family_to_trafo <- function(family, add_const = 1e-8)
                                           function(x) tf$add(add_const, tfe(x))),
                        multinomial = list(function(x) tfsoft(x)),
                        multinoulli = list(function(x) x),
+                       mse = list(function(x) x),
                        pareto = list(function(x) tf$add(add_const, tfe(x)),
                                      function(x) add_const + tfe(-x)),
                        pareto_ls = list(function(x) tf$add(add_const, tfe(x)),
@@ -498,5 +500,19 @@ tfd_zinb <- function(mu, r, probs)
                        tfd_deterministic(loc = mu * 0L)
                   ),
                 name="zinb")
+  )
+}
+
+#' For using mean squared error via TFP
+#' 
+#' @param mean parameter for the mean
+#' @details \code{deepregression} allows to train based on the
+#' MSE by using \code{loss = "mse"} as argument to \code{deepregression}.
+#' This tfd function just provides a dummy \code{family}
+#' 
+tfd_mse <- function(mean)
+{
+  return(
+    tfd_normal(loc = mean, scale = 1)
   )
 }

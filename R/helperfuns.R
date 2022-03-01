@@ -307,18 +307,6 @@ get_X_lin_newdata <- function(linname, newdata)
 
 get_names_pfc <- function(pfc) sapply(pfc, "[[", "term")
 
-#### used for the weight history
-coefkeras <- function(model)
-{
-  
-  layer_names <- sapply(model$layers, "[[", "name")
-  layers_names_structured <- layer_names[
-    grep("structured_", layer_names)
-  ]
-  unlist(sapply(layers_names_structured,
-                function(name) model$get_layer(name)$get_weights()[[1]]))
-}
-
 #### used in fit.deepregression
 WeightHistory <- R6::R6Class("WeightHistory",
                              inherit = KerasCallback,
@@ -327,10 +315,10 @@ WeightHistory <- R6::R6Class("WeightHistory",
                                
                                weights_last_layer = NULL,
                                
-                               on_epoch_end = function(batch, logs = list()) {
-                                 self$weights_last_layer <-
-                                   cbind(self$weights_last_layer,
-                                         coefkeras(self$model))
+                               on_epoch_end = function(epoch, logs = list()) {
+                                 self$weights_last_layer <- append(
+                                   self$weights_last_layer, list(self$model$get_weights())
+                                 )
                                }
                              ))
 
