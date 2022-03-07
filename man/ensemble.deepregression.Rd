@@ -14,7 +14,7 @@
   plot = TRUE,
   print_members = TRUE,
   stop_if_nan = TRUE,
-  save_weights = FALSE,
+  save_weights = TRUE,
   callbacks = list(),
   save_fun = NULL,
   ...
@@ -41,7 +41,8 @@ not affected}
 
 \item{stop_if_nan}{logical; whether to stop CV if NaN values occur}
 
-\item{save_weights}{logical, whether to save weights in each epoch.}
+\item{save_weights}{whether to save final weights of each ensemble member;
+defaults to \code{TRUE}}
 
 \item{callbacks}{a list of callbacks used for fitting}
 

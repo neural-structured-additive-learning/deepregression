@@ -12,7 +12,8 @@ penalty_control(
   anisotropic = TRUE,
   zero_constraint_for_smooths = TRUE,
   hat1 = FALSE,
-  sp_scale = function(x) 1/NROW(x)
+  sp_scale = function(x) ifelse(is.list(x) | is.data.frame(x), 1/NROW(x[[1]]),
+    1/NROW(x))
 )
 }
 \arguments{
