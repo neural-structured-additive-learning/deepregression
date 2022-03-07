@@ -210,7 +210,17 @@ deepregression <- function(
   # repeat weight options if not specified otherwise
   if(length(weight_options)!=length(list_of_formulas))
     weight_options <- weight_options[rep(1, length(list_of_formulas))]
+  
+  # training mse
+  if(!is.null(list(...)$loss) && list(...)$loss=="mse")
+  {
+    
+    weight_options[[2]]$specific <- c(weight_options[[2]]$specific, list("1" = list(trainable = FALSE)))
+    weight_options[[2]]$warmstarts <- c(weight_options[[2]]$warmstarts, list("1" = 0))
+    family <- "normal"
 
+  }
+  
   if(verbose) cat("Pre-calculate GAM terms...")
   so <- penalty_options
   so$gamdata <- precalc_gam(list_of_formulas, data, so)

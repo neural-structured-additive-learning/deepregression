@@ -30,7 +30,7 @@ penalty_control <- function(defaultSmoothing = NULL,
                            anisotropic = TRUE,
                            zero_constraint_for_smooths = TRUE,
                            hat1 = FALSE,
-                           sp_scale = function(x) 1/NROW(x)
+                           sp_scale = function(x) 1/NROW(x[[1]])
                            )
 {
   
