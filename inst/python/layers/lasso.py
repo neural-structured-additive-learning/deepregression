@@ -169,6 +169,42 @@ class ExplicitGroupLasso(reg.Regularizer):
         return self.la * tf.reduce_sum([tf.sqrt(tf.reduce_sum(tf.square(self.gathered_inputs[i]))) 
                        for i in range(len(self.gathered_inputs))])
                        
+
+class BlownUpPenalty(reg.Regularizer):    
+    def __init__(self, la=0, group_idx=None):
+        super(BlownUpPenalty, self).__init__()
+        self.la = la
+        self.group_idx = group_idx
+        self.group_shapes = [len(gii) for gii in group_idx]
+    
+    def __call__(self, x):
+        return self.la * tf.reduce_sum(tf.multiply(tf.sqrt(self.group_shapes), tf.square(x))) 
+        
+        
+class TibGroupLassoBlownUp(tf.keras.layers.Layer):
+    def __init__(self, units=1, group_idx=None, la=0, name="tib_grouplasso"):
+        super(TibGroupLassoBlownUp, self).__init__()
+        self.units = units
+        self.la = la
+        self._name = name
+        self.group_idx = group_idx
+        self.reg_group = reg.l2(self.la)
+        self.reg_dense = BlownUpPenalty(self.la, self.group_idx)
+      
+    def build(self, input_shape):
+        self.fc = tf.keras.layers.Dense(input_shape = input_shape, 
+                                        units = self.units, 
+                                        use_bias=False, 
+                                        bias_regularizer=None, 
+                                        activation=None, 
+                                        kernel_regularizer=self.reg_dense
+                                        )
+        self.gc = GroupConnected(group_idx=self.group_idx, la=self.reg_group)
+
+
+    def call(self, input):
+        return self.fc(self.gc(input))
+                       
                        
 class HadamardDiffLayer(keras.layers.Layer):
     def __init__(self, units=1, la=0, initu='glorot_uniform', initv='glorot_uniform'):
