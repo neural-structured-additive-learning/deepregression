@@ -178,7 +178,7 @@ class BlownUpPenalty(reg.Regularizer):
         self.group_shapes = [len(gii) for gii in group_idx]
     
     def __call__(self, x):
-        return self.la * tf.reduce_sum(tf.multiply(tf.sqrt(self.group_shapes), tf.square(x))) 
+        return self.la * tf.reduce_sum(tf.multiply(tf.cast(self.group_shapes, "float32"), tf.square(x))) 
         
         
 class TibGroupLassoBlownUp(tf.keras.layers.Layer):
@@ -188,7 +188,6 @@ class TibGroupLassoBlownUp(tf.keras.layers.Layer):
         self.la = la
         self._name = name
         self.group_idx = group_idx
-        self.reg_group = reg.l2(self.la)
         self.reg_dense = BlownUpPenalty(self.la, self.group_idx)
       
     def build(self, input_shape):
@@ -199,7 +198,7 @@ class TibGroupLassoBlownUp(tf.keras.layers.Layer):
                                         activation=None, 
                                         kernel_regularizer=self.reg_dense
                                         )
-        self.gc = GroupConnected(group_idx=self.group_idx, la=self.reg_group)
+        self.gc = GroupConnected(group_idx=self.group_idx, la=self.la)
 
 
     def call(self, input):
