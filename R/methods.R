@@ -738,7 +738,7 @@ get_partial_effect <- function(object, names=NULL, return_matrix = FALSE,
     
     if(name=="(Intercept)") name <- "1"
     weights <- get_weight_by_name(object, name = name, param_nr = which_param, ...)
-    
+    weights <- object$init_params$parsed_formulas_contents[[which_param]][[w]]$coef(weights)
     pe_fun <- object$init_params$parsed_formulas_contents[[which_param]][[w]]$partial_effect
     if(is.null(pe_fun)){
       #warning("Specified term does not have a partial effect function. Returning weights.")
