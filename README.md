@@ -33,7 +33,7 @@ If you set up a Python environment for the first time, install `reticulate` and 
 
 ## Python Path and Conda / Virtual Environment
 
-If R does not find Python or installed packages, check if the Python version and environemt in R is set to the correct path. You can find Python installations e.g. [like this](https://stackoverflow.com/questions/30464980/how-to-check-all-versions-of-python-installed-on-osx-and-centos). To check if all the modules have been installed correctly -- just as a sanity check, because installation of modules can be done from inside R using `reticulate` -- you can use `pip freeze` other [similar approaches](https://stackoverflow.com/questions/739993/how-can-i-get-a-list-of-locally-installed-python-modules). Finally, to check whether R also uses the Python version and environment you have installed all those modules into, you can force R to use a specific Python version using
+If R does not find Python or installed Python packages, check if the Python version and environment in R is set to the correct path. You can find your Python installations e.g. [like this](https://stackoverflow.com/questions/30464980/how-to-check-all-versions-of-python-installed-on-osx-and-centos). To check if all the modules have been installed correctly -- just as a sanity check, because you can do the installation of modules also from inside R using `reticulate::py_install` -- you can use `pip freeze` other [similar approaches](https://stackoverflow.com/questions/739993/how-can-i-get-a-list-of-locally-installed-python-modules). Finally, to check whether R also uses the Python version and environment you have installed all those modules into, you can force R to use a specific Python version using
 
 ```r
 reticulate::use_python("path/to/python/path", required = TRUE)
@@ -45,11 +45,13 @@ directly after starting your R session. Similar, you can force the usage of a vi
 reticulate::use_virtualenv("path/to/venv", required = TRUE)
 ```
 
-or Conda environment:
+or Conda environment
 
 ```r
 reticulate::use_condaenv("path/to/condaenv", required = TRUE)
 ```
+
+again, directly after starting your R session.
 
 # How to cite this?
 
