@@ -15,7 +15,7 @@
 #' @param list_of_deep_models a named list of functions specifying a keras model.
 #' See the examples for more details.
 #' @param family a character specifying the distribution. For information on
-#' possible distribution and parameters, see \code{\link{make_tfd_dist}}. Can also 
+#' possible distribution and parameters, see \code{\link{make_tfd_dist}}. Can also
 #' be a custom distribution.
 #' @param data data.frame or named list with input features
 #' @param tf_seed a seed for TensorFlow (only works with R version >= 2.2.0)
@@ -45,11 +45,11 @@
 #' @importFrom stats as.formula model.matrix terms terms.formula uniroot var dbeta coef predict na.omit
 #' @importFrom methods slotNames is as
 #'
-#' @references 
+#' @references
 #' Ruegamer, D. et al. (2021):
 #' deepregression: a Flexible Neural Network Framework for Semi-Structured Deep Distributional Regression.
 #' \url{https://arxiv.org/abs/2104.02705}.
-#' 
+#'
 #'
 #' @export
 #'
@@ -74,7 +74,7 @@
 #'   data = data, y = y,
 #'   list_of_deep_models = list(deep_model = deep_model)
 #' )
-#' 
+#'
 #' if(!is.null(mod)){
 #'
 #' # train for more than 10 epochs to get a better model
@@ -84,11 +84,11 @@
 #' mod %>% get_partial_effect(name = "s(xa)")
 #' mod %>% coef()
 #' mod %>% plot()
-#' 
+#'
 #' }
-#' 
+#'
 #' mod <- deepregression(
-#'   list_of_formulas = list(loc = ~ 1 + s(xa) + x1, scale = ~ 1, 
+#'   list_of_formulas = list(loc = ~ 1 + s(xa) + x1, scale = ~ 1,
 #'                           dummy = ~ -1 + deep_model(x1,x2,x3) %OZ% 1),
 #'   data = data, y = y,
 #'   list_of_deep_models = list(deep_model = deep_model),
@@ -116,7 +116,7 @@ deepregression <- function(
 )
 {
 
-  if(!is.null(tf_seed)) 
+  if(!is.null(tf_seed))
     try(tensorflow::set_random_seed(tf_seed), silent = TRUE)
 
   # first check if an env is available
@@ -145,7 +145,7 @@ deepregression <- function(
   }else{
     # get names of networks
     netnames <- names(list_of_deep_models)
-    
+
     if(is.null(netnames) & length(list_of_deep_models) == 1)
     {
       names(list_of_deep_models) <- netnames <- "d"
@@ -153,29 +153,29 @@ deepregression <- function(
     if(!is.null(list_of_deep_models) && is.null(names(list_of_deep_models)))
       stop("Please provide a named list of deep models.")
   }
-  
+
   # create list for image variables
   # (and overwrite it potentially later)
   image_var <- list()
-  
+
   if(length(netnames)>0){
-    
+
     len_dnns <- sapply(list_of_deep_models, length)
-    
+
     # check for image dnns
     if(any(len_dnns>1)){
-      
+
       image_var <- lapply(list_of_deep_models[len_dnns>1],
                           "[[", 2)
-      
+
     }
-    
+
     names(image_var) <- netnames[len_dnns>1]
     list_of_deep_models <- lapply(list_of_deep_models, dnn_processor)
     names(list_of_deep_models) <- netnames
-    
+
   }
-  
+
   # check if user wants automatic orthogonalization
   if(orthog_options$orthogonalize){
     specials_to_oz <- netnames
@@ -184,10 +184,10 @@ deepregression <- function(
     specials_to_oz <- c()
     automatic_oz_check <- FALSE
   }
-    
+
   # number of observations
   n_obs <- NROW(y)
-  
+
   # number of output dim
   if(family=="multinoulli" | family=="multinomial")
     output_dim <- NCOL(y)
@@ -197,39 +197,41 @@ deepregression <- function(
     if(any(sapply(data, class)=="list"))
       stop("Cannot deal with lists in list. Please remove list items in your data input.")
   }
-  
+
   # check list of formulas is always one-sided
   if(any(sapply(list_of_formulas, length)>2)){
     stop("Only one-sided formulas are allowed in list_of_formulas.")
   }
-  
+
   # check for further controls
   if(!is.null(attr(additional_processors, "controls")))
     penalty_options <- c(penalty_options, attr(additional_processors, "controls"))
-  
+
   # repeat weight options if not specified otherwise
   if(length(weight_options)!=length(list_of_formulas))
     weight_options <- weight_options[rep(1, length(list_of_formulas))]
-  
-  # training mse
-  if(!is.null(list(...)$loss) && list(...)$loss=="mse")
-  {
-    
-    weight_options[[2]]$specific <- c(weight_options[[2]]$specific, list("1" = list(trainable = FALSE)))
-    weight_options[[2]]$warmstarts <- c(weight_options[[2]]$warmstarts, list("1" = 0))
-    family <- "normal"
 
+  # training mse
+  is.lfun <- is.function(list(...)$loss)
+  if (!is.lfun) {
+    if (!is.null(list(...)$loss) && list(...)$loss=="mse") {
+      weight_options[[2]]$specific <- c(weight_options[[2]]$specific,
+                                        list("1" = list(trainable = FALSE)))
+      weight_options[[2]]$warmstarts <- c(weight_options[[2]]$warmstarts,
+                                          list("1" = 0))
+      family <- "normal"
+    }
   }
-  
+
   if(verbose) cat("Pre-calculate GAM terms...")
   so <- penalty_options
   so$gamdata <- precalc_gam(list_of_formulas, data, so)
-  
+
   # parse formulas
   if(verbose) cat("Preparing additive formula(s)...")
   parsed_formulas_contents <- lapply(1:length(list_of_formulas),
                                      function(i){
-                                       
+
                                        if(!is.null(attr(additional_processors, "controls")))
                                          so <- c(so, attr(additional_processors, "controls"))
                                        if(!is.null(attr(list_of_formulas[[i]], "with_layer"))){
@@ -238,57 +240,57 @@ deepregression <- function(
                                          so$with_layer <- TRUE
                                        }
                                        so$weight_options <- weight_options[[i]]
-                                       
-                                       res <- do.call("process_terms", 
+
+                                       res <- do.call("process_terms",
                                                       c(list(form = list_of_formulas[[i]],
                                                            data = data,
                                                            controls = so,
                                                            output_dim = output_dim,
                                                            param_nr = i,
-                                                           specials_to_oz = 
-                                                             specials_to_oz, 
-                                                           automatic_oz_check = 
+                                                           specials_to_oz =
+                                                             specials_to_oz,
+                                                           automatic_oz_check =
                                                              automatic_oz_check,
-                                                           identify_intercept = 
+                                                           identify_intercept =
                                                              orthog_options$identify_intercept
                                                            ),
                                                         list_of_deep_models,
                                                         additional_processors))
-                                       
-                                       return(res) 
+
+                                       return(res)
                                      })
-  
+
   names(parsed_formulas_contents) <- names(list_of_formulas)
-  
+
   if(verbose) cat(" Done.\n")
 
   if(return_prepoc)
     return(parsed_formulas_contents)
-  
+
   if(!is.list(subnetwork_builder)){
     subnetwork_builder <- list(subnetwork_builder)[
       rep(1,length(parsed_formulas_contents))
       ]
   }else{
-    if(length(parsed_formulas_contents) != 
+    if(length(parsed_formulas_contents) !=
        length(subnetwork_builder))
       stop("If subnetwork_builder is a list",
            ", it must be of the same size as the ",
            "list_of_formulas.")
   }
-  
+
   if(verbose) cat("Preparing subnetworks...")
-  
+
   # create gam data inputs
   if(!is.null(so$gamdata)){
     gaminputs <- makeInputs(so$gamdata$data_trafos, "gam_inp")
   }
-  
+
   # create additive predictor per formula
   additive_predictors <- lapply(1:length(parsed_formulas_contents), function(i)
-    subnetwork_builder[[i]](parsed_formulas_contents, 
+    subnetwork_builder[[i]](parsed_formulas_contents,
                             deep_top = orthog_options$deep_top,
-                            orthog_fun = orthog_options$orthog_fun, 
+                            orthog_fun = orthog_options$orthog_fun,
                             split_fun = orthog_options$split_fun,
                             shared_layers = weight_options[[i]]$shared_layers,
                             param_nr = i,
@@ -296,7 +298,7 @@ deepregression <- function(
                             )
   )
   if(verbose) cat(" Done.\n")
-    
+
   names(additive_predictors) <- names(list_of_formulas)
   if(!is.null(so$gamdata)){
     gaminputs <- list(gaminputs)
@@ -305,17 +307,17 @@ deepregression <- function(
   }else{
     additive_predictors <- c(list(NULL), additive_predictors)
   }
-  
+
   # initialize model
   if(verbose) cat("Building model...")
-  model <- model_builder(list_pred_param = additive_predictors, 
-                         family = family, 
-                         output_dim = output_dim, 
+  model <- model_builder(list_pred_param = additive_predictors,
+                         family = family,
+                         output_dim = output_dim,
                          ...)
   if(verbose) cat(" Done.\n")
 
   ret <- list(model = model,
-              init_params = 
+              init_params =
                 list(
                   list_of_formulas = list_of_formulas,
                   gamdata = so$gamdata,
@@ -332,7 +334,7 @@ deepregression <- function(
 
 
   class(ret) <- "deepregression"
-  
+
   return(ret)
 
 }
@@ -355,7 +357,7 @@ deepregression <- function(
 #' @param from_distfun_to_dist function creating a tfp distribution based on the
 #' prediction tensors and \code{dist_fun}. See \code{?distfun_to_dist}
 #' @param add_layer_shared_pred layer to extend shared layers defined in \code{mapping}
-#' @param trafo_list a list of transformation function to convert the scale of the 
+#' @param trafo_list a list of transformation function to convert the scale of the
 #' additive predictors to the respective distribution parameter
 #' @return a list with input tensors and output tensors that can be passed
 #' to, e.g., \code{keras_model}
@@ -367,23 +369,23 @@ from_preds_to_dist <- function(
   output_dim = 1L,
   mapping = NULL,
   from_distfun_to_dist = distfun_to_dist,
-  add_layer_shared_pred = function(x, units) layer_dense(x, units = units, 
+  add_layer_shared_pred = function(x, units) layer_dense(x, units = units,
                                                          use_bias = FALSE),
   trafo_list = NULL
 )
 {
-  
+
   if(!is.null(mapping)){
-    
+
     lpp <- list_pred_param
     list_pred_param <- list()
-    nr_params <- max(unlist(mapping)) 
-    
+    nr_params <- max(unlist(mapping))
+
     if(!is.null(add_layer_shared_pred)){
-      
+
       len_map <- sapply(mapping, length)
       multiple_param <- which(len_map>1)
-      
+
       for(ind in multiple_param){
         # add units
         if(lpp[[ind]]$shape[[2]] < len_map[ind]){
@@ -405,96 +407,96 @@ from_preds_to_dist <- function(
           stop("Node ", lpp[[ind]]$name, " has more units than defined by the mapping.\n",
                "  Does your deep neural network has the correct output dimensions?")
         }
-        
+
       }
-      
+
       lpp <- unlist(lpp, recursive = FALSE)
       mapping <- as.list(unlist(mapping))
-       
+
     }
-    
+
     # store names as they are obstructive later
     names_lpp <- names(lpp)
     lpp <- unname(lpp)
-    
+
     for(i in 1:nr_params){
       list_pred_param[[i]] <- layer_add_identity(lpp[which(sapply(mapping, function(mp) i %in% mp))])
     }
 
     if(!is.null(names_lpp)) names(list_pred_param) <- names_lpp[1:nr_params]
-    
+
   }else{
-  
+
     nr_params <- length(list_pred_param)
-    
+
   }
-  
+
   # check family
   if(!is.null(family)){
     if(is.character(family)){
       if(family %in% c("betar", "gammar", "pareto_ls", "inverse_gamma_ls")){
-        
+
         dist_fun <- family_trafo_funs_special(family)
-        
+
       }else{
-        
-        dist_fun <- make_tfd_dist(family, output_dim = output_dim, 
+
+        dist_fun <- make_tfd_dist(family, output_dim = output_dim,
                                   trafo_list = trafo_list)
-        
+
       }
     }else{ # assuming that family is a dist_fun already
-      
+
       dist_fun <- family
-      
+
     }
   }else{
-    
+
     return(layer_concatenate_identity(unname(list_pred_param)))
-    
+
   }
   nrparams_dist <- attr(dist_fun, "nrparams_dist")
-  
-  if(nrparams_dist < nr_params) 
+
+  if(nrparams_dist < nr_params)
   {
     warning("More formulas specified than parameters available.",
             " Will only use ", nrparams_dist, " formula(e).")
     nr_params <- nrparams_dist
     list_pred_param <- list_pred_param[1:nrparams_dist]
   }else if(nrparams_dist > nr_params){
-    stop("Length of list_of_formula (", nr_params, 
-         ") does not match number of distribution parameters (", 
+    stop("Length of list_of_formula (", nr_params,
+         ") does not match number of distribution parameters (",
          nrparams_dist, ").")
   }
-  
+
   if(is.null(names(list_pred_param))){
     names(list_pred_param) <- names_families(family)
   }
-  
+
   # concatenate predictors
   preds <- layer_concatenate_identity(unname(list_pred_param))
-  
+
   # generate output
   out <- from_distfun_to_dist(dist_fun, preds)
-  
+
   return(out)
-  
+
 }
 
 #' @title Function to define output distribution based on dist_fun
-#' 
+#'
 #' @param dist_fun a distribution function as defined by \code{make_tfd_dist}
 #' @param preds tensors with predictions
 #' @return a symbolic tfp distribution
 #' @export
-#' 
+#'
 distfun_to_dist <- function(dist_fun, preds)
 {
- 
-  # tfprobability::layer_distribution_lambda(preds, make_distribution_fn = dist_fun) 
+
+  # tfprobability::layer_distribution_lambda(preds, make_distribution_fn = dist_fun)
   return(
     tfp$layers$DistributionLambda(dist_fun)(preds)
   )
-  
+
 }
 
 #' @title Compile a Deep Distributional Regression Model
@@ -521,12 +523,12 @@ distfun_to_dist <- function(dist_fun, preds)
 #' n <- 500
 #' x <- runif(n) %>% as.matrix()
 #' z <- runif(n) %>% as.matrix()
-#' 
+#'
 #' y <- x - z
 #' data <- data.frame(x = x, z = z, y = y)
-#' 
+#'
 #' # change loss to mse and adapt
-#' # \code{from_preds_to_output} to work 
+#' # \code{from_preds_to_output} to work
 #' # only on the first output column
 #' mod <- deepregression(
 #'  y = y,
@@ -537,11 +539,11 @@ distfun_to_dist <- function(dist_fun, preds)
 #'  from_preds_to_output = function(x, ...) x[[1]],
 #'  loss = "mse"
 #' )
-#' 
-#' 
+#'
+#'
 #' @export
-#' 
-#' 
+#'
+#'
 keras_dr <- function(
   list_pred_param,
   weights = NULL,
@@ -549,7 +551,7 @@ keras_dr <- function(
   model_fun = keras_model,
   monitor_metrics = list(),
   from_preds_to_output = from_preds_to_dist,
-  loss = from_dist_to_loss(family = list(...)$family, 
+  loss = from_dist_to_loss(family = list(...)$family,
                            weights = weights),
   additional_penalty = NULL,
   ...
@@ -577,12 +579,12 @@ keras_dr <- function(
                      outputs = out)
   # additional loss
   if(!is.null(additional_penalty)){
-    
+
     add_loss <- function(x) additional_penalty(
       model$trainable_weights
     )
     model$add_loss(add_loss)
-    
+
   }
   # allow for optimizer as a function of the model
   if(is.function(optimizer)){
@@ -592,41 +594,41 @@ keras_dr <- function(
   model %>% compile(optimizer = optimizer,
                     loss = loss,
                     metrics = monitor_metrics)
-  
+
   return(model)
 
 }
 
 #' Function to transform a distritbution layer output into a loss function
-#' 
+#'
 #' @param family see \code{?deepregression}
 #' @param ind_fun function applied to the model output before calculating the
 #' log-likelihood. Per default independence is assumed by applying \code{tfd_independent}.
 #' @param weights sample weights
-#' 
+#'
 #' @return loss function
-#' 
-#'  
-#' 
+#'
+#'
+#'
 from_dist_to_loss <- function(
   family,
-  ind_fun = function(x) tfd_independent(x), 
+  ind_fun = function(x) tfd_independent(x),
   weights = NULL
 ){
-  
+
   # define weights to be equal to 1 if not given
   if(is.null(weights)) weights <- 1
-  
+
   # the negative log-likelihood is given by the negative weighted
   # log probability of the dist
-  if(family!="pareto_ls"){  
-    negloglik <- function(y, dist) 
-      - weights * (dist %>% ind_fun() %>% tfd_log_prob(y)) 
+  if(family!="pareto_ls"){
+    negloglik <- function(y, dist)
+      - weights * (dist %>% ind_fun() %>% tfd_log_prob(y))
   }else{
     negloglik <- function(y, dist)
       - weights * (dist %>% ind_fun() %>% tfd_log_prob(y + dist$scale))
   }
-  
+
   return(negloglik)
-  
+
 }
