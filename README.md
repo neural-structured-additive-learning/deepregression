@@ -67,8 +67,8 @@ For the methodology, please cite the following preprint:
 For the software, please cite:
 
     @article{rugamer2021deepregression,
-      title={deepregression: a Flexible Neural Network Framework for Semi-Structured Deep Distributional Regression}, 
-      author={David R{\"u}gamer and Ruolin Shen and Christina Bukas and Lisa Barros de Andrade e Sousa and Dominik Thalmeier and Nadja Klein and Chris Kolb and Florian Pfisterer and Philipp Kopper and Bernd Bischl and Christian L. M{\"u}ller},
+      title={deepregression: a Flexible Neural Network Framework for Semi-Structured Deep Distributional Regression},
+      author={David \textbf{R{\"u}gamer} and Chris Kolb and Cornelius Fritz and Florian Pfisterer and Philipp Kopper and Bernd Bischl and Ruolin Shen and Christina Bukas and Lisa Barros de Andrade e Sousa and Dominik Thalmeier and Philipp Baumann and Lucas Kook and Nadja Klein and Christian L. M{\"u}ller},
       year={2021},
       eprint={2104.02705},
       archivePrefix={arXiv},
