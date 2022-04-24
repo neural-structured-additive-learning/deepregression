@@ -648,7 +648,7 @@ log_score <- function(
   x,
   data=NULL,
   this_y=NULL,
-  ind_fun = function(x) tfd_independent(x,1),
+  ind_fun = function(x) tfd_independent(x),
   convert_fun = as.matrix,
   summary_fun = function(x) x
 )
@@ -672,6 +672,9 @@ log_score <- function(
     
   if(is.null(this_y)){
     this_y <- x$init_params$y
+  }else{
+    if(is.null(dim(this_y)))
+      warning("log-score calculation requires this_y to be a matrix.")
   }
   
   return(summary_fun(convert_fun(

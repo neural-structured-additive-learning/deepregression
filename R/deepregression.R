@@ -189,7 +189,7 @@ deepregression <- function(
   n_obs <- NROW(y)
 
   # number of output dim
-  if(family=="multinoulli" | family=="multinomial")
+  if(is.character(family) && (family=="multinoulli" | family=="multinomial"))
     output_dim <- NCOL(y)
 
   # check for lists in list
@@ -455,6 +455,7 @@ from_preds_to_dist <- function(
 
   }
   nrparams_dist <- attr(dist_fun, "nrparams_dist")
+  if(is.null(nrparams_dist)) nrparams_dist <- nr_params
 
   if(nrparams_dist < nr_params)
   {
@@ -621,7 +622,7 @@ from_dist_to_loss <- function(
 
   # the negative log-likelihood is given by the negative weighted
   # log probability of the dist
-  if(family!="pareto_ls"){
+  if(!is.character(family) || family!="pareto_ls"){
     negloglik <- function(y, dist)
       - weights * (dist %>% ind_fun() %>% tfd_log_prob(y))
   }else{
