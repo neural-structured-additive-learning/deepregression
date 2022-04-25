@@ -27,7 +27,7 @@ The requirements are given in the `DESCRIPTION`. If you load the package manuall
   - tensorflow
   - tfprobability
 
-If you set up a Python environment for the first time, install `reticulate` and run the `check_and_install` function from the `deepregression` package. This tries to install miniconda, TF 2.5.0rc0, TFP 0.12 and keras 2.5.0rc0, which seems to be the most reliable setup for `deepregression` at the moment.
+If you set up a Python environment for the first time, install `reticulate` and run the `check_and_install` function from the `deepregression` package. This tries to install miniconda, TF 2.5.0, TFP 0.12 and keras 2.5.0, which seems to be the most reliable setup for `deepregression` at the moment.
 
 # Troubleshooting
 
