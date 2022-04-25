@@ -37,7 +37,7 @@ prediction tensors and \code{dist_fun}. See \code{?distfun_to_dist}}
 
 \item{add_layer_shared_pred}{layer to extend shared layers defined in \code{mapping}}
 
-\item{trafo_list}{a list of transformation function to convert the scale of the 
+\item{trafo_list}{a list of transformation function to convert the scale of the
 additive predictors to the respective distribution parameter}
 }
 \value{

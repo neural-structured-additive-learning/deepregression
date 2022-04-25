@@ -56,7 +56,7 @@ y <- x - z
 data <- data.frame(x = x, z = z, y = y)
 
 # change loss to mse and adapt
-# \code{from_preds_to_output} to work 
+# \code{from_preds_to_output} to work
 # only on the first output column
 mod <- deepregression(
  y = y,

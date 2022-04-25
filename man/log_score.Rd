@@ -8,7 +8,7 @@ log_score(
   x,
   data = NULL,
   this_y = NULL,
-  ind_fun = function(x) tfd_independent(x, 1),
+  ind_fun = function(x) tfd_independent(x),
   convert_fun = as.matrix,
   summary_fun = function(x) x
 )
