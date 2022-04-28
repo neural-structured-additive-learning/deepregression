@@ -21,6 +21,8 @@
   options(orthogonalize = TRUE,
           identify_intercept = FALSE
   )
+  # catch TFP start-up error
+  suppressMessages(try(invisible(tfp$distributions$Normal(0,1)), silent = TRUE))
 }
 #' Function to check python environment and install necessary packages
 #'

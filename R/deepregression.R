@@ -494,9 +494,9 @@ distfun_to_dist <- function(dist_fun, preds)
 {
 
   # tfprobability::layer_distribution_lambda(preds, make_distribution_fn = dist_fun)
-  return(
-    tfp$layers$DistributionLambda(dist_fun)(preds)
-  )
+  ret <- suppressMessages(try(tfp$layers$DistributionLambda(dist_fun)(preds), silent = TRUE))
+  if(inherits(ret, "try-error")) ret <- tfp$layers$DistributionLambda(dist_fun)(preds)
+  return(ret)
 
 }
 

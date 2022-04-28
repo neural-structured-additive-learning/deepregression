@@ -78,14 +78,29 @@ class TibGroupLasso(tf.keras.layers.Layer):
         self.group_idx = group_idx
       
     def build(self, input_shape):
-        self.fc = tf.keras.layers.Dense(input_shape = input_shape, 
-                                        units = self.units, 
+        if self.group_idx is None:
+            self.fc = tf.keras.layers.Dense(units = 1, 
+                                            use_bias=False, 
+                                            bias_regularizer=None, 
+                                            activation=None, 
+                                            kernel_regularizer=self.reg
+                                            )
+            self.gc = tf.keras.layers.Dense(input_shape = input_shape, 
+                                        units = 1, 
                                         use_bias=False, 
                                         bias_regularizer=None, 
                                         activation=None, 
                                         kernel_regularizer=self.reg
                                         )
-        self.gc = GroupConnected(group_idx=self.group_idx, la=self.la)
+        else:
+            self.fc = tf.keras.layers.Dense(input_shape = input_shape, 
+                                            units = self.units, 
+                                            use_bias=False, 
+                                            bias_regularizer=None, 
+                                            activation=None, 
+                                            kernel_regularizer=self.reg
+                                            )
+            self.gc = GroupConnected(group_idx=self.group_idx, la=self.la)
 
 
     def call(self, input):

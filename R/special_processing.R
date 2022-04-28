@@ -27,6 +27,7 @@ process_terms <- function(
          int = int_processor,
          lin = lin_processor,
          lasso = l1_processor,
+         grlasso = l1group_processor,
          ridge = l2_processor,
          offsetx = offset_processor,
          rwt = rwt_processor
@@ -223,17 +224,18 @@ lin_processor <- function(term, data, output_dim, param_nr, controls){
   if(grepl("lin(.*)", term)) term <- paste(extractvar(term),
                                            collapse = " + ")
   
+  data_trafo <- function(indata = data) 
+    model.matrix(object = as.formula(paste0("~ 1 + ", term)), 
+                 data = indata)[,-1,drop=FALSE]
+  
   list(
-    data_trafo = function() model.matrix(object = as.formula(paste0("~ 1 + ", term)), 
-                                         data = data)[,-1,drop=FALSE],
+    data_trafo = function() data_trafo(),
     predict_trafo = function(newdata){ 
       return(
-        model.matrix(object = as.formula(paste0("~ 1 + ", term)),
-                     data = as.data.frame(newdata))[,-1,drop=FALSE]
+        data_trafo(as.data.frame(newdata))
       )
     },
-    input_dim = as.integer(ncol(model.matrix(object = as.formula(paste0("~ 1 +", term)), 
-                                  data = data))-1),
+    input_dim = as.integer(ncol(data_trafo())),
     layer = layer,
     coef = function(weights)  as.matrix(weights),
     penalty = NULL
@@ -315,6 +317,44 @@ l1_processor <- function(term, data, output_dim, param_nr, controls){
   )
   
 }
+
+l1group_processor <- function(term, data, output_dim, param_nr, controls){
+  
+  lambda = controls$sp_scale(data) * as.numeric(extractval(term, "la"))
+  
+  layer <- layer_generator(term = term, 
+                           output_dim = output_dim, 
+                           param_nr = param_nr, 
+                           controls = controls,
+                           further_layer_args = list(group_idx = NULL, la = lambda),
+                           layer_args_names = c("name", "units", "la", "group_idx"),
+                           layer_class = tibgroup_layer,
+  )
+  
+  data_trafo <- function(indata = data) 
+    model.matrix(object = as.formula(paste0("~ 1 + ", extractvar(term))), 
+                 data = indata)[,-1,drop=FALSE]
+  
+  list(
+    data_trafo = function() data_trafo(),
+    predict_trafo = function(newdata){ 
+      return(
+        data_trafo(as.data.frame(newdata))
+      )
+    },
+    input_dim = as.integer(ncol(data_trafo())),
+    layer = layer,
+    coef = function(weights){ 
+      weights <- lapply(weights, as.matrix)
+      return(
+        weights[[1]][[1]] * weights[[2]]
+      )
+    },
+    penalty = list(type = "l1group", values = lambda, dim = output_dim)
+  )
+  
+}
+
 
 l2_processor <- function(term, data, output_dim, param_nr, controls){
   # ridge

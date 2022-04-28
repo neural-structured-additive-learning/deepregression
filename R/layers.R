@@ -43,3 +43,11 @@ layer_hadamard_diff = function(units, la, initu = "glorot_uniform", initv = "glo
   layers <- reticulate::import_from_path("layers", path = python_path)
   layers$HadamardDiffLayer(units = units, la = la, initu = initu, initv = initv, ...)
 }
+
+layer_sparse_conv_2d <- function(filters,
+                                 kernel_size,
+                                 lam=NULL, ...) {
+  python_path <- system.file("python", package = "deepregression")
+  layers <- reticulate::import_from_path("layers", path = python_path)
+  layers$SparseConv2D(filters = filters, kernel_size = kernel_size, lam = lam, ...)
+}
