@@ -15,7 +15,8 @@ class SparseConv(layers.convolutional.Conv):
                  rank,
                 filters,
                 kernel_size,
-                 lam=None,
+                lam=None,
+                position_sparsity=-1, # use slide(start,end-1) for multiple indices
                 strides=1,
                 padding='valid',
                 data_format=None,
@@ -61,7 +62,8 @@ class SparseConv(layers.convolutional.Conv):
     )
 
         self.lam = lam
-        self.multfac_initializer = multfac_initiliazer 
+        self.multfac_initializer = multfac_initiliazer
+        self.position_sparsity = position_sparsity 
 
         if multfac_regularizer is None and kernel_regularizer is None and lam is not None:
             self.multfac_regularizer = tf.keras.regularizers.L2(self.lam)
@@ -100,6 +102,11 @@ class SparseConv(layers.convolutional.Conv):
                                                  input_shape))
         kernel_shape = self.kernel_size + (input_channel // self.groups,
                                            self.filters)
+        
+        # create 1s with same length as kernel_shape tuple                                   
+        multfac_shape = [1]*len(kernel_shape)
+        # overwrite those that should be overparameterized
+        multfac_shape[self.position_sparsity] = kernel_shape[self.position_sparsity]
 
         self.kernel = self.add_weight(
             name='kernel',
@@ -112,7 +119,7 @@ class SparseConv(layers.convolutional.Conv):
     
         self.multfac = self.add_weight(
             name='multfac',
-            shape=(1, 1, 1, self.filters),
+            shape=tuple(multfac_shape), 
             initializer=self.multfac_initializer,
             regularizer=self.multfac_regularizer,
             constraint=None,
@@ -329,6 +336,7 @@ class SparseConv2D(SparseConv):
                filters,
                kernel_size,
                lam=None,
+               position_sparsity=-1,
                strides=(1, 1),
                padding='valid',
                data_format=None,
@@ -351,6 +359,7 @@ class SparseConv2D(SparseConv):
             filters=filters,
             kernel_size=kernel_size,
             lam=lam,
+            position_sparsity=position_sparsity,
             strides=strides,
             padding=padding,
             data_format=data_format,
