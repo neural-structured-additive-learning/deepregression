@@ -27,7 +27,7 @@ process_terms <- function(
          int = int_processor,
          lin = lin_processor,
          lasso = l1_processor,
-         grlasso = l1group_processor,
+         grlasso = l21_processor,
          ridge = l2_processor,
          offsetx = offset_processor,
          rwt = rwt_processor
@@ -318,7 +318,7 @@ l1_processor <- function(term, data, output_dim, param_nr, controls){
   
 }
 
-l1group_processor <- function(term, data, output_dim, param_nr, controls){
+l21_processor <- function(term, data, output_dim, param_nr, controls){
   
   lambda = controls$sp_scale(data) * as.numeric(extractval(term, "la"))
   
