@@ -14,8 +14,6 @@ Function that checks if a Python environment is available
 and contains TensorFlow. If not the recommended version is installed.
 }
 \description{
-Note: The package currently relies on tensorflow version 2.0.0 which is
-not available for the latest python versions 3.9 and later.
 If you encounter problems with installing the required python modules
 please make sure, that a correct python version is configured using
 `py_discover_config` and change the python version if required.

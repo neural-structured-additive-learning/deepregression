@@ -520,6 +520,6 @@ create_P <- function(sp_and_S, scale)
 {
 
   as.matrix(bdiag(lapply(1:length(sp_and_S[[1]]), function(i)
-    scale(data) * sp_and_S[[1]][[i]] * sp_and_S[[2]][[i]])))
+    scale * sp_and_S[[1]][[i]] * sp_and_S[[2]][[i]])))
 
 }

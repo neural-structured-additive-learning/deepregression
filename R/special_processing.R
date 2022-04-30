@@ -248,7 +248,7 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
   output_dim <- as.integer(output_dim)
   # extract mgcv smooth object
   P <- create_P(get_gamdata(term, param_nr, controls$gamdata, what="sp_and_S"),
-                controls$sp_scale)
+                controls$sp_scale(data))
   
   layer <- layer_generator(term = term, 
                            output_dim = output_dim, 
