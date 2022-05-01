@@ -2,8 +2,8 @@ import os
 import warnings
 import numpy as np
 from itertools import groupby
-from tensorflow.python.keras.preprocessing.image import Iterator, ImageDataGenerator
-from tensorflow.python.keras.utils.data_utils import Sequence
+from tensorflow.keras.preprocessing.image import Iterator, ImageDataGenerator
+from keras.utils.data_utils import Sequence
 
 def all_equal(iterable):
     g = groupby(iterable)
