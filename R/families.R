@@ -385,16 +385,9 @@ family_trafo_funs_special <- function(family, add_const = 1e-8)
 
       mu = tfe(tf_stride_cols(x,1))
       sig = tfe(tf_stride_cols(x,2))
-      # con = #tf$compat$v2$maximum(
-      #   tfrec(tfsq(sig))#,0 + add_const)
-      # rate = #tf$compat$v2$maximum(
-      #   tfrec(tfmult(tfsq(sig),mu))#,0 + add_const)
       sigsq = tfsq(sig)
-      con = tfsq(tfdiv(mu, sig + add_const))
-      rate = tfdiv(mu, sigsq + add_const)
-
-      # rate = tfrec(tfe(x[,2,drop=FALSE]))
-      # con = tfdiv(tfe(x[,1,drop=FALSE]), tfe(x[,1,drop=FALSE]))
+      con = tfrec(sigsq + add_const)
+      rate = tfrec(tfmult(mu, sigsq))
 
       return(list(concentration = con, rate = rate))
     },
