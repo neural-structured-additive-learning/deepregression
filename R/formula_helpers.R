@@ -58,11 +58,22 @@ makelayername <- function(term, param_nr, truncate = 60)
 }
 
 #' @export
-extractvar <- function(term)
+extractvar <- function(term, allow_ia = FALSE)
 {
 
-  all.vars(as.formula(paste0("~", term)))
+  if(allow_ia){
+    pattern <- ".*\\((.*[\\:|\\*].*)\\)"
+    org_term <- gsub(pattern, "\\1", term)
+    term <- gsub(pattern, "helpervariable123", term)
+  }
+  
+  ret <- all.vars(as.formula(paste0("~", term)))
+  
+  if(allow_ia){
+    ret <- gsub("helpervariable123", org_term, ret)
+  }
 
+  return(ret)
 }
 
 #' Extract value in term name
@@ -179,6 +190,10 @@ rename_rwt <- function(form){
 
     })
 
+  }else{
+    
+    return(form)
+    
   }
 
   form <- paste(trms, collapse = " + ")

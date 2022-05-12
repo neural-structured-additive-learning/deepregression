@@ -221,12 +221,19 @@ lin_processor <- function(term, data, output_dim, param_nr, controls){
                            param_nr = param_nr, 
                            controls = controls)
   
-  if(grepl("lin(.*)", term)) term <- paste(extractvar(term),
+  if(grepl("lin(.*)", term)) term <- paste(extractvar(term, allow_ia = TRUE),
                                            collapse = " + ")
   
-  data_trafo <- function(indata = data) 
-    model.matrix(object = as.formula(paste0("~ 1 + ", term)), 
-                 data = indata)[,-1,drop=FALSE]
+  data_trafo <- function(indata = data)
+  {
+    if(attr(terms.formula(as.formula(paste0("~", term))), "intercept")==0){
+      model.matrix(object = as.formula(paste0("~", term)), 
+                   data = indata)
+    }else{
+      model.matrix(object = as.formula(paste0("~ 1 + ", term)), 
+                   data = indata)[,-1,drop=FALSE]
+    }
+  }
   
   list(
     data_trafo = function() data_trafo(),
