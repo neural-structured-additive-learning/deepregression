@@ -18,6 +18,14 @@ class SimplyConnected(keras.layers.Layer):
         
     def call(self, inputs):
         return tf.math.multiply(inputs, self.w)
+        
+    def get_config(self):
+
+        config = super().get_config().copy()
+        config.update({
+            'la': self.la
+        })
+        return config
   
     
 # SC layer (diagonal with length 1) followed by FC output    
@@ -44,6 +52,15 @@ class TibLinearLasso(tf.keras.layers.Layer):
 
     def call(self, input):
         return self.fc(self.sc(input))
+        
+    def get_config(self):
+
+        config = super().get_config().copy()
+        config.update({
+            'units': self.units,
+            'la': self.la
+        })
+        return config
 
     
 # grouping (GC) layer used for constructions  
@@ -65,6 +82,15 @@ class GroupConnected(keras.layers.Layer):
         gathered_inputs = [tf.gather(inputs, ind, axis = 1) for ind in self.group_idx]
         return tf.squeeze(tf.stack([tf.matmul(gathered_inputs[i], self.w[i]) 
                           for i in range(len(gathered_inputs))], axis=1), axis=-1)
+                          
+    def get_config(self):
+
+        config = super().get_config().copy()
+        config.update({
+            'group_idx': self.group_idx,
+            'la': self.la
+        })
+        return config
 
 
 # grouping layer followed by FC output
@@ -105,36 +131,56 @@ class TibGroupLasso(tf.keras.layers.Layer):
 
     def call(self, input):
         return self.fc(self.gc(input))
+        
+    def get_config(self):
+
+        config = super().get_config().copy()
+        config.update({
+            'units': self.units,
+            'group_idx': self.group_idx,
+            'la': self.la
+        })
+        return config
 
 
 # diagonal layers of length (depth-1) followed by FC output
 class HadamardLayer(tf.keras.layers.Layer):    
-  def __init__(self, units=1, la=0, depth=2, **kwargs):
-    super(HadamardLayer, self).__init__(**kwargs)
-    self.units = units
-    self.la = la
-    self.depth = depth
-    self.reg = reg.l2(self.la)
-    # self._name = name
+    def __init__(self, units=1, la=0, depth=2, **kwargs):
+        super(HadamardLayer, self).__init__(**kwargs)
+        self.units = units
+        self.la = la
+        self.depth = depth
+        self.reg = reg.l2(self.la)
+        # self._name = name
       
-  def build(self, input_shape):
-    self.fc = tf.keras.layers.Dense(input_shape = input_shape, 
-                                    units = self.units, 
-                                    use_bias=False,
-                                    bias_regularizer=None, 
-                                    activation=None, 
-                                    kernel_regularizer=self.reg
-                                    )
-    # create list of diagonal layers
-    self.diaglayers = [SimplyConnected(la=self.la) for x in range(0, self.depth-1)]
+    def build(self, input_shape):
+        self.fc = tf.keras.layers.Dense(input_shape = input_shape, 
+                                        units = self.units, 
+                                        use_bias=False,
+                                        bias_regularizer=None, 
+                                        activation=None, 
+                                        kernel_regularizer=self.reg
+                                        )
+        # create list of diagonal layers
+        self.diaglayers = [SimplyConnected(la=self.la) for x in range(0, self.depth-1)]
     
-    # use sequential model class for diagonal block
-    self.diagblock = tf.keras.Sequential(self.diaglayers)
+        # use sequential model class for diagonal block
+        self.diagblock = tf.keras.Sequential(self.diaglayers)
     
 
-  def call(self, input):
-    return self.fc(self.diagblock(input))  
+    def call(self, input):
+        return self.fc(self.diagblock(input))  
 
+        
+    def get_config(self):
+
+        config = super().get_config().copy()
+        config.update({
+            'units': self.units,
+            'la': self.la,
+            'depth': self.depth
+        })
+        return config
 
 # grouping layer followed by diagonal layers followed by FC output
 class GroupHadamardLayer(tf.keras.layers.Layer):
@@ -162,6 +208,17 @@ class GroupHadamardLayer(tf.keras.layers.Layer):
     def call(self, input):
         return self.fc(self.diagblock(self.gc(input)))
 
+        
+    def get_config(self):
+
+        config = super().get_config().copy()
+        config.update({
+            'units': self.units,
+            'group_idx': self.group_idx,
+            'la': self.la,
+            'depth': self.depth
+        })
+        return config
 
 # explicit penalties for comparisons   
 class inverse_group_lasso_pen(reg.Regularizer):
@@ -218,6 +275,17 @@ class TibGroupLassoBlownUp(tf.keras.layers.Layer):
 
     def call(self, input):
         return self.fc(self.gc(input))
+        
+        
+    def get_config(self):
+
+        config = super().get_config().copy()
+        config.update({
+            'units': self.units,
+            'group_idx': self.group_idx,
+            'la': self.la
+        })
+        return config
                        
                        
 class HadamardDiffLayer(keras.layers.Layer):
@@ -245,3 +313,15 @@ class HadamardDiffLayer(keras.layers.Layer):
     def call(self, inputs):
         beta = tf.subtract(tf.square(self.u), tf.square(self.v))
         return tf.matmul(inputs, beta)
+        
+        
+    def get_config(self):
+
+        config = super().get_config().copy()
+        config.update({
+            'units': self.units,
+            'la': self.la,
+            'initu': self.initu,
+            'initv': self.initv
+        })
+        return config

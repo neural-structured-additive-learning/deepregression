@@ -287,9 +287,17 @@ class SparseConv(layers.convolutional.Conv):
             'kernel_constraint':
                 constraints.serialize(self.kernel_constraint),
             'bias_constraint':
-                constraints.serialize(self.bias_constraint)
+                constraints.serialize(self.bias_constraint),
+            'lam':
+                self.lam,
+            'position_sparsity':
+                self.position_sparsity,
+            'multfac_initializer':
+                self.multfac_initializer,
+            'multfac_regularizer':
+                self.multfac_regularizer
         }
-        base_config = super(Conv, self).get_config()
+        base_config = super(layers.convolutional.Conv, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
     def _compute_causal_padding(self, inputs):
