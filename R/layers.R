@@ -44,6 +44,14 @@ layer_hadamard_diff = function(units, la, initu = "glorot_uniform", initv = "glo
   layers$HadamardDiffLayer(units = units, la = la, initu = initu, initv = initv, ...)
 }
 
+#' Sparse 2D Convolutional layer
+#' 
+#' @param filters number of filters
+#' @param kernel_size size of convolutional filter
+#' @param lam regularization strength
+#' @return layer object
+#' @export
+#' 
 layer_sparse_conv_2d <- function(filters,
                                  kernel_size,
                                  lam=NULL, ...) {
