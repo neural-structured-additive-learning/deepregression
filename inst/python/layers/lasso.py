@@ -22,15 +22,15 @@ class SimplyConnected(keras.layers.Layer):
     
 # SC layer (diagonal with length 1) followed by FC output    
 class TibLinearLasso(tf.keras.layers.Layer):
-    def __init__(self, units=1, la=0, name="tib_lasso"):
-        super(TibLinearLasso, self).__init__()
+    def __init__(self, units=1, la=0, **kwargs):
+        super(TibLinearLasso, self).__init__(**kwargs)
         self.units = units
         self.la = la
         # if self.units > 1:
             #  self.reg = inverse_group_lasso_pen(self.la)
             # else:
         self.reg = reg.l2(self.la)
-        self._name = name
+        # self._name = name
                 
     def build(self, input_shape):
         self.fc = tf.keras.layers.Dense(input_shape = input_shape, 
@@ -69,12 +69,12 @@ class GroupConnected(keras.layers.Layer):
 
 # grouping layer followed by FC output
 class TibGroupLasso(tf.keras.layers.Layer):
-    def __init__(self, units=1, group_idx=None, la=0, name="tib_grouplasso"):
-        super(TibGroupLasso, self).__init__()
+    def __init__(self, units=1, group_idx=None, la=0, **kwargs):
+        super(TibGroupLasso, self).__init__(**kwargs)
         self.units = units
         self.la = la
         self.reg = reg.l2(self.la)
-        self._name = name
+        # self._name = name
         self.group_idx = group_idx
       
     def build(self, input_shape):
@@ -109,13 +109,13 @@ class TibGroupLasso(tf.keras.layers.Layer):
 
 # diagonal layers of length (depth-1) followed by FC output
 class HadamardLayer(tf.keras.layers.Layer):    
-  def __init__(self, units=1, la=0, depth=2, name="hadamard_layer"):
-    super(HadamardLayer, self).__init__()
+  def __init__(self, units=1, la=0, depth=2, **kwargs):
+    super(HadamardLayer, self).__init__(**kwargs)
     self.units = units
     self.la = la
     self.depth = depth
     self.reg = reg.l2(self.la)
-    self._name = name
+    # self._name = name
       
   def build(self, input_shape):
     self.fc = tf.keras.layers.Dense(input_shape = input_shape, 
@@ -138,11 +138,11 @@ class HadamardLayer(tf.keras.layers.Layer):
 
 # grouping layer followed by diagonal layers followed by FC output
 class GroupHadamardLayer(tf.keras.layers.Layer):
-    def __init__(self, units=1, group_idx=None, la=0, depth=3, name="group_hadamard"):
-        super(GroupHadamardLayer, self).__init__()
+    def __init__(self, units=1, group_idx=None, la=0, depth=3, **kwargs):
+        super(GroupHadamardLayer, self).__init__(**kwargs)
         self.units = units
         self.la = la
-        self._name = name
+        # self._name = name
         self.reg = reg.l2(self.la)
         self.depth = depth
         self.group_idx = group_idx
@@ -173,8 +173,8 @@ class inverse_group_lasso_pen(reg.Regularizer):
 
 
 class ExplicitGroupLasso(reg.Regularizer):    
-    def __init__(self, la=0, group_idx=None):
-        super(ExplicitGroupLasso, self).__init__()
+    def __init__(self, la=0, group_idx=None, **kwargs):
+        super(ExplicitGroupLasso, self).__init__(**kwargs)
         self.la = la
         self.group_idx = group_idx
         self.group_shapes = [len(gii) for gii in group_idx]
@@ -197,11 +197,11 @@ class BlownUpPenalty(reg.Regularizer):
         
         
 class TibGroupLassoBlownUp(tf.keras.layers.Layer):
-    def __init__(self, units=1, group_idx=None, la=0, name="tib_grouplasso"):
-        super(TibGroupLassoBlownUp, self).__init__()
+    def __init__(self, units=1, group_idx=None, la=0, **kwargs):
+        super(TibGroupLassoBlownUp, self).__init__(**kwargs)
         self.units = units
         self.la = la
-        self._name = name
+        # self._name = name
         self.group_idx = group_idx
         self.reg_dense = BlownUpPenalty(self.la, self.group_idx)
       
@@ -221,8 +221,8 @@ class TibGroupLassoBlownUp(tf.keras.layers.Layer):
                        
                        
 class HadamardDiffLayer(keras.layers.Layer):
-    def __init__(self, units=1, la=0, initu='glorot_uniform', initv='glorot_uniform'):
-        super(HadamardDiffLayer, self).__init__()
+    def __init__(self, units=1, la=0, initu='glorot_uniform', initv='glorot_uniform', **kwargs):
+        super(HadamardDiffLayer, self).__init__(**kwargs)
         self.la = la
         self.initu = initu
         self.initv = initv
