@@ -4,14 +4,15 @@ import tensorflow.keras.regularizers as reg
 
 # simply-connected (SC) layer used for construction
 class SimplyConnected(keras.layers.Layer):
-    def __init__(self, la=0):
+    def __init__(self, la=0, multfac_initializer=tf.initializers.Ones):
         super(SimplyConnected, self).__init__()
         self.la = la
+        self.multfac_initializer = multfac_initializer
         
     def build(self, input_shape):
         self.w = self.add_weight(
             shape=(input_shape[-1], ),
-            initializer="random_normal",
+            initializer=self.multfac_initializer,
             regularizer=reg.l2(self.la),
             trainable=True,
         )
@@ -30,7 +31,7 @@ class SimplyConnected(keras.layers.Layer):
     
 # SC layer (diagonal with length 1) followed by FC output    
 class TibLinearLasso(tf.keras.layers.Layer):
-    def __init__(self, units=1, la=0, **kwargs):
+    def __init__(self, units=1, la=0, kernel_initializer=tf.keras.initializers.HeNormal, multfac_initializer=tf.initializers.Ones, **kwargs):
         super(TibLinearLasso, self).__init__(**kwargs)
         self.units = units
         self.la = la
@@ -39,6 +40,8 @@ class TibLinearLasso(tf.keras.layers.Layer):
             # else:
         self.reg = reg.l2(self.la)
         # self._name = name
+        self.kernel_initializer = kernel_initializer
+        self.multfac_initializer = multfac_initializer
                 
     def build(self, input_shape):
         self.fc = tf.keras.layers.Dense(input_shape = input_shape, 
@@ -46,9 +49,10 @@ class TibLinearLasso(tf.keras.layers.Layer):
                                     use_bias=False,
                                     bias_regularizer=None, 
                                     activation=None, 
+                                    kernel_initializer=self.kernel_initializer,
                                     kernel_regularizer=self.reg
                                     )
-        self.sc = SimplyConnected(la=self.la)
+        self.sc = SimplyConnected(la=self.la, multfac_initializer=self.multfac_initializer)
 
     def call(self, input):
         return self.fc(self.sc(input))
@@ -65,16 +69,17 @@ class TibLinearLasso(tf.keras.layers.Layer):
     
 # grouping (GC) layer used for constructions  
 class GroupConnected(keras.layers.Layer):
-    def __init__(self, group_idx=None, la=0):
+    def __init__(self, group_idx=None, la=0, multfac_initializer=tf.initializers.Ones):
         super(GroupConnected, self).__init__()
         self.la = la
         self.input_shapes = [len(gii) for gii in group_idx]
         self.group_idx = group_idx
+        self.multfac_initializer = multfac_initializer
         
     def build(self, input_shape):
         self.w = [self.add_weight(
             shape=(inps, 1),
-            initializer="random_normal",
+            initializer=self.multfac_initializer,
             regularizer=reg.l2(self.la),
             trainable=True) for inps in self.input_shapes]
         
@@ -95,13 +100,15 @@ class GroupConnected(keras.layers.Layer):
 
 # grouping layer followed by FC output
 class TibGroupLasso(tf.keras.layers.Layer):
-    def __init__(self, units=1, group_idx=None, la=0, **kwargs):
+    def __init__(self, units=1, group_idx=None, la=0, kernel_initializer=tf.keras.initializers.HeNormal, multfac_initializer=tf.initializers.Ones, **kwargs):
         super(TibGroupLasso, self).__init__(**kwargs)
         self.units = units
         self.la = la
         self.reg = reg.l2(self.la)
         # self._name = name
         self.group_idx = group_idx
+        self.kernel_initializer = kernel_initializer
+        self.multfac_initializer = multfac_initializer
       
     def build(self, input_shape):
         if self.group_idx is None:
@@ -109,14 +116,16 @@ class TibGroupLasso(tf.keras.layers.Layer):
                                             use_bias=False, 
                                             bias_regularizer=None, 
                                             activation=None, 
-                                            kernel_regularizer=self.reg
+                                            kernel_regularizer=self.reg,
+                                            kernel_initializer=self.kernel_initializer
                                             )
             self.gc = tf.keras.layers.Dense(input_shape = input_shape, 
                                         units = 1, 
                                         use_bias=False, 
                                         bias_regularizer=None, 
                                         activation=None, 
-                                        kernel_regularizer=self.reg
+                                        kernel_regularizer=self.reg,
+                                        kernel_initializer=self.multfac_initializer
                                         )
         else:
             self.fc = tf.keras.layers.Dense(input_shape = input_shape, 
@@ -124,9 +133,10 @@ class TibGroupLasso(tf.keras.layers.Layer):
                                             use_bias=False, 
                                             bias_regularizer=None, 
                                             activation=None, 
-                                            kernel_regularizer=self.reg
+                                            kernel_regularizer=self.reg,
+                                            kernel_initializer=self.kernel_initializer
                                             )
-            self.gc = GroupConnected(group_idx=self.group_idx, la=self.la)
+            self.gc = GroupConnected(group_idx=self.group_idx, la=self.la, multfac_initializer=self.multfac_initializer)
 
 
     def call(self, input):
@@ -145,12 +155,14 @@ class TibGroupLasso(tf.keras.layers.Layer):
 
 # diagonal layers of length (depth-1) followed by FC output
 class HadamardLayer(tf.keras.layers.Layer):    
-    def __init__(self, units=1, la=0, depth=2, **kwargs):
+    def __init__(self, units=1, la=0, depth=2, kernel_initializer=tf.keras.initializers.HeNormal, multfac_initializer=tf.initializers.Ones, **kwargs):
         super(HadamardLayer, self).__init__(**kwargs)
         self.units = units
         self.la = la
         self.depth = depth
         self.reg = reg.l2(self.la)
+        self.kernel_initializer = kernel_initializer
+        self.multfac_initializer = multfac_initializer
         # self._name = name
       
     def build(self, input_shape):
@@ -159,10 +171,11 @@ class HadamardLayer(tf.keras.layers.Layer):
                                         use_bias=False,
                                         bias_regularizer=None, 
                                         activation=None, 
-                                        kernel_regularizer=self.reg
+                                        kernel_regularizer=self.reg,
+                                        kernel_initializer=self.kernel_initializer
                                         )
         # create list of diagonal layers
-        self.diaglayers = [SimplyConnected(la=self.la) for x in range(0, self.depth-1)]
+        self.diaglayers = [SimplyConnected(la=self.la, multfac_initializer=self.multfac_initializer) for x in range(0, self.depth-1)]
     
         # use sequential model class for diagonal block
         self.diagblock = tf.keras.Sequential(self.diaglayers)
@@ -184,7 +197,7 @@ class HadamardLayer(tf.keras.layers.Layer):
 
 # grouping layer followed by diagonal layers followed by FC output
 class GroupHadamardLayer(tf.keras.layers.Layer):
-    def __init__(self, units=1, group_idx=None, la=0, depth=3, **kwargs):
+    def __init__(self, units=1, group_idx=None, la=0, depth=3, kernel_initializer=tf.keras.initializers.HeNormal, multfac_initializer=tf.initializers.Ones, **kwargs):
         super(GroupHadamardLayer, self).__init__(**kwargs)
         self.units = units
         self.la = la
@@ -192,6 +205,8 @@ class GroupHadamardLayer(tf.keras.layers.Layer):
         self.reg = reg.l2(self.la)
         self.depth = depth
         self.group_idx = group_idx
+        self.kernel_initializer = kernel_initializer
+        self.multfac_initializer = multfac_initializer
       
     def build(self, input_shape):
         self.fc = tf.keras.layers.Dense(input_shape = input_shape, 
@@ -199,10 +214,11 @@ class GroupHadamardLayer(tf.keras.layers.Layer):
                                         use_bias=False, 
                                         bias_regularizer=None, 
                                         activation=None, 
-                                        kernel_regularizer=self.reg
+                                        kernel_regularizer=self.reg,
+                                        kernel_initializer=self.kernel_initializer
                                         )
-        self.gc = GroupConnected(group_idx=self.group_idx, la=self.la)
-        self.diaglayers = [SimplyConnected(la=self.la) for x in range(0, (self.depth-2))]
+        self.gc = GroupConnected(group_idx=self.group_idx, la=self.la, multfac_initializer=self.multfac_initializer)
+        self.diaglayers = [SimplyConnected(la=self.la, multfac_initializer=self.multfac_initializer) for x in range(0, (self.depth-2))]
         self.diagblock = tf.keras.Sequential(self.diaglayers)
 
     def call(self, input):
@@ -254,13 +270,15 @@ class BlownUpPenalty(reg.Regularizer):
         
         
 class TibGroupLassoBlownUp(tf.keras.layers.Layer):
-    def __init__(self, units=1, group_idx=None, la=0, **kwargs):
+    def __init__(self, units=1, group_idx=None, la=0, kernel_initializer=tf.keras.initializers.HeNormal, multfac_initializer=tf.initializers.Ones, **kwargs):
         super(TibGroupLassoBlownUp, self).__init__(**kwargs)
         self.units = units
         self.la = la
         # self._name = name
         self.group_idx = group_idx
         self.reg_dense = BlownUpPenalty(self.la, self.group_idx)
+        self.kernel_initializer = kernel_initializer
+        self.multfac_initializer = multfac_initializer
       
     def build(self, input_shape):
         self.fc = tf.keras.layers.Dense(input_shape = input_shape, 
@@ -268,9 +286,10 @@ class TibGroupLassoBlownUp(tf.keras.layers.Layer):
                                         use_bias=False, 
                                         bias_regularizer=None, 
                                         activation=None, 
-                                        kernel_regularizer=self.reg_dense
+                                        kernel_regularizer=self.reg_dense,
+                                        kernel_initializer=self.kernel_initializer
                                         )
-        self.gc = GroupConnected(group_idx=self.group_idx, la=self.la)
+        self.gc = GroupConnected(group_idx=self.group_idx, la=self.la, multfac_initializer=self.multfac_initializer)
 
 
     def call(self, input):
