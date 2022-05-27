@@ -393,7 +393,7 @@ offset_processor <- function(term, data, output_dim, param_nr, controls=NULL){
                            param_nr = param_nr, 
                            controls = controls,
                            trainable = FALSE,
-                           kernel_initializer = tf$keras$initializers$Ones,
+                           kernel_initializer = tf$keras$initializers$Ones
                            )
   
   list(
