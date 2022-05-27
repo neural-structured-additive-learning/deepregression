@@ -19,6 +19,28 @@ tf_stride_cols <- function(A, start, end=NULL)
   
 }
 
+#' Function to index tensors last dimension
+#' 
+#' @param A tensor
+#' @param start first index
+#' @param end last index (equals start index if NULL)
+#' @return sliced tensor
+#' @export
+tf_stride_last_dim_tensor <- function(A, start, end=NULL){
+
+  stopifnot(start <= end)
+  if(is.null(end)) end <- start
+  mat <- as.integer(A$shape)
+  sz <- mat
+  sz[length(sz)] <- end-start+1L
+  return(
+    tf$slice(A, begin = as.integer(c(rep(0, length(mat)-1), start-1L)),
+             size = as.integer(sz))
+             
+  )
+  
+}
+
 #' @export
 #'
 #'

@@ -139,13 +139,31 @@ make_tfd_dist <- function(family, add_const = 1e-8, output_dim = 1L,
 create_family <- function(tfd_dist, trafo_list, output_dim = 1L)
 {
   
-  ret_fun <- function(x) do.call(tfd_dist,
-                                 lapply(1:(x$shape[[2]]/output_dim),
-                                        function(i)
-                                          trafo_list[[i]](
-                                            tf_stride_cols(x,(i-1L)*output_dim+1L,
-                                                           (i-1L)*output_dim+output_dim)))
-  )
+  if(length(output_dim)==1){
+
+    # the usual  case    
+    ret_fun <- function(x) do.call(tfd_dist,
+                                   lapply(1:(x$shape[[2]]/output_dim),
+                                          function(i)
+                                            trafo_list[[i]](
+                                              tf_stride_cols(x,(i-1L)*output_dim+1L,
+                                                             (i-1L)*output_dim+output_dim)))
+    ) 
+  
+  }else{
+    
+    # tensor-shaped output (assuming the last dimension to be 
+    # the distribution parameter dimension if tfd_dist has multiple arguments)
+    dist_dim <- length(trafo_list)
+    ret_fun <- function(x) do.call(tfd_dist,
+                                   lapply(1:(x$shape[[length(x$shape)]]/dist_dim),
+                                          function(i)
+                                            trafo_list[[i]](
+                                              tf_stride_last_dim_tensor(x,(i-1L)*dist_dim+1L,
+                                                                        (i-1L)*dist_dim+dist_dim)))
+    ) 
+    
+  }
   
   attr(ret_fun, "nrparams_dist") <- length(trafo_list)
   
