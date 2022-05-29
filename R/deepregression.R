@@ -34,6 +34,7 @@
 #' @param orthog_options options for the orthgonalization defined by \code{\link{orthog_control}}
 #' @param verbose logical; whether to print progress of model initialization to console
 #' @param weight_options options for layer weights defined by \code{\link{weight_control}}
+#' @param formula_options options for formula parsing (mainly used to make calculation more efficiently)
 #' @param output_dim dimension of the output, per default 1L
 #' @param ... further arguments passed to the \code{model_builder} function
 #'
@@ -110,8 +111,10 @@ deepregression <- function(
   penalty_options = penalty_control(),
   orthog_options = orthog_control(),
   weight_options = weight_control(),
+  formula_options = form_control(),
   output_dim = 1L,
   verbose = FALSE,
+
   ...
 )
 {
@@ -225,7 +228,9 @@ deepregression <- function(
 
   if(verbose) cat("Pre-calculate GAM terms...")
   so <- penalty_options
-  so$gamdata <- precalc_gam(list_of_formulas, data, so)
+  if(formula_options$precalculate_gamparts)
+    so$gamdata <- precalc_gam(list_of_formulas, data, so) else
+      so$gamdata <- NULL
 
   # parse formulas
   if(verbose) cat("Preparing additive formula(s)...")
@@ -247,6 +252,7 @@ deepregression <- function(
                                                            controls = so,
                                                            output_dim = output_dim,
                                                            param_nr = i,
+                                                           parsing_options = formula_options,
                                                            specials_to_oz =
                                                              specials_to_oz,
                                                            automatic_oz_check =

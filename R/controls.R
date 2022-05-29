@@ -191,3 +191,25 @@ weight_control <- function(
   return(ret_list)
   
 }
+
+#' Options for formula parsing
+#' 
+#' @param precalculate_gamparts logical; if TRUE (default), additive parts are pre-calculated
+#' and can later be used more efficiently. Set to FALSE only if no smooth effects are in the 
+#' formula(s) and a formula is very large so that extracting all terms takes long or might fail
+#' @param check_form logical; if TRUE (default), the formula is checked in \code{process_terms}
+#' @return Returns a list with options
+#' @export
+#'
+form_control <- function(
+    precalculate_gamparts = TRUE,
+    check_form = TRUE
+)
+{
+  
+  return(
+    list(precalculate_gamparts = precalculate_gamparts,
+         check_form = check_form)
+  )
+  
+}

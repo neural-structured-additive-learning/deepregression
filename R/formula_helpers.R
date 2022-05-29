@@ -99,6 +99,15 @@ extractval <- function(term, name, default_for_missing = FALSE, default = NULL)
 
 }
 
+# multiple value option of extractval
+extractvals <- function(term, names){
+  if(is.character(term)) term <- as.formula(paste0("~", term))
+  inputs <- as.list(as.list(term)[[2]])[-1]
+  return(sapply(names, function(name){
+    if(name %in% names(inputs)) inputs[[name]] else NULL
+  }))
+}
+
 extractlen <- function(term, data)
 {
 
@@ -123,9 +132,14 @@ form2text <- function(form)
 
 }
 
-get_special <- function(term, specials)
+get_special <- function(term, specials, simplify = FALSE)
 {
 
+  if(simplify){
+    if(term=="(Intercept)") return(NULL)
+    if(!grepl("\\(", term)) return(NULL)
+    return(gsub("(.*)\\((.*))","\\1",term))
+  }
   sp <- attr(terms.formula(as.formula(paste0("~",term)),
                            specials = specials), "specials")
   names(unlist(sp))

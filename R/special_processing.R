@@ -8,6 +8,7 @@
 #' @param automatic_oz_check logical; whether to automatically check for DNNs to be orthogonalized
 #' @param identify_intercept logical; whether to make the intercept automatically identifiable
 #' @param param_nr integer; identifier for the distribution parameter
+#' @param parsing_options options 
 #' @param ... further processors
 #' @return returns a processor function
 #' 
@@ -15,6 +16,7 @@
 process_terms <- function(
   form, data, controls, 
   output_dim, param_nr, 
+  parsing_options,
   specials_to_oz = c(), 
   automatic_oz_check = TRUE, 
   identify_intercept = FALSE,
@@ -43,15 +45,16 @@ process_terms <- function(
   specials <- specials[sapply(specials, nchar)>0]
   
   # otherwise offset is dropped
-  form <- rename_offset(form)
+  if(parsing_options$check_form) form <- rename_offset(form)
   
   # for row-wise tensor product
-  form <- rename_rwt(form)
+  if(parsing_options$check_form) form <- rename_rwt(form)
   
   list_terms <- separate_define_relation(form = form, 
                                          specials = specials, 
                                          specials_to_oz = specials_to_oz, 
-                                         automatic_oz_check = automatic_oz_check)
+                                         automatic_oz_check = automatic_oz_check,
+                                         simplify = !parsing_options$check_form)
   
   if("1" %in% sapply(list_terms, "[[", "term"))
   {
@@ -63,9 +66,10 @@ process_terms <- function(
   result <- list()
   
   # add intercept terms
-  if(attr(terms.formula(form), "intercept") & !"(Intercept)" %in% 
-     sapply(list_terms, "[[", "term"))
-    list_terms[[length(list_terms)+1]] <- 
+  if(parsing_options$check_form)
+    if(attr(terms.formula(form), "intercept") & !"(Intercept)" %in% 
+       sapply(list_terms, "[[", "term"))
+      list_terms[[length(list_terms)+1]] <- 
     list(term = "(Intercept)",
          nr = length(list_terms)+1,
          left_from_oz = TRUE,
@@ -73,16 +77,15 @@ process_terms <- function(
   
   for(i in 1:length(list_terms)){
     
-    lin_counter <- 1
     args$term = list_terms[[i]]$term
-    spec <- get_special(list_terms[[i]]$term, specials = specials)
+    spec <- get_special(list_terms[[i]]$term, specials = specials, 
+                        simplify = !parsing_options$check_form)
     args$controls <- controls 
     args$controls$procs <- procs
     if(is.null(spec)){
       if(args$term=="(Intercept)")
         result[[i]] <- c(list_terms[[i]], do.call(int_processor, args)) else
           result[[i]] <- c(list_terms[[i]], do.call(lin_processor, args))
-        lin_counter <- lin_counter+1
     }else{
       result[[i]] <- c(list_terms[[i]], do.call(procs[[spec]], args))
     }
