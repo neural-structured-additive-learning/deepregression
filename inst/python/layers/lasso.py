@@ -69,7 +69,7 @@ class TibLinearLasso(tf.keras.layers.Layer):
     
 # grouping (GC) layer used for constructions  
 class GroupConnected(keras.layers.Layer):
-    def __init__(self, group_idx=None, la=0, multfac_initializer=tf.initializers.Ones):
+    def __init__(self, group_idx=None, la=0, multfac_initializer=tf.keras.initializers.HeNormal):
         super(GroupConnected, self).__init__()
         self.la = la
         self.input_shapes = [len(gii) for gii in group_idx]
@@ -100,7 +100,7 @@ class GroupConnected(keras.layers.Layer):
 
 # grouping layer followed by FC output
 class TibGroupLasso(tf.keras.layers.Layer):
-    def __init__(self, units=1, group_idx=None, la=0, kernel_initializer=tf.keras.initializers.HeNormal, multfac_initializer=tf.initializers.Ones, **kwargs):
+    def __init__(self, units=1, group_idx=None, la=0, kernel_initializer=tf.initializers.Ones, multfac_initializer=tf.keras.initializers.HeNormal, **kwargs):
         super(TibGroupLasso, self).__init__(**kwargs)
         self.units = units
         self.la = la
