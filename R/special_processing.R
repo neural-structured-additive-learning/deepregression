@@ -32,7 +32,8 @@ process_terms <- function(
          grlasso = l21_processor,
          ridge = l2_processor,
          offsetx = offset_processor,
-         rwt = rwt_processor
+         rwt = rwt_processor,
+         const = const_broadcasting_processor
     )
   
   dots <- list(...)
@@ -144,6 +145,9 @@ layer_generator <- function(term, output_dim, param_nr, controls,
                             ...
                             ){
   
+  const_broadcasting <- !is.null(controls$const_broadcasting) && (
+    controls$const_broadcasting & output_dim>1)
+  
   layer_args <- controls$weight_options$general
   
   specific_opt <- term %in% names(controls$weight_options$specific)
@@ -163,7 +167,8 @@ layer_generator <- function(term, output_dim, param_nr, controls,
     )
   
 
-  layer_args$units <- units
+  if(!const_broadcasting) layer_args$units <- units else 
+    layer_args$units <- controls$const_broadcasting
   layer_args$name <- name
 
   if(!is.null(further_layer_args)) 
@@ -173,10 +178,19 @@ layer_generator <- function(term, output_dim, param_nr, controls,
   
   if(controls$with_layer){
     
-    layer = function(x){
-      return(
-        do.call(layer_class, layer_args)(x)
-      )
+    if(!const_broadcasting){
+      layer = function(x){
+        return(
+          do.call(layer_class, layer_args)(x)
+        )
+      }
+    }else{
+      layer = function(x){
+        layer_prev <- do.call(layer_class, layer_args)(x)
+        return(
+          tf$tile(layer_prev, multiples = list(tf$shape(layer_prev)[[1]], output_dim))
+        )
+      }
     }
     
   }else{
@@ -489,6 +503,28 @@ rwt_processor <- function(term, data, output_dim, param_nr, controls){
   
 }
 
+const_broadcasting_processor <- function(term, data, output_dim, param_nr, controls){
+  
+  controls$const_broadcasting <- as.integer(extractval(term, name="dim", TRUE, 1L))
+  term <- gsub("const\\((.*)\\)", "\\1", term)
+  
+  spec <- get_special(term, specials = names(controls$procs))
+  
+  args <- list(data = data, output_dim = output_dim, param_nr = param_nr)
+  args$term <- term
+  args$controls <- controls 
+
+  if(is.null(spec)){
+    if(args$term=="1")
+      ret <- c(term, do.call(int_processor, args)) else
+        ret <- c(term, do.call(lin_processor, args))
+  }else{
+    ret <- c(term, do.call(procs[[spec]], args))
+  }
+  
+  return(ret)
+  
+}
 
 dnn_processor <- function(dnn){
   

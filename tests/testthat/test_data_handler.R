@@ -23,7 +23,8 @@ test_that("loop_through_pfc_and_call_trafo", {
                   output_dim = output_dim,
                   automatic_oz_check = TRUE,
                   param_nr = 1,
-                  controls = controls)
+                  controls = controls,
+                  parsing_options = form_control())
   )
   
   ll <- loop_through_pfc_and_call_trafo(list(res1))
@@ -49,7 +50,8 @@ test_that("loop_through_pfc_and_call_trafo", {
                   output_dim = output_dim,
                   automatic_oz_check = TRUE,
                   param_nr = 1,
-                  controls = controls)
+                  controls = controls,
+                  parsing_options = form_control())
   )
   ll <- loop_through_pfc_and_call_trafo(list(res1))
   expect_true(all(!is.null(sapply(ll, dim))))

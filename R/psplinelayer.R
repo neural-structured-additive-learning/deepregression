@@ -386,15 +386,32 @@ precalc_gam <- function(lof, data, controls)
   # split terms in brackets and remove leading brackets
   termstrings <- lapply(termstrings, function(tfs) unlist(sapply(tfs, function(tf)
     gsub("^\\(", "", trimws(strsplit(tf, split = "+", fixed = T)[[1]])))))
-  gam_terms <- lapply(termstrings, function(tf) tf[grepl("(^|\\()(s|te|ti)\\(", tf)])
-
+  gam_terms <- lapply(termstrings, function(tf) tf[grepl("(^|\\()(s|te|ti)\\(", tf) | 
+                                                     grepl("~\\s?(s|te|ti)\\(", tf)])
+  gam_terms <- lapply(gam_terms, function(tf){ 
+    if(any(grepl("~", tf))){
+      return(
+        c(tf[!grepl("~", tf)], sapply(tf[grepl("~", tf)], function(x){
+          
+          parts <- strsplit(x, "~")[[1]][-1]
+          bracket_mismatch <- mismatch_brackets(parts, bracket_set = c("\\(", "\\)"))
+          parts[bracket_mismatch] <- gsub("\\)\\)$", ")", parts[bracket_mismatch])
+          return(parts)
+          
+        })) 
+        )
+      }else return(tf)
+    })
+  
   # bracket_mismatch <- mismatch_brackets(ul_gam_terms,
   #                                       bracket_set = c("\\(", "\\)"))
   # ul_gam_terms[bracket_mismatch] <- gsub("\\)\\)$", ")", ul_gam_terms[bracket_mismatch])
   gam_terms <- lapply(gam_terms, function(gts)
-    sapply(gts, function(gt) gsub(" ", "", extract_pure_gam_part(gt, FALSE),
-                                  fixed = TRUE))
-  )
+    unlist(sapply(gts, function(gt) sapply(gt, function(gtt) 
+      gsub(" ", "", extract_pure_gam_part(gtt, FALSE),
+                                  fixed = TRUE)
+      )))
+    )
   gam_terms <- lapply(gam_terms, unique)
   if(all(sapply(gam_terms, length)==0)) return(NULL)
   len_lists <- rep(1:length(lof), sapply(gam_terms, length))

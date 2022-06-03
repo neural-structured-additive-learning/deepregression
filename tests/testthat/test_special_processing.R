@@ -40,7 +40,8 @@ test_that("process_terms", {
                   output_dim = output_dim,
                   automatic_oz_check = TRUE,
                   param_nr = 1,
-                  controls = controls)
+                  controls = controls,
+                  parsing_options = form_control())
     
   )
   
@@ -73,7 +74,8 @@ test_that("rwt", {
                   output_dim = output_dim,
                   automatic_oz_check = TRUE,
                   param_nr = 1,
-                  controls = controls)
+                  controls = controls,
+                  parsing_options = form_control())
     
   )
   
@@ -107,7 +109,8 @@ test_that("fixed weights", {
                   output_dim = output_dim,
                   automatic_oz_check = TRUE,
                   param_nr = 1,
-                  controls = controls)
+                  controls = controls,
+                  parsing_options = form_control())
     
   )
   

@@ -27,7 +27,8 @@ test_that("subnetwork_init", {
                   output_dim = output_dim,
                   automatic_oz_check = TRUE,
                   param_nr = 1,
-                  controls = controls)
+                  controls = controls,
+                  parsing_options = form_control())
   )
   
   gaminputs <- gaminputs <- makeInputs(controls$gamdata$data_trafos, "gam_inp")
@@ -68,7 +69,8 @@ test_that("shared layer within formula", {
                   output_dim = output_dim,
                   automatic_oz_check = TRUE,
                   param_nr = 1,
-                  controls = controls)
+                  controls = controls,
+                  parsing_options = form_control())
   )
   
   gaminputs <- gaminputs <- makeInputs(controls$gamdata$data_trafos, "gam_inp")
