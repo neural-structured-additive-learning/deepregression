@@ -20,6 +20,7 @@ deepregression(
   penalty_options = penalty_control(),
   orthog_options = orthog_control(),
   weight_options = weight_control(),
+  formula_options = form_control(),
   output_dim = 1L,
   verbose = FALSE,
   ...
@@ -72,6 +73,8 @@ Can have an attribute \code{"controls"} to pass additional controls}
 \item{orthog_options}{options for the orthgonalization defined by \code{\link{orthog_control}}}
 
 \item{weight_options}{options for layer weights defined by \code{\link{weight_control}}}
+
+\item{formula_options}{options for formula parsing (mainly used to make calculation more efficiently)}
 
 \item{output_dim}{dimension of the output, per default 1L}
 

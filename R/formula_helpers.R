@@ -76,7 +76,7 @@ extractvar <- function(term, allow_ia = FALSE)
   return(ret)
 }
 
-#' Extract value in term name
+#' Formula helpers
 #'
 #' @param term character representing a formula term
 #' @param name character; the value to extract
@@ -84,6 +84,7 @@ extractvar <- function(term, allow_ia = FALSE)
 #' @param default value returned when missing
 #' @return the value used for \code{name}
 #' @export
+#' @rdname formulaHelpers
 #' @examples
 #' extractval("s(a, la = 2)", "la")
 #'
@@ -125,6 +126,9 @@ extractdim <- function(x)
 
 }
 
+#' @param form formula that is converted to a character string
+#' @export
+#' @rdname formulaHelpers
 form2text <- function(form)
 {
 

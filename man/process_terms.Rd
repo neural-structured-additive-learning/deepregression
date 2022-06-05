@@ -10,6 +10,7 @@ process_terms(
   controls,
   output_dim,
   param_nr,
+  parsing_options,
   specials_to_oz = c(),
   automatic_oz_check = TRUE,
   identify_intercept = FALSE,
@@ -26,6 +27,8 @@ process_terms(
 \item{output_dim}{the output dimension of the response}
 
 \item{param_nr}{integer; identifier for the distribution parameter}
+
+\item{parsing_options}{options}
 
 \item{specials_to_oz}{specials that should be automatically checked for}
 
