@@ -3,7 +3,7 @@
 
 [![R build status](https://github.com/neural-structured-additive-learning/deepregression/workflows/R-CMD-check/badge.svg)](https://github.com/neural-structured-additive-learning/deepregression/actions)
   [![Codecov test coverage](https://codecov.io/gh/neural-structured-additive-learning/deepregression/branch/main/graph/badge.svg)](https://codecov.io/gh/neural-structured-additive-learning/deepregression?branch=main)
-[![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 This is a refactored version of the old [deepregression](https://github.com/davidruegamer/deepregression) package.
 
