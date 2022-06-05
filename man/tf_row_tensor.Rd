@@ -4,7 +4,7 @@
 \alias{tf_row_tensor}
 \title{Row-wise tensor product using TensorFlow}
 \usage{
-tf_row_tensor(a, b)
+tf_row_tensor(a, b, ...)
 }
 \arguments{
 \item{a, b}{tensor}

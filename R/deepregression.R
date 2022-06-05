@@ -355,7 +355,7 @@ deepregression <- function(
 #' @param output_dim dimension of the output
 #' @param mapping a list of integers. The i-th list item defines which element
 #' elements of \code{list_pred_param} are used for the i-th parameter.
-#' For example, \code{map = list(1,2,1:2)} means that \code{list_pred_param[[1]]}
+#' For example, \code{mapping = list(1,2,1:2)} means that \code{list_pred_param[[1]]}
 #' is used for the first distribution parameter, \code{list_pred_param[[2]]} for
 #' the second distribution parameter and  \code{list_pred_param[[3]]} for both
 #' distribution parameters (and then added once to \code{list_pred_param[[1]]} and
