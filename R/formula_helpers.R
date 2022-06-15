@@ -52,8 +52,12 @@ make_valid_layername <- function(string)
 makelayername <- function(term, param_nr, truncate = 60)
 {
 
-  if(class(term)=="formula") term <- form2text(term)
-  return(paste0(strtrim(make_valid_layername(gsub("%X%", "", term)), truncate), "_", param_nr))
+  if(class(term)=="formula") 
+    term <- form2text(term)
+  if(grepl("const\\(", term)) 
+    term <- gsub("const\\((.*?)\\)", "\\1", term) 
+  return(paste0(strtrim(make_valid_layername(gsub("%X%", "", term)), 
+                        truncate), "_", param_nr))
 
 }
 

@@ -149,6 +149,7 @@ layer_generator <- function(term, output_dim, param_nr, controls,
     controls$const_broadcasting & output_dim>1)
   
   layer_args <- controls$weight_options$general
+  layer_args <- c(layer_args, list(...))
   
   specific_opt <- term %in% names(controls$weight_options$specific)
   if(specific_opt){
@@ -505,12 +506,13 @@ rwt_processor <- function(term, data, output_dim, param_nr, controls){
 
 const_broadcasting_processor <- function(term, data, output_dim, param_nr, controls){
   
-  controls$const_broadcasting <- as.integer(extractval(term, name="dim", TRUE, 1L))
+  #controls$const_broadcasting <- 
+  # as.integer(extractval(term, name="dim", TRUE, 1L))
   term <- gsub("const\\((.*)\\)", "\\1", term)
   
   spec <- get_special(term, specials = names(controls$procs))
   
-  args <- list(data = data, output_dim = output_dim, param_nr = param_nr)
+  args <- list(data = data, output_dim = 1L, param_nr = param_nr)
   args$term <- term
   args$controls <- controls 
 
@@ -520,6 +522,20 @@ const_broadcasting_processor <- function(term, data, output_dim, param_nr, contr
         ret <- c(term, do.call(lin_processor, args))
   }else{
     ret <- c(term, do.call(procs[[spec]], args))
+  }
+  
+  ret$output_dim = output_dim
+  layer_ft <- ret$layer
+  ret$layer <- function(x){
+    
+    return(
+      layer_ft(x) %>% layer_dense(units = as.integer(output_dim), 
+                                  activation = "linear", 
+                                  use_bias = FALSE, 
+                                  kernel_initializer = "ones",
+                                  trainable = FALSE)
+    )
+    
   }
   
   return(ret)

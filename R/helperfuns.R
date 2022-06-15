@@ -61,7 +61,7 @@ get_weight_by_opname <- function(mod, name, partial_match = FALSE)
 get_layer_by_opname <- function(mod, name, partial_match = FALSE)
 {
   
-  names <- get_mod_names(mod)
+  # names <- get_mod_names(mod)
   w <- get_layernr_by_opname(mod, name, partial_match = partial_match)
   if(length(w)==0)
     stop("Cannot find specified ", name, " in model weights.")
