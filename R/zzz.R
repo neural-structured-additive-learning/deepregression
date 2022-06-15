@@ -39,14 +39,14 @@
 #' @export
 check_and_install <- function(force = FALSE) {
   if (!reticulate::py_module_available("tensorflow") || force) {
-    keras::install_keras(version = "2.5.0", tensorflow = "2.5.0", 
-                         extra_packages = c("tensorflow_probability==0.12", "six")) # nocov
+    keras::install_keras(version = "2.8.0", tensorflow = "2.8.0", 
+                         extra_packages = c("tensorflow_probability==0.16", "six")) # nocov
   } else {
     message("Tensorflow found, skipping tensorflow installation!")
     if (!reticulate::py_module_available("tensorflow_probability") || 
         !reticulate::py_module_available("six")) {
       message("Installing pytho modules 'tfprobability' and 'six'") # nocov
-      reticulate::py_install(packages = c("tensorflow-probability==0.12", "six")) # nocov
+      reticulate::py_install(packages = c("tensorflow-probability==0.16", "six")) # nocov
     }
   }
 }
