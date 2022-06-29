@@ -9,6 +9,7 @@
 #' @param only_data logical, if TRUE, only the data for plotting is returned
 #' @param grid_length the length of an equidistant grid at which a two-dimensional function
 #' is evaluated for plotting.
+#' @param main_multiple vector of strings; plot main titles if multiple plots are selected
 #' @param type the type of plot (see generic \code{plot} function)
 #' @param get_weight_fun function to extract weight from model given \code{x},
 #' a \code{name} and \code{param_nr}
@@ -25,6 +26,7 @@ plot.deepregression <- function(
   which_param = 1, # for which parameter
   only_data = FALSE,
   grid_length = 40,
+  main_multiple = NULL,
   type = "b",
   get_weight_fun = get_weight_by_name,
   ... # passed to plot function
@@ -54,6 +56,14 @@ plot.deepregression <- function(
     
   for(name in which){
     
+    if(!is.null(main_multiple)){
+      main <- main_multiple[1]
+    }else if(!is.null(list(...)$main)){
+      main <- list(...)$main
+    }else{
+      main <- name
+    }
+    
     pp <- pfc[[which(names_all==name)]]
     plotData[[name]] <- pp$plot_fun(pp, 
                                     weights = get_weight_fun(x, name = name , 
@@ -71,7 +81,7 @@ plot.deepregression <- function(
           
           suppressWarnings(plot(partial_effect[order(value),i] ~ sort(value),
                                 data = plotData[[name]][c("value", "partial_effect")],
-                                main = name,
+                                main = main,
                                 xlab = extractvar(name),
                                 ylab = "partial effect",
                                 type = type,
@@ -100,7 +110,7 @@ plot.deepregression <- function(
                   type = type,
                   xlab = colnames(plotData[[name]]$df)[1],
                   ylab = "partial effect",
-                  main = gsub(colnames(plotData[[name]]$df)[2], lev, name),
+                  main = gsub(colnames(plotData[[name]]$df)[2], lev, main),
                   ...
                 )
               )
@@ -117,7 +127,7 @@ plot.deepregression <- function(
                 xlab = colnames(plotData[[name]]$df)[1],
                 ylab = colnames(plotData[[name]]$df)[2],
                 # zlab = "partial effect",
-                main = name
+                main = main
               )
             )
             
@@ -131,6 +141,8 @@ plot.deepregression <- function(
       warning("Plotting of effects with ", dims,
               " covariate inputs not supported.")
     }
+    
+    main_multiple <- main_multiple[-1]
     
   }
   

@@ -21,13 +21,14 @@
 #' @param tf_seed a seed for TensorFlow (only works with R version >= 2.2.0)
 #' @param additional_processors a named list with additional processors to convert the formula(s).
 #' Can have an attribute \code{"controls"} to pass additional controls
-#' @param return_prepoc logical; if TRUE only the pre-processed data and layers are returned (default FALSE).
+#' @param return_prepoc logical; if TRUE only the pre-processed data and layers are returned 
+#' (default FALSE).
 #' @param subnetwork_builder function to build each subnetwork (network for each distribution parameter;
 #' per default \code{subnetwork_init}). Can also be a list of the same size as
 #' \code{list_of_formulas}.
-#' @param model_builder function to build the model based on additive predictors (per default \code{keras_dr}).
-#' In order to work with the methods defined for the class \code{deepregression}, the model should behave
-#' like a keras model
+#' @param model_builder function to build the model based on additive predictors 
+#' (per default \code{keras_dr}). In order to work with the methods defined for the class 
+#' \code{deepregression}, the model should behave like a keras model
 #' @param fitting_function function to fit the instantiated model when calling \code{fit}. Per default
 #' the keras \code{fit} function.
 #' @param penalty_options options for smoothing and penalty terms defined by \code{\link{penalty_control}}
@@ -168,8 +169,7 @@ deepregression <- function(
     # check for image dnns
     if(any(len_dnns>1)){
 
-      image_var <- lapply(list_of_deep_models[len_dnns>1],
-                          "[[", 2)
+      image_var <- lapply(list_of_deep_models[len_dnns>1], "[[", 2)
 
     }
 

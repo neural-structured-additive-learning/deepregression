@@ -162,7 +162,7 @@ prepare_generator_deepregression <- function(
     
   }else{
     
-    input_x <- lapply(input_x, as.matrix)
+    input_x <- lapply(input_x, as.array)
     
     ind_val <- sample(1:NROW(input_y), round(NROW(input_y)*validation_split))
     ind_train <- setdiff(1:NROW(input_y), ind_val)
