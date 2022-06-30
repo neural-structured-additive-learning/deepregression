@@ -33,7 +33,8 @@ process_terms <- function(
          ridge = l2_processor,
          offsetx = offset_processor,
          rwt = rwt_processor,
-         const = const_broadcasting_processor
+         const = const_broadcasting_processor,
+         mult = multiply_processor
     )
   
   dots <- list(...)
@@ -493,6 +494,51 @@ rwt_processor <- function(term, data, output_dim, param_nr, controls){
     data_trafo = function() do.call("cbind", lapply(terms, function(x) x$data_trafo())),
     predict_trafo = function(newdata) 
       do.call("cbind", lapply(terms, function(x) x$predict_trafo(newdata))),
+    input_dim = sum(dims),
+    layer = layer,
+    coef = function(weights) lapply(terms, function(x) x$coef(weights)),
+    partial_effect = function(...) lapply(terms, function(x) x$partial_effect(...)),
+    plot_fun = function(...) lapply(terms, function(x) x$plot_fun(...)),
+    get_org_values = function() do.call("cbind", lapply(terms, function(x) x$get_org_values())),
+    penalty = penalties
+  )
+  
+}
+
+multiply_processor <- function(term, data, output_dim, param_nr, controls){
+  
+  terms <- get_terms_mult(term)
+  
+  terms <- lapply(terms, function(t){ 
+    args <- list(term = t, data = data, output_dim = output_dim,
+                 param_nr = param_nr, controls = controls)
+    spec <- get_special(t, specials = names(controls$procs))
+    if(is.null(spec)){
+      if(t=="1")
+        return(do.call(int_processor, args)) else
+          return(do.call(lin_processor, args))
+    }
+    do.call(controls$procs[[spec]], args)
+  })
+  
+  dims <- sapply(terms, "[[", "input_dim")
+  csd <- c(0, cumsum(dims))
+  penalties <- lapply(terms, "[[", "penalty")
+
+  layer = function(x, ...){
+    
+    inps <- lapply(1:length(dims), function(i){
+      tf_stride_cols(x, as.integer(csd[i]+1), as.integer(csd[i+1]))
+    })
+    outp <- lapply(1:length(inps), function(i) terms[[i]]$layer(inps[[i]]))
+    return(tf$keras$layers$multiply(outp))
+  }
+  
+  list(
+    data_trafo = function() 
+      do.call("cbind", lapply(terms, function(x) to_matrix(x$data_trafo()))),
+    predict_trafo = function(newdata) 
+      do.call("cbind", lapply(terms, function(x) to_matrix(x$predict_trafo(newdata)))),
     input_dim = sum(dims),
     layer = layer,
     coef = function(weights) lapply(terms, function(x) x$coef(weights)),

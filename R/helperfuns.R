@@ -420,3 +420,10 @@ combine_penalties <- function(penalties, dims)
 }
 
 is_len_zero <- function(x) length(x)==0
+
+subset_list_and_df <- function(x, sel){
+  
+  if(is.data.frame(x)) return(x[sel, drop=FALSE])
+  return(x[sel])
+  
+}

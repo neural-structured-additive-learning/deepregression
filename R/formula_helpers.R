@@ -170,6 +170,12 @@ get_terms_rwt <- function(term)
 
 }
 
+get_terms_mult <- function(term)
+{
+  
+  trimws(strsplit(gsub("mult\\((.*)\\)", "\\1", term), split=",")[[1]])
+  
+}
 
 remove_layer <- function(term){
 
