@@ -49,13 +49,15 @@ layer_hadamard_diff = function(units, la, initu = "glorot_uniform", initv = "glo
 #' @param filters number of filters
 #' @param kernel_size size of convolutional filter
 #' @param lam regularization strength
+#' @param depth depth of weight factorization
 #' @return layer object
 #' @export
 #' 
 layer_sparse_conv_2d <- function(filters,
                                  kernel_size,
-                                 lam=NULL, ...) {
+                                 lam=NULL,
+                                 depth=2,...) {
   python_path <- system.file("python", package = "deepregression")
   layers <- reticulate::import_from_path("layers", path = python_path)
-  layers$SparseConv2D(filters = filters, kernel_size = kernel_size, lam = lam, ...)
+  layers$SparseConv2D(filters = filters, kernel_size = kernel_size, lam = lam, depth = depth, ...)
 }

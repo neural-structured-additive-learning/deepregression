@@ -16,7 +16,8 @@ class SparseConv(layers.convolutional.Conv):
                 filters,
                 kernel_size,
                 lam=None,
-                position_sparsity=-1, # use slide(start,end-1) for multiple indices
+                position_sparsity=-1, # use slide(start,end-1) for multiple indices,
+                depth=2,
                 strides=1,
                 padding='valid',
                 data_format=None,
@@ -64,9 +65,11 @@ class SparseConv(layers.convolutional.Conv):
         self.lam = lam
         self.multfac_initializer = multfac_initiliazer
         self.position_sparsity = position_sparsity 
+        self.depth = depth
 
         if multfac_regularizer is None and kernel_regularizer is None and lam is not None:
-            self.multfac_regularizer = tf.keras.regularizers.L2(self.lam)
+            # blow up penalty corresponding to depth of factorization (AM-GM)
+            self.multfac_regularizer = tf.keras.regularizers.L2((self.depth-1)*self.lam)
             self.kernel_regularizer = tf.keras.regularizers.L2(self.lam)
         else:
             self.multfac_regularizer = multfac_regularizer
@@ -187,7 +190,9 @@ class SparseConv(layers.convolutional.Conv):
         if self._is_causal:  # Apply causal padding to inputs for Conv1D.
             inputs = tf.pad(inputs, self._compute_causal_padding(inputs))
 
-        outputs = self._convolution_op(inputs, tf.multiply(self.kernel, self.multfac))
+        outputs = self._convolution_op(inputs, tf.multiply(self.kernel, 
+                tf.pow(x = self.multfac, y = (self.depth-1))
+                ))
 
         if self.use_bias:
             output_rank = outputs.shape.rank
@@ -292,6 +297,8 @@ class SparseConv(layers.convolutional.Conv):
                 self.lam,
             'position_sparsity':
                 self.position_sparsity,
+            'depth':
+                self.depth,
             'multfac_initializer':
                 self.multfac_initializer,
             'multfac_regularizer':
@@ -345,6 +352,7 @@ class SparseConv2D(SparseConv):
                kernel_size,
                lam=None,
                position_sparsity=-1,
+               depth = 2,
                strides=(1, 1),
                padding='valid',
                data_format=None,
@@ -368,6 +376,7 @@ class SparseConv2D(SparseConv):
             kernel_size=kernel_size,
             lam=lam,
             position_sparsity=position_sparsity,
+            depth=depth,
             strides=strides,
             padding=padding,
             data_format=data_format,
