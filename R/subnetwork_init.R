@@ -204,7 +204,7 @@ makeInputs <- function(pp, param_nr)
       return(
         tf$keras$Input(
           shape = inp,
-          name = paste0("input_", strtrim(make_valid_layername(ap$term), 60),
+          name = paste0("input_", strtrim(make_valid_layername(ap$term), options()$cutoff_names),
                         "_", param_nr))
       )
   }

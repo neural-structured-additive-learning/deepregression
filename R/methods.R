@@ -363,6 +363,10 @@ coef.deepregression <- function(
   to_return <- get_type_pfc(pfc, type)
   
   names <- get_names_pfc(pfc)[as.logical(to_return)]
+  if(any(grepl("^mult\\(", names))){
+    names_mult <- c(sapply(names[grepl("^mult\\(", names)], get_terms_mult))
+    names <- c(names[!grepl("^mult\\(", names)], names_mult)
+  }
   pfc <- pfc[as.logical(to_return)]
   check_names <- names
   check_names[check_names=="(Intercept)"] <- "1"

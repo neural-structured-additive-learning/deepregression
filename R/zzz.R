@@ -19,7 +19,8 @@
   } # nocov end
   # options
   options(orthogonalize = TRUE,
-          identify_intercept = FALSE
+          identify_intercept = FALSE,
+          cutoff_names = 60
   )
   # catch TFP start-up error
   suppressMessages(try(invisible(tfp$distributions$Normal(0,1)), silent = TRUE))

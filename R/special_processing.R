@@ -541,7 +541,7 @@ multiply_processor <- function(term, data, output_dim, param_nr, controls){
       do.call("cbind", lapply(terms, function(x) to_matrix(x$predict_trafo(newdata)))),
     input_dim = sum(dims),
     layer = layer,
-    coef = function(weights) lapply(terms, function(x) x$coef(weights)),
+    coef = function(weights) lapply(terms, function(x) if(!is.null(x$coef)) x$coef(weights)),
     partial_effect = function(...) lapply(terms, function(x) x$partial_effect(...)),
     plot_fun = function(...) lapply(terms, function(x) x$plot_fun(...)),
     get_org_values = function() do.call("cbind", lapply(terms, function(x) x$get_org_values())),
