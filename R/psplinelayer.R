@@ -303,7 +303,7 @@ extract_pure_gam_part <- function(term, remove_other_options=TRUE){
 
 }
 
-create_data_trafos <- function(evaluated_gam_term, controls)
+create_data_trafos <- function(evaluated_gam_term, controls, xlin)
 {
 
   # extract Xs
@@ -315,13 +315,25 @@ create_data_trafos <- function(evaluated_gam_term, controls)
   # get default Z matrix, which is possibly overwritten afterwards
   Z <- diag(rep(1,ncol(thisX)))
   # constraint
-  if(controls$zero_constraint_for_smooths &
+  if((controls$zero_constraint_for_smooths | 
+      controls$no_linear_trend_for_smooths ) &
      length(evaluated_gam_term)==1 &
-     !evaluated_gam_term[[1]]$dim>1)
+     !evaluated_gam_term[[1]]$dim>1){
+    
+    conMat <- list()
+    
+    if(controls$zero_constraint_for_smooths)
+      conMat[[1]] <- matrix(rep(1,NROW(evaluated_gam_term[[1]]$X)), ncol=1)
+    if(controls$no_linear_trend_for_smooths)
+      conMat[[2]] <- xlin
+    conMat <- do.call("cbind", conMat)
+    
     Z <- orthog_structured_smooths_Z(
       evaluated_gam_term[[1]]$X,
-      matrix(rep(1,NROW(evaluated_gam_term[[1]]$X)), ncol=1)
+      conMat
     )
+    
+  }
 
   return(
     list(data_trafo = function() thisX %*% Z,
@@ -466,7 +478,9 @@ precalc_gam <- function(lof, data, controls)
     w <- which(names(sterms)==parts[1])
     sterm <- sterms[[w]]
     controls$zero_constraint_for_smooths <- as.logical(parts[2])
-    ret <- create_data_trafos(sterm, controls)
+    xlin <- NULL
+    if(length(sterm)==1 & length(sterm[[1]]$term)==1) xlin <- data[[sterm[[1]]$term]]
+    ret <- create_data_trafos(sterm, controls, xlin)
     ret$term <- ugt
     return(ret)
   })

@@ -420,7 +420,8 @@ cv <- function (x, ...) {
 #' @param print_folds whether to print the current fold
 #' @param mylapply lapply function to be used; defaults to \code{lapply}
 #' @param save_weights logical, whether to save weights in each epoch.
-#' @param cv_folds an integer if list with train and test data sets
+#' @param cv_folds an integer; can also be a list of lists 
+#' with train and test data sets per fold
 #' @param stop_if_nan logical; whether to stop CV if NaN values occur
 #' @param callbacks a list of callbacks used for fitting
 #' @param save_fun function applied to the model in each fold to be stored in

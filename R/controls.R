@@ -16,6 +16,8 @@
 #' @param zero_constraint_for_smooths logical; the same as absorb_cons,
 #' but done explicitly. If true a constraint is put on each smooth to have zero mean. Can
 #' be a vector of \code{length(list_of_formulas)} for each distribution parameter.
+#' @param no_linear_trend_for_smooths logical; see \code{zero_constraint_for_smooths}, but
+#' this removes the linear trend from splines
 #' @param hat1 logical; if TRUE, the smoothing parameter is defined by the trace of the hat
 #' matrix sum(diag(H)), else sum(diag(2*H-HH))
 #' @param sp_scale function of response; for scaling the penalty (1/n per default)
@@ -29,6 +31,7 @@ penalty_control <- function(defaultSmoothing = NULL,
                            absorb_cons = FALSE,
                            anisotropic = TRUE,
                            zero_constraint_for_smooths = TRUE,
+                           no_linear_trend_for_smooths = FALSE,
                            hat1 = FALSE,
                            sp_scale = function(x)
                              ifelse(is.list(x) | is.data.frame(x), 1/NROW(x[[1]]), 1/NROW(x))
@@ -50,6 +53,7 @@ penalty_control <- function(defaultSmoothing = NULL,
               absorb_cons = absorb_cons,
               anisotropic = anisotropic,
               zero_constraint_for_smooths = zero_constraint_for_smooths,
+              no_linear_trend_for_smooths = no_linear_trend_for_smooths,
               hat1 = hat1,
               sp_scale = sp_scale))
   
