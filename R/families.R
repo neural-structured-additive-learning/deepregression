@@ -36,7 +36,9 @@ tfmult <- function(x,y) tf$math$multiply(x,y)
 #'  \item{"chi": }{cauchy with df (exp)}
 #'  \item{"exponential": }{exponential with lambda (exp)}
 #'  \item{"gamma": }{gamma with concentration (exp) and rate (exp)}
-#'  \item{"gammar": }{gamma with location (exp) and scale (exp)}
+#'  \item{"gammar": }{gamma with location (exp) and scale (exp), following
+#'  \code{gamlss.dist::GA}, which implies that the expectation is the location, 
+#'  and the variance of the distribution is the \code{location^2 scale^2}}
 #'  \item{"gumbel": }{gumbel with location (identity), scale (exp)}
 #'  \item{"half_cauchy": }{half cauchy with location (identity), scale (exp)}
 #'  \item{"half_normal": }{half normal with scale (exp)}
@@ -54,7 +56,7 @@ tfmult <- function(x,y) tf$math$multiply(x,y)
 #'  \item{"pareto": }{Pareto with concentration (exp) and scale (1/exp)} 
 #'  \item{"pareto_ls": }{Pareto location scale version with mean (exp) 
 #'  and scale (exp), which corresponds to a Pareto distribution with parameters scale = mean
-#'  and concentration = 1/sigma, where sigma is the scale in the pareto_ls version.}
+#'  and concentration = 1/sigma, where sigma is the scale in the pareto_ls version}
 #'  \item{"poisson": }{poisson with rate (exp)}
 #'  \item{"poisson_lograte": }{poisson with lograte (identity))}
 #'  \item{"student_t": }{Student's t with df (exp)}

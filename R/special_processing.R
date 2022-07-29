@@ -42,7 +42,10 @@ process_terms <- function(
   if(length(dots)>0 && is.null(names(dots)))
     stop("Please provide named arguments.")
   
-  procs <- c(defaults, dots)
+  # the order dots, defaults allows to also overwrite
+  # the defaults by just adding an additional processor
+  # with the same naming
+  procs <- c(dots, defaults)
   specials <- names(procs)
   specials <- specials[sapply(specials, nchar)>0]
   
@@ -86,8 +89,8 @@ process_terms <- function(
     args$controls$procs <- procs
     if(is.null(spec)){
       if(args$term=="(Intercept)")
-        result[[i]] <- c(list_terms[[i]], do.call(int_processor, args)) else
-          result[[i]] <- c(list_terms[[i]], do.call(lin_processor, args))
+        result[[i]] <- c(list_terms[[i]], do.call(procs[["int"]], args)) else
+          result[[i]] <- c(list_terms[[i]], do.call(procs[["lin"]], args))
     }else{
       result[[i]] <- c(list_terms[[i]], do.call(procs[[spec]], args))
     }

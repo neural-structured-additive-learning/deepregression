@@ -291,7 +291,11 @@ fix_bracket_mismatch <- function(x)
 extract_pure_gam_part <- function(term, remove_other_options=TRUE){
 
   term <- gsub(".*(^|\\()(s|te|ti)\\((.*)", "\\2(\\3", term)
-  term <- gsub("(s|te|ti)(\\()(.*?)(\\))(.*)", "\\1\\2\\3\\4", term)
+  term <- paste0(gsub("(s|te|ti)(\\(.*)\\)", "\\1", term),
+                 save_nested_brackets_match(
+                   gsub("(s|te|ti)(\\(.*\\))", "\\2", term)
+                 )
+  )
   term <- fix_bracket_mismatch(term)
   if(remove_other_options){
     term <- remove_df_wrapper(term)

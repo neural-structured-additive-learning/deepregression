@@ -259,6 +259,23 @@ rename_offset <- function(form)
 
 }
 
+save_nested_brackets_match <- function(x, start=NULL){
+  
+  xx <- strsplit(x, "")[[1]]
+  if(is.null(start)) start <- which(xx=="(")
+  if(length(start)==0) return(x)
+  open <- 1
+  closing <- 0
+  i <- start[1]
+  while(open > closing & i < length(xx)){
+    i <- i + 1
+    if(xx[i]==")") closing <- closing + 1
+    if(xx[i]=="(") open <- open + 1
+  }
+  return(substring(x, start[1], i))
+  
+}
+
 # extract_kerasoptions <- function(term,
 #                                  activation = extractval(term, "activation", TRUE),
 #                                  use_bias = extractval(term, "use_bias", TRUE, FALSE),
