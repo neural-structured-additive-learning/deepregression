@@ -191,7 +191,7 @@ class SparseConv(layers.convolutional.Conv):
             inputs = tf.pad(inputs, self._compute_causal_padding(inputs))
 
         outputs = self._convolution_op(inputs, tf.multiply(self.kernel, 
-                tf.pow(x = self.multfac, y = (self.depth-1))
+                tf.pow(x = tf.abs(self.multfac), y = (self.depth-1))
                 ))
 
         if self.use_bias:
