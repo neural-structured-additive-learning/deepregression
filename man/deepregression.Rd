@@ -52,15 +52,16 @@ be a custom distribution.}
 
 \item{tf_seed}{a seed for TensorFlow (only works with R version >= 2.2.0)}
 
-\item{return_prepoc}{logical; if TRUE only the pre-processed data and layers are returned (default FALSE).}
+\item{return_prepoc}{logical; if TRUE only the pre-processed data and layers are returned 
+(default FALSE).}
 
 \item{subnetwork_builder}{function to build each subnetwork (network for each distribution parameter;
 per default \code{subnetwork_init}). Can also be a list of the same size as
 \code{list_of_formulas}.}
 
-\item{model_builder}{function to build the model based on additive predictors (per default \code{keras_dr}).
-In order to work with the methods defined for the class \code{deepregression}, the model should behave
-like a keras model}
+\item{model_builder}{function to build the model based on additive predictors 
+(per default \code{keras_dr}). In order to work with the methods defined for the class 
+\code{deepregression}, the model should behave like a keras model}
 
 \item{fitting_function}{function to fit the instantiated model when calling \code{fit}. Per default
 the keras \code{fit} function.}

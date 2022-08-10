@@ -115,7 +115,6 @@ deepregression <- function(
   formula_options = form_control(),
   output_dim = 1L,
   verbose = FALSE,
-
   ...
 )
 {
@@ -187,9 +186,6 @@ deepregression <- function(
     specials_to_oz <- c()
     automatic_oz_check <- FALSE
   }
-
-  # number of observations
-  n_obs <- NROW(y)
 
   # number of output dim
   if(is.character(family) && (family=="multinoulli" | family=="multinomial"))

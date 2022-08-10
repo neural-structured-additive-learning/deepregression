@@ -10,7 +10,7 @@
 #' @param null_space_penalty logical value;
 #' if TRUE, the null space will also be penalized for smooth effects.
 #' Per default, this is equal to the value give in \code{variational}.
-#' @param absorb_cons logical; adds identifiability constraint to the basisi.
+#' @param absorb_cons logical; adds identifiability constraint to the basis.
 #' See \code{?mgcv::smoothCon} for more details.
 #' @param anisotropic whether or not use anisotropic smoothing (default is TRUE)
 #' @param zero_constraint_for_smooths logical; the same as absorb_cons,

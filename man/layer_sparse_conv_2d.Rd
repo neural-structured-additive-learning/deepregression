@@ -4,7 +4,7 @@
 \alias{layer_sparse_conv_2d}
 \title{Sparse 2D Convolutional layer}
 \usage{
-layer_sparse_conv_2d(filters, kernel_size, lam = NULL, ...)
+layer_sparse_conv_2d(filters, kernel_size, lam = NULL, depth = 2, ...)
 }
 \arguments{
 \item{filters}{number of filters}
@@ -12,6 +12,8 @@ layer_sparse_conv_2d(filters, kernel_size, lam = NULL, ...)
 \item{kernel_size}{size of convolutional filter}
 
 \item{lam}{regularization strength}
+
+\item{depth}{depth of weight factorization}
 }
 \value{
 layer object

@@ -11,6 +11,7 @@ penalty_control(
   absorb_cons = FALSE,
   anisotropic = TRUE,
   zero_constraint_for_smooths = TRUE,
+  no_linear_trend_for_smooths = FALSE,
   hat1 = FALSE,
   sp_scale = function(x) ifelse(is.list(x) | is.data.frame(x), 1/NROW(x[[1]]),
     1/NROW(x))
@@ -30,7 +31,7 @@ use df as an argument for \code{s()}, \code{te()} or \code{ti()}}
 if TRUE, the null space will also be penalized for smooth effects.
 Per default, this is equal to the value give in \code{variational}.}
 
-\item{absorb_cons}{logical; adds identifiability constraint to the basisi.
+\item{absorb_cons}{logical; adds identifiability constraint to the basis.
 See \code{?mgcv::smoothCon} for more details.}
 
 \item{anisotropic}{whether or not use anisotropic smoothing (default is TRUE)}
@@ -38,6 +39,9 @@ See \code{?mgcv::smoothCon} for more details.}
 \item{zero_constraint_for_smooths}{logical; the same as absorb_cons,
 but done explicitly. If true a constraint is put on each smooth to have zero mean. Can
 be a vector of \code{length(list_of_formulas)} for each distribution parameter.}
+
+\item{no_linear_trend_for_smooths}{logical; see \code{zero_constraint_for_smooths}, but
+this removes the linear trend from splines}
 
 \item{hat1}{logical; if TRUE, the smoothing parameter is defined by the trace of the hat
 matrix sum(diag(H)), else sum(diag(2*H-HH))}
