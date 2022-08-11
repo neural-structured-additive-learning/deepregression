@@ -241,12 +241,15 @@ deepregression <- function(
                                          so$with_layer <- TRUE
                                        }
                                        so$weight_options <- weight_options[[i]]
+                                       od <- ifelse(length(output_dim)>1, 
+                                                    output_dim[[i]], output_dim)
+                                         
 
                                        res <- do.call("process_terms",
                                                       c(list(form = list_of_formulas[[i]],
                                                            data = data,
                                                            controls = so,
-                                                           output_dim = output_dim,
+                                                           output_dim = od,
                                                            param_nr = i,
                                                            parsing_options = formula_options,
                                                            specials_to_oz =
@@ -498,6 +501,9 @@ from_preds_to_dist <- function(
 distfun_to_dist <- function(dist_fun, preds)
 {
 
+  # for debugging:
+  # a=get("trafo_fun", environment(dist_fun))
+  # b=get("mixdist", environment(dist_fun))
   # tfprobability::layer_distribution_lambda(preds, make_distribution_fn = dist_fun)
   ret <- suppressMessages(try(tfp$layers$DistributionLambda(dist_fun)(preds), silent = TRUE))
   if(inherits(ret, "try-error")) ret <- tfp$layers$DistributionLambda(dist_fun)(preds)
@@ -581,8 +587,8 @@ keras_dr <- function(
   # define single output of network
   out <- from_preds_to_output(outputs, ...)
   # define model
-  model <- model_fun(inputs = inputs,
-                     outputs = out)
+  model <- suppressWarnings(model_fun(inputs = inputs,
+                                      outputs = out))
   # additional loss
   if(!is.null(additional_penalty)){
 

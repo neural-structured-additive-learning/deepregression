@@ -245,6 +245,7 @@ family_to_tfd <- function(family)
                      cauchy = tfd_cauchy,
                      chi2 = tfd_chi2,
                      chi = tfd_chi,
+                     deterministic = tfd_deterministic,
                      dirichlet_multinomial = tfd_dirichlet_multinomial,
                      dirichlet = tfd_dirichlet,
                      exponential = tfd_exponential,
@@ -326,6 +327,7 @@ family_to_trafo <- function(family, add_const = 1e-8)
                                      function(x) tf$add(add_const, tfe(x))),
                        chi2 = list(function(x) tf$add(add_const, tfe(x))),
                        chi = list(function(x) tf$add(add_const, tfe(x))),
+                       deterministic = list(function(x) x),
                        dirichlet_multinomial = list(), #tbd
                        dirichlet = list(), #tbd
                        exponential = list(function(x) tf$add(add_const, tfe(x))),
@@ -368,7 +370,7 @@ family_to_trafo <- function(family, add_const = 1e-8)
                                         function(x) tf$add(add_const, tfe(x))),
                        poisson = list(function(x) tf$add(add_const, tfe(x))),
                        poisson_lograte = list(function(x) x),
-                       student_t = list(function(x) x),
+                       student_t = list(function(x) tf$add(add_const, tfe(x))),
                        student_t_ls = list(function(x) tf$add(add_const, tfe(x)),
                                            function(x) x,
                                            function(x) tf$add(add_const, tfe(x))),
