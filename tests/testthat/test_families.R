@@ -111,3 +111,36 @@ test_that("tffuns", {
   expect_is(tfrec(x), "tensorflow.tensor")
   expect_is(tfmult(x,y), "tensorflow.tensor")
 })
+
+test_that("tfd_mvr", {
+  
+    n <- 100
+    
+    set.seed(24)
+    x <- runif(n) %>% as.matrix()
+    z <- runif(n) %>% as.matrix()
+    y <- exp(as.matrix(0.5*x + rnorm(n, 0, 0.1*z) + 1))
+    data = data.frame(x = x, z = z)
+  
+    suppressWarnings(
+      mod <- deepregression(
+        y = y,
+        data = data,
+        # define how parameters should be modeled
+        list_of_formulas = list(~ 1 + x, ~ 1 + x),
+        list_of_deep_models = NULL,
+        family = "mvr", 
+        tf_seed = 44
+      )
+    )
+    res <- mod %>% fit(epochs=2L, verbose = FALSE, view_metrics = FALSE)
+    expect_true(!sum(is.nan(unlist(res$metrics))) > 0)
+    expect_true(!any(unlist(res$metrics)==Inf))
+    expect_is(mod, "deepregression")
+    expect_true(!any(is.nan(unlist(coef(mod)))))
+    expect_true(!any(is.nan(fitted(mod))))
+    suppressWarnings(res <- mod %>% predict(data))
+    expect_true(is.numeric(res))
+    expect_true(!any(is.nan(res)))
+
+})

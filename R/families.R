@@ -265,6 +265,7 @@ family_to_tfd <- function(family)
                      log_normal = tfd_log_normal,
                      logistic = tfd_logistic,
                      mse = tfd_mse,
+                     mvr = tfd_mvr,
                      multinomial = function(probs)
                        tfd_multinomial(total_count = 1L,
                                        probs = probs),
@@ -364,6 +365,8 @@ family_to_trafo <- function(family, add_const = 1e-8)
                        multinomial = list(function(x) tfsoft(x)),
                        multinoulli = list(function(x) x),
                        mse = list(function(x) x),
+                       mvr = list(function(x) x, 
+                                  function(x) tf$add(add_const, tfe(x))),
                        pareto = list(function(x) tf$add(add_const, tfe(x)),
                                      function(x) add_const + tfe(-x)),
                        pareto_ls = list(function(x) tf$add(add_const, tfe(x)),
@@ -516,6 +519,30 @@ tfd_zinb <- function(mu, r, probs)
                   ),
                 name="zinb")
   )
+}
+
+#' Implementation of a distribution-like layer for Mean-Variance Regression
+#'
+#' @param predictors a two dimensional predictor for mean and variance
+tfd_mvr <- function(loc, scale, 
+                    validate_args = FALSE,
+                    allow_nan_stats = TRUE,
+                    name = "MVR")
+{
+  
+  args <- list(
+    loc = loc,
+    scale = scale,
+    validate_args = validate_args,
+    allow_nan_stats = allow_nan_stats,
+    name = name
+  )
+  
+  python_path <- system.file("python", package = "deepregression")
+  distributions <- reticulate::import_from_path("distributions", path = python_path)
+  
+  return(do.call(distributions$MVR, args))
+  
 }
 
 #' For using mean squared error via TFP
