@@ -354,6 +354,7 @@ create_data_trafos <- function(evaluated_gam_term, controls, xlin)
 
 }
 
+#' @export
 create_penalty <- function(evaluated_gam_term, df, controls, Z = NULL)
 {
 

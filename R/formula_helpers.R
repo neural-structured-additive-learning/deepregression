@@ -113,6 +113,10 @@ extractvals <- function(term, names){
   }))
 }
 
+#' @param term formula term 
+#' @param data a data.frame or list
+#' @export
+#' @rdname formulaHelpers
 extractlen <- function(term, data)
 {
 

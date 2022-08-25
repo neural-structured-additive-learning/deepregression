@@ -2,21 +2,26 @@
 % Please edit documentation in R/formula_helpers.R
 \name{extractval}
 \alias{extractval}
+\alias{extractlen}
 \alias{form2text}
 \title{Formula helpers}
 \usage{
 extractval(term, name, default_for_missing = FALSE, default = NULL)
 
+extractlen(term, data)
+
 form2text(form)
 }
 \arguments{
-\item{term}{character representing a formula term}
+\item{term}{formula term}
 
 \item{name}{character; the value to extract}
 
 \item{default_for_missing}{logical; if TRUE, returns \code{default} if argument is missing}
 
 \item{default}{value returned when missing}
+
+\item{data}{a data.frame or list}
 
 \item{form}{formula that is converted to a character string}
 }
