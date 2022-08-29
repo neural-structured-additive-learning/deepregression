@@ -63,6 +63,7 @@ pe_gen <- function(pp, df, weights){
 
 }
 
+#' @export
 layer_spline = function(units = 1L, P, name, trainable = TRUE,
                         kernel_initializer = "glorot_uniform") {
   python_path <- system.file("python", package = "deepregression")
