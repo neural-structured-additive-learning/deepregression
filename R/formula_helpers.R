@@ -144,6 +144,7 @@ form2text <- function(form)
 
 }
 
+#' @export
 get_special <- function(term, specials, simplify = FALSE)
 {
 

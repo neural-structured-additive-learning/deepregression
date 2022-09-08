@@ -348,6 +348,7 @@ get_type_pfc <- function(pfc, type = NULL)
   
 }
 
+#' @export
 combine_penalties <- function(penalties, dims)
 {
   

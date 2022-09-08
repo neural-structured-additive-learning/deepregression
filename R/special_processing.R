@@ -209,6 +209,7 @@ layer_generator <- function(term, output_dim, param_nr, controls,
   
 }
 
+#' @export
 int_processor <- function(term, data, output_dim, param_nr, controls){
   
   if(term=="(Intercept)") term <- "1"
