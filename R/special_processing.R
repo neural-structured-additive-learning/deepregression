@@ -622,4 +622,3 @@ dnn_image_placeholder_processor <- function(dnn, size){
     )
   }
 }
-
