@@ -236,6 +236,7 @@ int_processor <- function(term, data, output_dim, param_nr, controls){
   
 }
 
+#' @export
 lin_processor <- function(term, data, output_dim, param_nr, controls){
   
   

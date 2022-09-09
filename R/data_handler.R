@@ -38,6 +38,7 @@ loop_through_pfc_and_call_trafo <- function(pfc, newdata = NULL)
 #' @param pfc list of processor transformed formulas 
 #' @param gamdata processor for gam part
 #' @return list of matrices or arrays
+#' @export
 #' 
 prepare_data <- function(pfc, gamdata = NULL)
 {
@@ -56,6 +57,7 @@ prepare_data <- function(pfc, gamdata = NULL)
 #' @param newdata list in the same format as the original data
 #' @param gamdata processor for gam part
 #' @return list of matrices or arrays
+#' @export
 #' 
 prepare_newdata <- function(pfc, newdata, gamdata = NULL)
 {

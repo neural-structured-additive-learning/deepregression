@@ -16,6 +16,7 @@
 #' @param ... further arguments, passed to fit, plot or predict function
 #'
 #' @method plot deepregression
+#' @export plot.deepregression
 #' @export
 #' @rdname methodDR
 #'
@@ -161,6 +162,7 @@ plot.deepregression <- function(
 #' @param convert_fun how should the resulting tensor be converted,
 #' per default \code{as.matrix}
 #'
+#' @export predict.deepregression
 #' @export
 #' @rdname methodDR
 #'
@@ -208,6 +210,7 @@ predict.deepregression <- function(
 #' @param ... further arguments passed to the predict function
 #'
 #' @export
+#' @export fitted.deepregression
 #' @rdname methodDR
 #'
 fitted.deepregression <- function(
@@ -239,7 +242,7 @@ fitted.deepregression <- function(
 #' \code{keras:::fit.keras.engine.training.Model}
 #'
 #'
-#' @export fit deepregression
+#' @export fit.deepregression
 #' @export
 #' 
 #' @rdname methodDR
@@ -349,6 +352,7 @@ fit.deepregression <- function(
 #' @importFrom stats coef
 #' @method coef deepregression
 #' @rdname methodDR
+#' @export coef.deepregression
 #' @export
 #'
 coef.deepregression <- function(
@@ -388,6 +392,8 @@ coef.deepregression <- function(
 #' @param ... unused
 #'
 #' @method print deepregression
+#' @export print.deepregression
+#' @export
 #'
 print.deepregression <- function(
   x,
@@ -706,6 +712,7 @@ log_score <- function(
 #' @param param_nr distribution parameter number
 #' @param postfixes character (vector) appended to layer name
 #' @return weight matrix
+#' @export
 #' 
 #' 
 get_weight_by_name <- function(mod, name, param_nr=1, postfixes="")

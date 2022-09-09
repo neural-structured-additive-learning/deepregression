@@ -29,7 +29,7 @@ ensemble <- function (x, ...) {
 #'     the trained weights of each ensemble member)
 #'
 #' @method ensemble deepregression
-#'
+#' @export ensemble.deepregression
 #' @export
 #'
 ensemble.deepregression <- function(
