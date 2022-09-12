@@ -2,6 +2,7 @@ context("Deep ensembles")
 
 test_that("deep ensemble", {
 
+  set.seed(42)
   n <- 1000
   data <- data.frame(matrix(rnorm(4*n), c(n,4)))
   colnames(data) <- c("x1", "x2", "x3", "xa")
@@ -21,9 +22,9 @@ test_that("deep ensemble", {
   expect_identical(cf_init, cf_post)
 
   edist <- get_ensemble_distribution(ret)
-  nll <- - mean(tfd_log_prob(get_distribution(mod) %>% tfd_independent(), y)$numpy())
+  nll <- .call_for_all_members(ret, \(x) -mean(tfd_log_prob(get_distribution(x) %>% tfd_independent(), y)$numpy()))
   nlle <- - mean(tfd_log_prob(edist %>% tfd_independent(), y)$numpy())
-  expect_lte(nlle, nll)
+  expect_lte(nlle, mean(unlist(nll)))
 
   expect_length(cf <- coef.drEnsemble(ret), 3L)
   expect_equal(dim(cf$x1), c(1, 5))
