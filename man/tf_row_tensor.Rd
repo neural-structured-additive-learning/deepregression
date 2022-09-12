@@ -8,6 +8,11 @@ tf_row_tensor(a, b, ...)
 }
 \arguments{
 \item{a, b}{tensor}
+
+\item{...}{arguments passed to TensorFlow layer}
+}
+\value{
+a TensorFlow layer
 }
 \description{
 Row-wise tensor product using TensorFlow

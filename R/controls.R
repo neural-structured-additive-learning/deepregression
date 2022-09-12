@@ -105,7 +105,6 @@ orthog_control <- function(split_fun = split_model,
 
 #' Options for weights of layers
 #' 
-#' @param len integer; the length of \code{list_of_formulas}
 #' @param specific_weight_options specific options for certain
 #' weight terms; must be a list of length \code{length(list_of_formulas)} and
 #' each element in turn a named list (names are term names as in the formula)

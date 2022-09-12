@@ -1,4 +1,8 @@
-# needed by gam_processor
+#' Orthogonalize structured term by another matrix
+#' @param S matrix; matrix to orthogonalize
+#' @param L matrix; matrix which defines the projection
+#' and its orthogonal complement, in which \code{S} is projected
+#' @return constraint matrix
 #' @export
 orthog_structured_smooths_Z <- function(S,L)
 {
@@ -16,7 +20,10 @@ orthog_structured_smooths_Z <- function(S,L)
   
 }
 
-# needed by gam_processor
+#' Function to compute adjusted penalty when orthogonalizing
+#' @param P matrix; original penalty matrix
+#' @param Z matrix; constraint matrix
+#' @return adjusted penalty matrix
 #' @export
 orthog_P <- function(P,Z)
 {

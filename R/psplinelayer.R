@@ -63,6 +63,14 @@ pe_gen <- function(pp, df, weights){
 
 }
 
+#' Function to define spline as TensorFlow layer
+#' 
+#' @param units integer; number of output units
+#' @param P matrix; penalty matrix
+#' @param name string; string defining the layer's name
+#' @param trainable logical; whether layer is trainable
+#' @param kernel_initializer initializer; for basis coefficients
+#' @return TensorFlow layer
 #' @export
 layer_spline = function(units = 1L, P, name, trainable = TRUE,
                         kernel_initializer = "glorot_uniform") {
@@ -287,7 +295,11 @@ fix_bracket_mismatch <- function(x)
 
 }
 
-#'
+#' Extract the smooth term from a deepregression term specification
+#' @param term term specified in a formula
+#' @param remove_other_options logical; whether to remove other options
+#' withing the smooth term
+#' @return pure gam part of term
 #' @export
 extract_pure_gam_part <- function(term, remove_other_options=TRUE){
 
@@ -355,6 +367,11 @@ create_data_trafos <- function(evaluated_gam_term, controls, xlin)
 
 }
 
+#' Function to create mgcv-type penalty
+#' @param evaluated_gam_term a list resulting from a smoothConstruct call
+#' @param df integer; specified degrees-of-freedom for the gam term
+#' @param controls list; further arguments defining the smooth
+#' @return a list with penalty parameter and penalty matrix
 #' @export
 create_penalty <- function(evaluated_gam_term, df, controls, Z = NULL)
 {
@@ -520,6 +537,11 @@ get_gamdata_nr <- function(term, param_nr, gamdata)
 
 }
 
+#' Extract number in matching table of reduced gam term
+#' @param term term in formula
+#' @param param_nr integer; number of the distribution parameter
+#' @param gamdata list as returned by \code{precalc_gam}
+#' @return integer with number of gam term in matching table
 #' @export
 get_gamdata_reduced_nr <- function(term, param_nr, gamdata){
 
@@ -531,6 +553,12 @@ get_gamdata_reduced_nr <- function(term, param_nr, gamdata){
 
 }
 
+#' Extract property of gamdata
+#' @param term term in formula
+#' @param param_nr integer; number of the distribution parameter
+#' @param gamdata list as returned by \code{precalc_gam}
+#' @param what string specifying what to return
+#' @return property of the gamdata object as defined by \code{what}
 #' @export
 get_gamdata <- function(term, param_nr, gamdata,
                         what = c("data_trafo",

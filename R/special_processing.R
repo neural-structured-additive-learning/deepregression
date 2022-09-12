@@ -137,6 +137,7 @@ process_terms <- function(
 #' 
 #' @return a basic processor list structure
 #' 
+#' @rdname processors
 #' @export
 #' 
 layer_generator <- function(term, output_dim, param_nr, controls, 
@@ -209,6 +210,7 @@ layer_generator <- function(term, output_dim, param_nr, controls,
   
 }
 
+#' @rdname processors
 #' @export
 int_processor <- function(term, data, output_dim, param_nr, controls){
   
@@ -236,6 +238,7 @@ int_processor <- function(term, data, output_dim, param_nr, controls){
   
 }
 
+#' @rdname processors
 #' @export
 lin_processor <- function(term, data, output_dim, param_nr, controls){
   
@@ -274,6 +277,8 @@ lin_processor <- function(term, data, output_dim, param_nr, controls){
   
 }
 
+#' @rdname processors
+#' @export
 gam_processor <- function(term, data, output_dim, param_nr, controls){
   
   output_dim <- as.integer(output_dim)
@@ -572,7 +577,7 @@ const_broadcasting_processor <- function(term, data, output_dim, param_nr, contr
       ret <- c(term, do.call(int_processor, args)) else
         ret <- c(term, do.call(lin_processor, args))
   }else{
-    ret <- c(term, do.call(procs[[spec]], args))
+    ret <- c(term, do.call(controls$procs[[spec]], args))
   }
   
   ret$output_dim = output_dim

@@ -521,9 +521,7 @@ tfd_zinb <- function(mu, r, probs)
   )
 }
 
-#' Implementation of a distribution-like layer for Mean-Variance Regression
-#'
-#' @param predictors a two dimensional predictor for mean and variance
+# Implementation of a distribution-like layer for Mean-Variance Regression
 tfd_mvr <- function(loc, scale, 
                     validate_args = FALSE,
                     allow_nan_stats = TRUE,
@@ -551,6 +549,7 @@ tfd_mvr <- function(loc, scale,
 #' @details \code{deepregression} allows to train based on the
 #' MSE by using \code{loss = "mse"} as argument to \code{deepregression}.
 #' This tfd function just provides a dummy \code{family}
+#' @return a TFP distribution
 #' 
 tfd_mse <- function(mean)
 {

@@ -35,6 +35,8 @@ layer_hadamard = function(units, la, depth, ...) {
 }
 
 layer_group_hadamard = function(units, la, group_idx, depth, ...) {
+  python_path <- system.file("python", package = "deepregression")
+  layers <- reticulate::import_from_path("layers", path = python_path)
   layers$GroupHadamardLayer(units = units, la = la, group_idx = group_idx, depth = depth, ...)
 }
 
@@ -50,13 +52,14 @@ layer_hadamard_diff = function(units, la, initu = "glorot_uniform", initv = "glo
 #' @param kernel_size size of convolutional filter
 #' @param lam regularization strength
 #' @param depth depth of weight factorization
+#' @param ... arguments passed to TensorFlow layer
 #' @return layer object
 #' @export
 #' 
 layer_sparse_conv_2d <- function(filters,
                                  kernel_size,
                                  lam=NULL,
-                                 depth=2,...) {
+                                 depth=2, ...) {
   python_path <- system.file("python", package = "deepregression")
   layers <- reticulate::import_from_path("layers", path = python_path)
   layers$SparseConv2D(filters = filters, kernel_size = kernel_size, lam = lam, depth = depth, ...)

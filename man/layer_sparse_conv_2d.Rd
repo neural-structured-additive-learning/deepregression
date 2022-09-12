@@ -14,6 +14,8 @@ layer_sparse_conv_2d(filters, kernel_size, lam = NULL, depth = 2, ...)
 \item{lam}{regularization strength}
 
 \item{depth}{depth of weight factorization}
+
+\item{...}{arguments passed to TensorFlow layer}
 }
 \value{
 layer object

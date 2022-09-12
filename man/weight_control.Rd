@@ -30,8 +30,6 @@ corresponding to start weights of the respective weights}
 \item{shared_layers}{list for each distribution parameter;
 each list item can be again a list of character vectors specifying terms
 which share layers}
-
-\item{len}{integer; the length of \code{list_of_formulas}}
 }
 \value{
 Returns a list with options

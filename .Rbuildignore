@@ -1,2 +1,11 @@
 ^\.github$
 ^codecov\.yml$
+^.*\.Rproj$
+^\.Rproj\.user$
+.travis.yml
+cran-comments.md
+README.md
+^doc$
+^Meta$
+^figure$
+LICENSE.txt

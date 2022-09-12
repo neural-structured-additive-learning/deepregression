@@ -41,9 +41,13 @@ tf_stride_last_dim_tensor <- function(A, start, end=NULL){
   
 }
 
+#' Split tensor in multiple parts
+#' 
+#' @param A tensor
+#' @param len integer; defines the split lengths
+#' @return list of tensors
+#'
 #' @export
-#'
-#'
 tf_split_multiple <- function(A, len){
   
   ends <- cumsum(len)
@@ -69,6 +73,8 @@ tf_repeat <- function(a, dim)
 #' Row-wise tensor product using TensorFlow
 #' 
 #' @param a,b tensor
+#' @param ... arguments passed to TensorFlow layer
+#' @return a TensorFlow layer
 #' 
 #' @export
 #' 

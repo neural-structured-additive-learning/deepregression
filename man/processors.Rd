@@ -2,6 +2,9 @@
 % Please edit documentation in R/special_processing.R
 \name{layer_generator}
 \alias{layer_generator}
+\alias{int_processor}
+\alias{lin_processor}
+\alias{gam_processor}
 \title{Function that creates layer for each processor}
 \usage{
 layer_generator(
@@ -17,6 +20,12 @@ layer_generator(
   units = as.integer(output_dim),
   ...
 )
+
+int_processor(term, data, output_dim, param_nr, controls)
+
+lin_processor(term, data, output_dim, param_nr, controls)
+
+gam_processor(term, data, output_dim, param_nr, controls)
 }
 \arguments{
 \item{term}{character; term in the formula}

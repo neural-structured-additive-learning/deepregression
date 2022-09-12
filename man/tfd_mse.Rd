@@ -9,6 +9,9 @@ tfd_mse(mean)
 \arguments{
 \item{mean}{parameter for the mean}
 }
+\value{
+a TFP distribution
+}
 \description{
 For using mean squared error via TFP
 }

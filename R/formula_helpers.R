@@ -47,12 +47,16 @@ make_valid_layername <- function(string)
 
 #### helper functions for processors
 
-
+#' Function that takes term and create layer name
+#' @param term term in formula
+#' @param param_nr integer; defining number of the distribution's parameter
+#' @param truncate integer; value from which on names are truncated
+#' @return name (string) for layer
 #' @export
 makelayername <- function(term, param_nr, truncate = 60)
 {
 
-  if(class(term)=="formula") 
+  if(inherits(term,"formula"))
     term <- form2text(term)
   if(grepl("const\\(", term)) 
     term <- gsub("const\\((.*?)\\)", "\\1", term) 
@@ -61,6 +65,11 @@ makelayername <- function(term, param_nr, truncate = 60)
 
 }
 
+#' Extract variable from term
+#' @param term term specified in formula
+#' @param allow_ia logical; whether to allow interaction of terms
+#' using the \code{:} notation
+#' @return variable as string
 #' @export
 extractvar <- function(term, allow_ia = FALSE)
 {
@@ -144,6 +153,12 @@ form2text <- function(form)
 
 }
 
+#' Extract terms defined by specials in formula
+#' @param term term in formula
+#' @param specials string(s); special name(s)
+#' @param simplify logical; shortcut for returning only
+#' the name of the special in term
+#' @return specials in formula
 #' @export
 get_special <- function(term, specials, simplify = FALSE)
 {
@@ -160,6 +175,9 @@ get_special <- function(term, specials, simplify = FALSE)
 }
 
 
+#' Extract processor name from term
+#' @param term term in formula
+#' @return processor name as string
 #' @export
 get_processor_name <- function(term)
 {

@@ -348,7 +348,13 @@ get_type_pfc <- function(pfc, type = NULL)
   
 }
 
+#' Function to combine two penalties
+#' 
+#' @param penalties a list of penalties
+#' @param dims dimensions of the parameters to penalize
+#' @return a TensorFlow penalty combining the two penalties
 #' @export
+#' 
 combine_penalties <- function(penalties, dims)
 {
   
