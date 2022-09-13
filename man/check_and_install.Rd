@@ -16,6 +16,6 @@ and contains TensorFlow. If not the recommended version is installed.
 \description{
 If you encounter problems with installing the required python modules
 please make sure, that a correct python version is configured using
-`py_discover_config` and change the python version if required.
-Internally uses keras::install_keras.
+\code{py_discover_config} and change the python version if required.
+Internally uses \code{keras::install_keras}.
 }

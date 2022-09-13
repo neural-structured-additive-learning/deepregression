@@ -34,8 +34,7 @@ orthog <- function(Y, Q)
 {
 
   X_XtXinv_Xt <- tf$linalg$matmul(Q,tf$linalg$matrix_transpose(Q))
-  Yorth <- Y - tf$linalg$matmul(X_XtXinv_Xt, Y)
-  return(Yorth)
+  return(Y - tf$linalg$matmul(X_XtXinv_Xt, Y))
 
 }
 
@@ -44,7 +43,7 @@ orthog_tf <- function(Y, X)
   
   Q = tf$linalg$qr(X, full_matrices=TRUE, name="QR")$q
   X_XtXinv_Xt <- tf$linalg$matmul(Q,tf$linalg$matrix_transpose(Q))
-  Yorth <- tf$subtract(Y, tf$linalg$matmul(X_XtXinv_Xt, Y))
+  return(tf$subtract(Y, tf$linalg$matmul(X_XtXinv_Xt, Y)))
   
 }
 

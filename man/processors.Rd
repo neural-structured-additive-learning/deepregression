@@ -56,6 +56,8 @@ provide the arguments of a default Dense layer.}
 \item{units}{integer; number of units for layer}
 
 \item{...}{other keras layer parameters}
+
+\item{data}{data frame; the data used in processors}
 }
 \value{
 a basic processor list structure

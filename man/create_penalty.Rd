@@ -12,6 +12,8 @@ create_penalty(evaluated_gam_term, df, controls, Z = NULL)
 \item{df}{integer; specified degrees-of-freedom for the gam term}
 
 \item{controls}{list; further arguments defining the smooth}
+
+\item{Z}{matrix; matrix for constraint(s)}
 }
 \value{
 a list with penalty parameter and penalty matrix

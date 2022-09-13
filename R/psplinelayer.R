@@ -371,6 +371,7 @@ create_data_trafos <- function(evaluated_gam_term, controls, xlin)
 #' @param evaluated_gam_term a list resulting from a smoothConstruct call
 #' @param df integer; specified degrees-of-freedom for the gam term
 #' @param controls list; further arguments defining the smooth
+#' @param Z matrix; matrix for constraint(s)
 #' @return a list with penalty parameter and penalty matrix
 #' @export
 create_penalty <- function(evaluated_gam_term, df, controls, Z = NULL)
@@ -414,7 +415,7 @@ precalc_gam <- function(lof, data, controls)
 {
 
   tfs <- lapply(lof, function(form) terms.formula(form, specials = c("s", "te", "ti")))
-  termstrings <- lapply(tfs, function(tf) trmstrings <- attr(tf, "term.labels"))
+  termstrings <- lapply(tfs, function(tf) attr(tf, "term.labels"))
   # split % % parts
   termstrings <- lapply(termstrings, function(tfs) unlist(sapply(tfs, function(tf)
     trimws(strsplit(tf, split = "%.*%")[[1]]))))

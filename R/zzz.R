@@ -29,8 +29,8 @@
 #'
 #' If you encounter problems with installing the required python modules
 #' please make sure, that a correct python version is configured using
-#' `py_discover_config` and change the python version if required.
-#' Internally uses keras::install_keras.
+#' \code{py_discover_config} and change the python version if required.
+#' Internally uses \code{keras::install_keras}.
 #'
 #' @param force if TRUE, forces the installations
 #' @return Function that checks if a Python environment is available
@@ -46,7 +46,7 @@ check_and_install <- function(force = FALSE) {
     message("Tensorflow found, skipping tensorflow installation!")
     if (!reticulate::py_module_available("tensorflow_probability") || 
         !reticulate::py_module_available("six")) {
-      message("Installing pytho modules 'tfprobability' and 'six'") # nocov
+      message("Installing python modules 'tfprobability' and 'six'") # nocov
       reticulate::py_install(packages = c("tensorflow-probability==0.16", "six")) # nocov
     }
   }

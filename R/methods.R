@@ -462,10 +462,7 @@ cv.deepregression <- function(
       cv_folds)
   }
   
-  nrfolds <- length(cv_folds)
   old_weights <- x$model$get_weights()
-
-  if(print_folds) folds_iter <- 1
 
   # subset fun
   if(NCOL(x$init_params$y)==1)

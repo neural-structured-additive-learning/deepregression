@@ -133,6 +133,7 @@ process_terms <- function(
 #' layer args will be used. Needs to be set for layers that do not
 #' provide the arguments of a default Dense layer.
 #' @param units integer; number of units for layer
+#' @param data data frame; the data used in processors
 #' @param ... other keras layer parameters
 #' 
 #' @return a basic processor list structure
