@@ -7,7 +7,9 @@
 #' @export
 #' @rdname hadamard_layers
 #' @examples 
-#' l1_layer <- tib_layer(units = 1L, la = 0.1)
+#' require(tensorflow){
+#'   l1_layer <- tib_layer(units = 1L, la = 0.1)
+#' }
 tib_layer = function(units, la, ...) {
   python_path <- system.file("python", package = "deepregression")
   layers <- reticulate::import_from_path("layers", path = python_path)
