@@ -4,7 +4,10 @@
   if(!reticulate::py_available())
   {
     res <- suppressMessages(reticulate::configure_environment(pkgname))
-    if(res){
+    if(res & requireNamespace("tensorflow", quietly = TRUE) & 
+       requireNamespace("keras", quietly = TRUE)){
+      suppressMessages(try(tf$compat$v1$logging$set_verbosity(
+        tf$compat$v1$logging$ERROR)))
       suppressMessages(try(tf$get_logger()$setLevel('ERROR')))
       suppressMessages(try(tf$autograph$set_verbosity(level=0L)))
       suppressMessages(try(keras::use_implementation("tensorflow"), silent = TRUE))

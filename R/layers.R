@@ -1,45 +1,75 @@
+#' Hadamard-type layers
+#' 
+#' @param units integer; number of units
+#' @param la numeric; regularization value (> 0)
+#' @param ... arguments passed to TensorFlow layer
+#' @return layer object
+#' @export
+#' @rdname hadamard_layers
+#' @examples 
+#' l1_layer <- tib_layer(units = 1L, la = 0.1)
 tib_layer = function(units, la, ...) {
   python_path <- system.file("python", package = "deepregression")
   layers <- reticulate::import_from_path("layers", path = python_path)
   layers$TibLinearLasso(units = units, la = la, ...)
 }
 
+#' @export
+#' @rdname hadamard_layers
 simplyconnected_layer = function(la, ...) {
   python_path <- system.file("python", package = "deepregression")
   layers <- reticulate::import_from_path("layers", path = python_path)
   layers$SimplyConnected(la = la, ...)
 }
 
+#' @export
+#' @rdname hadamard_layers
 inverse_group_lasso_pen = function(la) {
   python_path <- system.file("python", package = "deepregression")
   layers <- reticulate::import_from_path("layers", path = python_path)
   layers$inverse_group_lasso_pen(la = la)
 } 
 
+#' @param group_idx list of group indices
+#' @export
+#' @rdname hadamard_layers
 regularizer_group_lasso = function(la, group_idx) {
   python_path <- system.file("python", package = "deepregression")
   layers <- reticulate::import_from_path("layers", path = python_path)
   layers$ExplicitGroupLasso(la = la, group_idx = group_idx)
 }
 
+#' @param group_idx list of group indices
+#' @export
+#' @rdname hadamard_layers
 tibgroup_layer = function(units, group_idx, la, ...) {
   python_path <- system.file("python", package = "deepregression")
   layers <- reticulate::import_from_path("layers", path = python_path)
   layers$TibGroupLasso(units = units, group_idx = group_idx, la = la, ...)
 }
 
+#' @param depth integer; depth of the paramterization
+#' @export
+#' @rdname hadamard_layers
 layer_hadamard = function(units, la, depth, ...) {
   python_path <- system.file("python", package = "deepregression")
   layers <- reticulate::import_from_path("layers", path = python_path)
   layers$HadamardLayer(units = units, la = la, depth = depth, ...)
 }
 
+#' @param group_idx list of group indices
+#' @param depth integer; depth of the paramterization
+#' @export
+#' @rdname hadamard_layers
 layer_group_hadamard = function(units, la, group_idx, depth, ...) {
   python_path <- system.file("python", package = "deepregression")
   layers <- reticulate::import_from_path("layers", path = python_path)
   layers$GroupHadamardLayer(units = units, la = la, group_idx = group_idx, depth = depth, ...)
 }
 
+#' @param initu,initv initializers for parameters
+#' @export
+#' @rdname hadamard_layers
 layer_hadamard_diff = function(units, la, initu = "glorot_uniform", initv = "glorot_uniform", ...) {
   python_path <- system.file("python", package = "deepregression")
   layers <- reticulate::import_from_path("layers", path = python_path)

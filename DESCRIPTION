@@ -15,19 +15,20 @@ Config/reticulate:
   list(
     packages = list(
       list(package = "six", pip = TRUE),
-      list(package = "tensorflow", version = "2.8.0", pip = TRUE),
+      list(package = "tensorflow", version = "2.10.0", pip = TRUE),
       list(package = "tensorflow_probability", version = "0.16", pip = TRUE),
-      list(package = "keras", version = "2.8.0", pip = TRUE))
+      list(package = "keras", version = "2.10.0", pip = TRUE))
   )
-Depends: R (>= 4.0.0)
+Depends: 
+    R (>= 4.0.0),
+    tensorflow (>= 2.2.0),
+    tfprobability,
+    keras (>= 2.2.0)
 Suggests:
     testthat,
     knitr,
     covr
 Imports:
-    tensorflow (>= 2.2.0),
-    tfprobability,
-    keras (>= 2.2.0),
     mgcv,
     dplyr,
     R6,
