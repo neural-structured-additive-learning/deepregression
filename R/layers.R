@@ -61,6 +61,7 @@ layer_hadamard = function(units, la, depth, ...) {
 #' @param depth integer; depth of the paramterization
 #' @export
 #' @rdname hadamard_layers
+
 layer_group_hadamard = function(units, la, group_idx, depth, ...) {
   python_path <- system.file("python", package = "deepregression")
   layers <- reticulate::import_from_path("layers", path = python_path)
@@ -74,6 +75,20 @@ layer_hadamard_diff = function(units, la, initu = "glorot_uniform", initv = "glo
   python_path <- system.file("python", package = "deepregression")
   layers <- reticulate::import_from_path("layers", path = python_path)
   layers$HadamardDiffLayer(units = units, la = la, initu = initu, initv = initv, ...)
+}
+
+#' Hadamard Layer
+#' 
+#' @param units number of units in layer
+#' @param la regularization strength
+#' @param depth depth of weight factorization
+#' @return layer object
+#' @export
+#' 
+layer_hadamard = function(units=1, la=0, depth=3, ...) {
+  python_path <- system.file("python", package = "deepregression")
+  layers <- reticulate::import_from_path("layers", path = python_path)
+  layers$HadamardLayer(units = units, la = la, depth = depth, ...)
 }
 
 #' Sparse 2D Convolutional layer
