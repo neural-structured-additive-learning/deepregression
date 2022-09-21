@@ -21,7 +21,7 @@ regularizer_group_lasso(la, group_idx)
 
 tibgroup_layer(units, group_idx, la, ...)
 
-layer_hadamard(units, la, depth, ...)
+layer_hadamard(units = 1, la = 0, depth = 3, ...)
 
 layer_group_hadamard(units, la, group_idx, depth, ...)
 
@@ -32,6 +32,8 @@ layer_hadamard_diff(
   initv = "glorot_uniform",
   ...
 )
+
+layer_hadamard(units = 1, la = 0, depth = 3, ...)
 }
 \arguments{
 \item{units}{integer; number of units}
@@ -42,7 +44,7 @@ layer_hadamard_diff(
 
 \item{group_idx}{list of group indices}
 
-\item{depth}{integer; depth of the paramterization}
+\item{depth}{integer; depth of weight factorization}
 
 \item{initu, initv}{initializers for parameters}
 }
@@ -51,7 +53,4 @@ layer object
 }
 \description{
 Hadamard-type layers
-}
-\examples{
-l1_layer <- tib_layer(units = 1L, la = 0.1)
 }

@@ -6,10 +6,6 @@
 #' @return layer object
 #' @export
 #' @rdname hadamard_layers
-#' @examples 
-#' require(tensorflow){
-#'   l1_layer <- tib_layer(units = 1L, la = 0.1)
-#' }
 tib_layer = function(units, la, ...) {
   python_path <- system.file("python", package = "deepregression")
   layers <- reticulate::import_from_path("layers", path = python_path)
@@ -41,7 +37,6 @@ regularizer_group_lasso = function(la, group_idx) {
   layers$ExplicitGroupLasso(la = la, group_idx = group_idx)
 }
 
-#' @param group_idx list of group indices
 #' @export
 #' @rdname hadamard_layers
 tibgroup_layer = function(units, group_idx, la, ...) {
@@ -50,7 +45,6 @@ tibgroup_layer = function(units, group_idx, la, ...) {
   layers$TibGroupLasso(units = units, group_idx = group_idx, la = la, ...)
 }
 
-#' @param depth integer; depth of the paramterization
 #' @export
 #' @rdname hadamard_layers
 layer_hadamard = function(units, la, depth, ...) {
@@ -59,11 +53,8 @@ layer_hadamard = function(units, la, depth, ...) {
   layers$HadamardLayer(units = units, la = la, depth = depth, ...)
 }
 
-#' @param group_idx list of group indices
-#' @param depth integer; depth of the paramterization
 #' @export
 #' @rdname hadamard_layers
-
 layer_group_hadamard = function(units, la, group_idx, depth, ...) {
   python_path <- system.file("python", package = "deepregression")
   layers <- reticulate::import_from_path("layers", path = python_path)
@@ -79,12 +70,8 @@ layer_hadamard_diff = function(units, la, initu = "glorot_uniform", initv = "glo
   layers$HadamardDiffLayer(units = units, la = la, initu = initu, initv = initv, ...)
 }
 
-#' Hadamard Layer
-#' 
-#' @param units number of units in layer
-#' @param la regularization strength
-#' @param depth depth of weight factorization
-#' @return layer object
+#' @param depth integer; depth of weight factorization
+#' @rdname hadamard_layers
 #' @export
 #' 
 layer_hadamard = function(units=1, la=0, depth=3, ...) {
