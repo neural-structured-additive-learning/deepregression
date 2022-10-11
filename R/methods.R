@@ -291,7 +291,7 @@ fit.deepregression <- function(
       x = prepare_newdata(object$init_params$parsed_formulas_content, 
                           validation_data[[1]], 
                           gamdata = object$init_params$gamdata$data_trafos),
-      y = as.matrix(validation_data[[2]], ncol=1)
+      y = object$init_params$prepare_y_valdata(validation_data[[2]])
     )
 
   if(length(object$init_params$image_var)>0){
@@ -693,8 +693,10 @@ log_score <- function(
   if(is.null(this_y)){
     this_y <- x$init_params$y
   }else{
-    if(is.null(dim(this_y)))
-      warning("log-score calculation requires this_y to be a matrix.")
+    if(is.null(dim(this_y))){
+      warning("Meaningful log-score calculations require this_y to be a matrix (forced now).")
+     this_y <- as.matrix(this_y) 
+    }
   }
   
   return(summary_fun(convert_fun(

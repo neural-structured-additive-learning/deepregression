@@ -1,5 +1,13 @@
 #' @importFrom stats na.omit
 
+VERSIONPY = "3.10"
+VERSIONTF = "2.8"
+VERSIONKERAS = "2.8"
+VERSIONTFP = "0.16"
+
+create_package_name <- function(package, version)
+  paste(package, version, sep="==")
+
 .onLoad <- function(libname, pkgname) { # nocov start
   if(suppressMessages(!reticulate::py_available()))
   {
@@ -42,14 +50,48 @@
 #' @export
 check_and_install <- function(force = FALSE) {
   if (!reticulate::py_module_available("tensorflow") || force) {
-    keras::install_keras(version = "2.8.0", tensorflow = "2.8.0", 
-                         extra_packages = c("tensorflow_probability==0.16", "six")) # nocov
+    keras::install_keras(version = VERSIONKERAS, tensorflow = VERSIONTF, 
+                         extra_packages = c(create_package_name("tensorflow_probability", VERSIONTFP),
+                                            "six")) # nocov
   } else {
     message("Tensorflow found, skipping tensorflow installation!")
     if (!reticulate::py_module_available("tensorflow_probability") || 
         !reticulate::py_module_available("six")) {
       message("Installing python modules 'tfprobability' and 'six'") # nocov
-      reticulate::py_install(packages = c("tensorflow-probability==0.16", "six")) # nocov
+      reticulate::py_install(packages = c(create_package_name("tensorflow_probability", VERSIONTFP), 
+                                          "six")) # nocov
     }
   }
+}
+
+#' Function to update miniconda and packages
+#' 
+#' @param python string; version of python
+#' @param uninstall logical; whether to uninstall previous conda env
+#' @param also_packages logical; whether to install also all required packages
+#' 
+update_miniconda_deepregression <- function(python = VERSIONPY, 
+                                            uninstall = TRUE,
+                                            also_packages = TRUE)
+{
+  
+  if(uninstall) reticulate::miniconda_uninstall()
+  
+  Sys.setenv(RETICULATE_MINICONDA_PYTHON_VERSION=python)
+  reticulate::install_miniconda()
+  
+  if(also_packages){
+
+    conda_install(packages=c(create_package_name("tensorflow", VERSIONTF),
+                             create_package_name("keras", VERSIONKERAS),
+                             create_package_name("tensorflow-probability", VERSIONTFP)),
+                  python_version = VERSIONPY)
+    # tensorflow::install_tensorflow(version = VERSIONTF)
+    # keras::install_keras(version = VERSIONKERAS, tensorflow = VERSIONTF,
+    #                      extra_packages = c(create_package_name("tensorflow_probability", VERSIONTFP),
+    #                                         "six"))
+    
+  }
+  # maybe requires a final sudo apt-get dist-upgrade
+  
 }

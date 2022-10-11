@@ -333,7 +333,8 @@ deepregression <- function(
                   family = family,
                   penalty_options = penalty_options,
                   orthog_options = orthog_options,
-                  image_var = image_var
+                  image_var = image_var,
+                  prepare_y_valdata = function(x) as.matrix(x)
                 ),
               fit_fun = fitting_function)
 
