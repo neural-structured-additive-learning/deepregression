@@ -130,11 +130,11 @@ deepregression <- function(
     invisible(return(NULL))
   }
 
-  if(!py_module_available("tensorflow"))
-  {
-    message("Tensorflow not available. Use install_tensorflow().")
-    invisible(return(NULL))
-  }
+  # if(!reticulate::py_module_available("tensorflow"))
+  # {
+  #   message("Tensorflow not available. Use install_tensorflow().")
+  #   invisible(return(try(import("tensorflow"))))
+  # }
 
   # convert data.frame to list
   if(is.data.frame(data)){

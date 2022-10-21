@@ -82,7 +82,7 @@ update_miniconda_deepregression <- function(python = VERSIONPY,
   
   if(also_packages){
 
-    conda_install(packages=c(create_package_name("tensorflow", VERSIONTF),
+    reticulate::conda_install(packages=c(create_package_name("tensorflow", VERSIONTF),
                              create_package_name("keras", VERSIONKERAS),
                              create_package_name("tensorflow-probability", VERSIONTFP)),
                   python_version = VERSIONPY)

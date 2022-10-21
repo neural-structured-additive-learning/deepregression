@@ -85,8 +85,8 @@ tf_row_tensor <- function(a, b, ...)
   #   tf_row_tensor_right_part(a,b)
   # )
   python_path <- system.file("python", package = "deepregression")
-  misc <- reticulate::import_from_path("misc", path = python_path)
-  misc$RowTensor(...)(list(a, b))
+  tffuns <- reticulate::import_from_path("tffuns", path = python_path)
+  tffuns$RowTensor(...)(list(a, b))
 }
 
 tf_row_tensor_left_part <- function(a,b)
