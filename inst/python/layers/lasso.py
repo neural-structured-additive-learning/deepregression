@@ -197,7 +197,7 @@ class HadamardLayer(tf.keras.layers.Layer):
 
 # grouping layer followed by diagonal layers followed by FC output
 class GroupHadamardLayer(tf.keras.layers.Layer):
-    def __init__(self, units=1, group_idx=None, la=0, depth=3, kernel_initializer=tf.keras.initializers.HeNormal, multfac_initializer=tf.initializers.Ones, **kwargs):
+    def __init__(self, units=1, group_idx=None, la=0, depth=3, kernel_initializer=tf.initializers.Ones, multfac_initializer=tf.keras.initializers.HeNormal, **kwargs):
         super(GroupHadamardLayer, self).__init__(**kwargs)
         self.units = units
         self.la = la
