@@ -1,8 +1,8 @@
 #' @importFrom stats na.omit
 
 VERSIONPY = "3.10"
-VERSIONTF = "2.8"
-VERSIONKERAS = "2.8"
+VERSIONTF = "2.10"
+VERSIONKERAS = "2.10"
 VERSIONTFP = "0.16"
 
 create_package_name <- function(package, version)
@@ -28,6 +28,8 @@ create_package_name <- function(package, version)
       tfp <<- reticulate::import("tensorflow_probability", delay_load = TRUE)
     }
     
+  }else{
+    tf <- reticulate::import("tensorflow")
   } # nocov end
   # options
   options(orthogonalize = TRUE,
