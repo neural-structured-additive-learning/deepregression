@@ -204,13 +204,17 @@ separate_define_relation <- function(
     for(k in 1:length(terms_right[[i]])){
       
       is_already_left <- is_equal_not_null(terms_right[[i]][[k]], sapply(terms, "[[", "term"))
+      if(terms_right[[i]][[k]]==".")
+        is_already_left <- seq_along(terms_right) != i
       is_already_right <- FALSE
       if(length(add_terms)>0)
         is_already_right <- is_equal_not_null(terms_right[[i]][[k]], 
                                               sapply(add_terms, "[[", "term"))
       if(any(is_already_left)){
-        terms[[which(is_already_left)]]$right_from_oz <- 
-          c(terms[[which(is_already_left)]]$right_from_oz, i)
+        for(m in 1:sum(is_already_left)){
+          terms[[which(is_already_left)[m]]]$right_from_oz <- 
+            c(terms[[which(is_already_left)[m]]]$right_from_oz, i) 
+        }
       }else if(any(is_already_right)){
         add_terms[[which(is_already_right)]]$right_from_oz <- 
           c(add_terms[[which(is_already_right)]]$right_from_oz, i)

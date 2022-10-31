@@ -76,6 +76,8 @@ penalty_control <- function(defaultSmoothing = NULL,
 #' to make the intercept identifiable
 #' @param deep_top function; optional function to put on top of the deep network instead
 #' of splitting the function using \code{split_fun}
+#' @param orthog_fun function; for custom orthogonaliuation. if NULL, \code{orthog_type} 
+#' is used to define the function that computes the orthogonalization
 #' @return Returns a list with options
 #' @export
 #'
@@ -83,16 +85,18 @@ orthog_control <- function(split_fun = split_model,
                            orthog_type = c("tf", "manual"),
                            orthogonalize = options()$orthogonalize,
                            identify_intercept = options()$identify_intercept,
-                           deep_top = NULL)
+                           deep_top = NULL,
+                           orthog_fun = NULL)
 {
   
   # check orthog type
   orthog_type <- match.arg(orthog_type)
   
   # define orthogonalization function
-  orthog_fun <- switch(orthog_type,
-                       tf = orthog_tf,
-                       manual = orthog)
+  if(is.null(orthog_fun))
+    orthog_fun <- switch(orthog_type,
+                         tf = orthog_tf,
+                         manual = orthog)
   
   return(list(split_fun = split_fun,
               orthog_type = orthog_type,
