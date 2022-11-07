@@ -9,7 +9,8 @@ orthog_control(
   orthog_type = c("tf", "manual"),
   orthogonalize = options()$orthogonalize,
   identify_intercept = options()$identify_intercept,
-  deep_top = NULL
+  deep_top = NULL,
+  orthog_fun = NULL
 )
 }
 \arguments{
@@ -32,6 +33,9 @@ to make the intercept identifiable}
 
 \item{deep_top}{function; optional function to put on top of the deep network instead
 of splitting the function using \code{split_fun}}
+
+\item{orthog_fun}{function; for custom orthogonaliuation. if NULL, \code{orthog_type} 
+is used to define the function that computes the orthogonalization}
 }
 \value{
 Returns a list with options

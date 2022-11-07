@@ -207,6 +207,19 @@ prepare_generator_deepregression <- function(
   
 }
 
+#' Generator function for deepregression objects
+#' 
+#' @param object deepregression model;
+#' @param newdata data.frame or list; for (optional) new data
+#' @param batch_size integer; \code{NULL} will use the default (20)
+#' @param apply_fun see \code{?predict.deepregression}
+#' @param convert_fun see \code{?predict.deepregression}
+#' @param ret_dist logical; whether to return the whole distribution or
+#' only the (mean) prediction
+#' 
+#' @return matrix or list of distributions
+#' @export
+#' 
 predict_gen <- function(
   object,
   newdata = NULL,
