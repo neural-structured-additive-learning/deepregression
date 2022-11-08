@@ -305,6 +305,13 @@ get_X_lin_newdata <- function(linname, newdata)
   
 }
 
+#' Extract term names from the parsed formula content
+#' 
+#' @param pfc parsed formula content
+#' 
+#' @return vector of term names
+#' @export
+#' 
 get_names_pfc <- function(pfc) sapply(pfc, "[[", "term")
 
 #### used in fit.deepregression
