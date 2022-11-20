@@ -41,7 +41,7 @@ orthog <- function(Y, Q)
 orthog_tf <- function(Y, X)
 {
   
-  Q = tf$linalg$qr(X, full_matrices=TRUE, name="QR")$q
+  Q = tf$linalg$qr(X, full_matrices=FALSE, name="QR")$q
   X_XtXinv_Xt <- tf$linalg$matmul(Q,tf$linalg$matrix_transpose(Q))
   return(tf$subtract(Y, tf$linalg$matmul(X_XtXinv_Xt, Y)))
   

@@ -532,7 +532,8 @@ precalc_gam <- function(lof, data, controls)
 get_gamdata_nr <- function(term, param_nr, gamdata)
 {
 
-  which(sapply(gamdata$matching_table, "[[", "term") == gsub(" ", "", term, fixed=T) &
+  which(sapply(gamdata$matching_table, "[[", "term") == 
+          gsub(" ", "", gsub("\n", "", term, fixed = T), fixed=T) &
           sapply(gamdata$matching_table, "[[", "param_nr") == param_nr
   )
 
