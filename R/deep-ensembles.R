@@ -45,6 +45,7 @@ ensemble.deepregression <- function(
   save_weights = TRUE,
   callbacks = list(),
   save_fun = NULL,
+  seed = seq_len(n_ensemble),
   ...
 )
 {
@@ -55,7 +56,7 @@ ensemble.deepregression <- function(
 
     # Randomly initialize weights
     if (reinitialize)
-      x <- reinit_weights(x)
+      x <- reinit_weights(x, seed[iter])
     else
       set_weights(x$model, original_weights)
 
@@ -219,7 +220,7 @@ fitted.drEnsemble <- function(object, apply_fun = tfd_mean, ...) {
 #' @param object model to re-initialize
 #' @export
 #'
-reinit_weights <- function(object) {
+reinit_weights <- function(object, seed) {
   UseMethod("reinit_weights")
 }
 
@@ -233,12 +234,13 @@ reinit_weights <- function(object) {
 #'
 #' @export
 #'
-reinit_weights.deepregression <- function(object) {
+reinit_weights.deepregression <- function(object, seed) {
   lapply(object$model$layers, function(x) {
     # x$build(x$input_shape)
     dtype <- x$dtype
     dshape <- try(x$kernel$shape, silent = TRUE)
-    dweight <- try(x$kernel_initializer(shape = dshape, dtype = dtype), silent = TRUE)
+    dweight <- try(x$kernel_initializer(shape = dshape, dtype = dtype,
+                                        seed = seed), silent = TRUE)
     try(x$set_weights(weights = list(dweight)), silent = TRUE)
   })
 
