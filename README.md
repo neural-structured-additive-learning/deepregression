@@ -73,7 +73,7 @@ For the software, please cite:
       eprint={2104.02705},
       archivePrefix={arXiv},
       journal={Journal of Statistical Software},
-      note={Provisionally Accepted}
+      note={Accepted}
     }
 
 # How to use this?
