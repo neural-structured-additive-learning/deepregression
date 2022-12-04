@@ -1,6 +1,6 @@
 Package: deepregression
 Title: Fitting Deep Distributional Regression
-Version: 0.3
+Version: 0.3.1
 Authors@R: c(
     person("David", "Ruegamer", , "david.ruegamer@gmail.com", role = c("aut", "cre")),
     person("Florian", "Pfisterer", , "florian.pfisterer@stat.uni-muenchen.de", role = c("ctb")),

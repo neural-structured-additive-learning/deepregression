@@ -162,7 +162,9 @@ separate_define_relation <- function(
       trmstrings[!no_changes] <- mapply(function(x,y) paste0(x, y), 
                                         trmstrings[!no_changes],
                                         oz_to_add[!no_changes])
-      form <- as.formula(paste0("~ ", paste(trmstrings, collapse = " + ")))
+      formf <- paste(trmstrings, collapse = " + ")
+      if(!has_intercept) formf <- paste0("-1 + ", formf)
+      form <- as.formula(paste0("~ ", formf))
       return(separate_define_relation(form, specials = specials, 
                                       specials_to_oz = specials_to_oz,
                                       automatic_oz_check = FALSE))
