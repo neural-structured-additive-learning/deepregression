@@ -16,7 +16,7 @@ test_that("deep ensemble", {
   )
 
   cf_init <- coef(mod)
-  ret <- ensemble(mod, epochs = 10, save_weights = TRUE)
+  ret <- ensemble(mod, epochs = 10, save_weights = TRUE, verbose = TRUE)
   cf_post <- coef(mod)
 
   expect_identical(cf_init, cf_post)
@@ -60,12 +60,15 @@ test_that("reinitializing weights", {
     )
   )
 
+  reinit_weights(mod, seed = 1)
   cfa <- coef(mod)
-  reinit_weights(mod)
+  reinit_weights(mod, seed = 2)
   cfb <- coef(mod)
 
+  expect_false(all(cfa[[1]] == cfb[[1]]))
+
   fit(mod, epochs = 2)
-  reinit_weights(mod)
+  reinit_weights(mod, seed = 3)
   fit(mod, epochs = 2)
 
   expect_identical(cfa$x1, cfb$x1)

@@ -5,3 +5,4 @@ tests/testthat/*.pdf
 *.pyc
 */__pycache__
 *.cpython
+.Rproj.user
