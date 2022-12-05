@@ -238,11 +238,13 @@ reinit_weights.deepregression <- function(object, seed) {
   lapply(object$model$layers, function(x) {
     # x$build(x$input_shape)
     dtype <- x$dtype
-    dshape <- try(x$kernel$shape, silent = TRUE)
-    dweight <- try(x$kernel_initializer(shape = dshape, dtype = dtype,
-                                        seed = seed), silent = TRUE)
-    try(x$set_weights(weights = list(dweight)), silent = TRUE)
+    try({
+      dshape <- x$kernel$shape
+      dinit <- x$kernel_initializer$from_config(
+        config = list(seed = tf$constant(seed)))
+      dweight <- dinit(shape = dshape, dtype = dtype)
+      x$set_weights(weights = list(dweight))
+    }, silent = TRUE)
   })
-
   return(invisible(object))
 }
