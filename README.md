@@ -58,10 +58,11 @@ again, directly after starting your R session.
 For the methodology, please cite the following preprint:
 
     @article{rugamer2020unifying,
-      title={Semi-Structured Deep Distributional Regression: Combining Structured Additive Models and Deep Learning},
+      title={Semi-Structured Deep Distributional Regression},
       author={R{\"u}gamer, David and Kolb, Chris and Klein, Nadja},
-      journal={arXiv preprint arXiv:2002.05777},
-      year={2020}
+      journal={The American Statistician},
+      year={2023},
+      note={Accepted}
     }
     
 For the software, please cite:
