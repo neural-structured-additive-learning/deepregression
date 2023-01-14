@@ -17,6 +17,7 @@
   save_weights = TRUE,
   callbacks = list(),
   save_fun = NULL,
+  seed = seq_len(n_ensemble),
   ...
 )
 }

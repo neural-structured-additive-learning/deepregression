@@ -38,12 +38,21 @@ orthog <- function(Y, Q)
 
 }
 
-orthog_tf <- function(Y, X)
+orthog_tf_fun <- function(Y, X)
 {
   
   Q = tf$linalg$qr(X, full_matrices=FALSE, name="QR")$q
   X_XtXinv_Xt <- tf$linalg$matmul(Q,tf$linalg$matrix_transpose(Q))
   return(tf$subtract(Y, tf$linalg$matmul(X_XtXinv_Xt, Y)))
+  
+}
+
+orthog_tf <- function(Y, X, deactivate_at_test = TRUE)
+{
+  
+  python_path <- system.file("python", package = "deepregression")
+  layers <- reticulate::import_from_path("layers", path = python_path)
+  return(layers$Orthogonalization(deactivate_at_test = deactivate_at_test)(Y, X))
   
 }
 

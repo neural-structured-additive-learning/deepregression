@@ -35,6 +35,6 @@ test_that("orthog_control", {
                c("%>%", "x", "layer_dense(1)"))
   
   expect_true(is.null(oc$deep_top))
-  expect_equal(oc$orthog_fun, orthog_tf)
+  expect_equal(get("deactivate_oz_at_test", environment(oc$orthog_fun)), TRUE)
   
 })

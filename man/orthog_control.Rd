@@ -10,7 +10,8 @@ orthog_control(
   orthogonalize = options()$orthogonalize,
   identify_intercept = options()$identify_intercept,
   deep_top = NULL,
-  orthog_fun = NULL
+  orthog_fun = NULL,
+  deactivate_oz_at_test = TRUE
 )
 }
 \arguments{
@@ -36,6 +37,9 @@ of splitting the function using \code{split_fun}}
 
 \item{orthog_fun}{function; for custom orthogonaliuation. if NULL, \code{orthog_type} 
 is used to define the function that computes the orthogonalization}
+
+\item{deactivate_oz_at_test}{logical; whether to deactive the orthogonalization cell
+at test time when using \code{orthog_tf} for \code{orthog_fun} (the default).}
 }
 \value{
 Returns a list with options

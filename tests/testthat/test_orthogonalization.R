@@ -121,3 +121,76 @@ test_that("custom orthogonalization", {
     expect_true(!any(is.nan(res)))
   }
 })
+
+test_that("orthogonalization at test time", {
+  
+  set.seed(24)
+  n <- 500
+  b0 <- 1
+  x <- runif(n) %>% as.matrix()
+  z <- runif(n)
+  fac <- gl(10, n/10)
+  true_mean_fun <- function(xx) sin(10*xx) + b0
+  # training data
+  y <- true_mean_fun(x) + rnorm(n = n, mean = 0, sd = 2)
+  data = data.frame(x = x, fac = fac, z = z)
+  
+  deep_model <- function(x) x %>%
+    layer_dense(units = 10, activation = "relu") %>%
+    layer_dense(units = 10, activation = "relu") %>%
+    layer_dense(units = 10, activation = "relu") %>%
+    layer_dense(units = 1, activation = "linear")
+  
+  form <- "~ 0 + d(x) %OZ% z"
+  
+  ### first manual check
+  mod <- deepregression(
+    y = y,
+    data = data,
+    # define how parameters should be modeled
+    list_of_formulas = list(loc = as.formula(form), scale = ~1),
+    list_of_deep_models = list(d = deep_model),
+    orthog_options = orthog_control(orthog_fun = orthog_tf_fun)
+  )
+  
+  mod %>% fit(epochs = 10L, verbose = FALSE)
+  
+  pr1 <- predict(mod, data, batch_size = 10)
+  pr2 <- predict(mod, data, batch_size = 100)
+  expect_false(all.equal(pr1, pr2)=="TRUE")
+  
+  ### now with default implementation
+  mod <- deepregression(
+    y = y,
+    data = data,
+    # define how parameters should be modeled
+    list_of_formulas = list(loc = as.formula(form), scale = ~1),
+    list_of_deep_models = list(d = deep_model)
+  )
+  
+  mod %>% fit(epochs = 10L, verbose = FALSE)
+  
+  # deactivate OZ at test should lead to sample-independent prediction behavior
+  pr1 <- predict(mod, data, batch_size = 10)
+  pr2 <- predict(mod, data, batch_size = 100)
+  expect_equal(pr1, pr2)
+  
+  ### now activate OZ at test time
+  mod <- deepregression(
+    y = y,
+    data = data,
+    # define how parameters should be modeled
+    list_of_formulas = list(loc = as.formula(form), scale = ~1),
+    list_of_deep_models = list(d = deep_model),
+    orthog_options = orthog_control(deactivate_oz_at_test = FALSE)
+  )
+  
+  mod %>% fit(epochs = 10L, verbose = FALSE)
+  
+  # deactivate OZ at test should lead to sample-independent prediction behavior
+  pr1 <- predict(mod, data, batch_size = 10)
+  pr2 <- predict(mod, data, batch_size = 100)
+  expect_false(all.equal(pr1, pr2)=="TRUE")
+  
+  
+})
