@@ -9,9 +9,8 @@ import functools
 from tensorflow.python.ops import nn_ops
 import tensorflow as tf
 import keras
-from keras.layers.convolutional.base_conv import Conv
 
-class SparseConv(Conv):
+class SparseConv(layers.convolutional.Conv):
     def __init__(self,
                  rank,
                 filters,
