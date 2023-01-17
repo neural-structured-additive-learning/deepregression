@@ -130,7 +130,7 @@ mod <- deepregression(
 
 }
 \references{
-Ruegamer, D. et al. (2021):
+Ruegamer, D. et al. (2023):
 deepregression: a Flexible Neural Network Framework for Semi-Structured Deep Distributional Regression.
-\url{https://arxiv.org/abs/2104.02705}.
+\doi{10.18637/jss.v105.i02}.
 }

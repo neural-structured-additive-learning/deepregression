@@ -1,6 +1,6 @@
 Package: deepregression
 Title: Fitting Deep Distributional Regression
-Version: 0.3.1
+Version: 1.0.0
 Authors@R: c(
     person("David", "Ruegamer", , "david.ruegamer@gmail.com", role = c("aut", "cre")),
     person("Florian", "Pfisterer", , "florian.pfisterer@stat.uni-muenchen.de", role = c("ctb")),
@@ -9,7 +9,7 @@ Authors@R: c(
     person("Lucas", "Kook", , "lucasheinrich.kook@uzh.ch", role = c("ctb")))
 Description:
     Allows for the specification of semi-structured deep distributional regression models which are fitted in a neural network as 
-    proposed by Ruegamer et al. (2021) <arXiv:2104.02705>.
+    proposed by Ruegamer et al. (2023) <doi:10.18637/jss.v105.i02>.
     Predictors can be modeled using structured (penalized) linear effects, structured non-linear effects or using an unstructured deep network model.
 Config/reticulate:
   list(
