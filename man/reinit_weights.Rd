@@ -8,6 +8,8 @@ reinit_weights(object, seed)
 }
 \arguments{
 \item{object}{model to re-initialize}
+
+\item{seed}{seed for reproducibility}
 }
 \description{
 Genereic function to re-intialize model weights

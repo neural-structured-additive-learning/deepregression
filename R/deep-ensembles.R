@@ -21,6 +21,7 @@ ensemble <- function (x, ...) {
 #'     defaults to \code{TRUE}
 #' @param print_members logical; print results for each member
 #' @inheritParams cv.deepregression
+#' @param seed seed for reproducibility
 #' @param ... further arguments passed to \code{object$fit_fun}
 #'
 #' @return object of class \code{"drEnsemble"}, containing the original
@@ -218,6 +219,7 @@ fitted.drEnsemble <- function(object, apply_fun = tfd_mean, ...) {
 #' Genereic function to re-intialize model weights
 #'
 #' @param object model to re-initialize
+#' @param seed seed for reproducibility
 #' @export
 #'
 reinit_weights <- function(object, seed) {
@@ -227,7 +229,7 @@ reinit_weights <- function(object, seed) {
 #' Method to re-initialize weights of a \code{"deepregression"} model
 #'
 #' @param object object of class \code{"deepregression"}
-#'
+#' @param seed seed for reproducibility
 #' @return invisible \code{NULL}
 #'
 #' @method reinit_weights deepregression

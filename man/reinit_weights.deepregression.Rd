@@ -8,6 +8,8 @@
 }
 \arguments{
 \item{object}{object of class \code{"deepregression"}}
+
+\item{seed}{seed for reproducibility}
 }
 \value{
 invisible \code{NULL}
