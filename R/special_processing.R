@@ -1,4 +1,4 @@
-#' Control function to define the processor for terms in the formula
+#' Control function to define the processors for terms in the formula
 #' 
 #' @param form the formula to be processed
 #' @param data the data for the terms in the formula
@@ -134,7 +134,7 @@ process_terms <- function(
 #' provide the arguments of a default Dense layer.
 #' @param units integer; number of units for layer
 #' @param data data frame; the data used in processors
-#' @param ... other keras layer parameters
+#' @param ... other layer parameters
 #' 
 #' @return a basic processor list structure
 #' 

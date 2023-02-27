@@ -2,7 +2,7 @@
 % Please edit documentation in R/special_processing.R
 \name{process_terms}
 \alias{process_terms}
-\title{Control function to define the processor for terms in the formula}
+\title{Control function to define the processors for terms in the formula}
 \usage{
 process_terms(
   form,
@@ -42,5 +42,5 @@ process_terms(
 returns a processor function
 }
 \description{
-Control function to define the processor for terms in the formula
+Control function to define the processors for terms in the formula
 }
