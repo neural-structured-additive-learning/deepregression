@@ -60,7 +60,6 @@
 \method{cv}{deepregression}(
   x,
   verbose = FALSE,
-  patience = 20,
   plot = TRUE,
   print_folds = TRUE,
   cv_folds = 5,
@@ -126,7 +125,7 @@ early stopping be trigged (default: "val_loss")}
 
 \item{view_metrics}{logical, whether to trigger the Viewer in RStudio / Browser.}
 
-\item{patience}{number of patience for early stopping}
+\item{patience}{integer, number of rounds after which early stopping is done.}
 
 \item{save_weights}{logical, whether to save weights in each epoch.}
 

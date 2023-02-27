@@ -272,7 +272,13 @@ lin_processor <- function(term, data, output_dim, param_nr, controls){
     },
     input_dim = as.integer(ncol(data_trafo())),
     layer = layer,
-    coef = function(weights)  as.matrix(weights),
+    coef = function(weights){  
+      
+      wm <- as.matrix(weights)
+      rownames(wm) <- colnames(data_trafo())
+      return(wm)
+      
+      },
     penalty = NULL
   )
   

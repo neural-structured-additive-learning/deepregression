@@ -34,7 +34,7 @@ not affected}
 
 \item{verbose}{whether to print training in each fold}
 
-\item{patience}{number of patience for early stopping}
+\item{patience}{integer, number of rounds after which early stopping is done.}
 
 \item{plot}{whether to plot the resulting losses in each fold}
 

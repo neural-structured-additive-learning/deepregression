@@ -170,6 +170,37 @@ class PenLinear(tf.keras.layers.Layer):
     def call(self, inputs):
         return tf.matmul(inputs, self.w)
 
+class TrainableLambdaLayer(tf.keras.layers.Layer):
+    def __init__(self, units, lmbda, P, kernel_initializer=tf.keras.initializers.HeNormal, **kwargs):
+        super(TrainableLambdaLayer, self).__init__(**kwargs)
+        self.units = units
+        self.lmbda = tf.Variable(lmbda, name="lambda")
+        self.P = P
+        self.kernel_initializer = kernel_initializer
+
+    def build(self, input_shape):
+        self.w = self.add_weight(
+            shape=(input_shape[-1], self.units),
+            initializer=self.kernel_initializer,
+            #regularizer=squaredPenalty(self.P, tf.math.exp(self.lmbda)),
+            trainable=True
+        )
+
+    def get_config(self):
+
+        config = super().get_config().copy()
+        config.update({
+            'units': self.units,
+            'lambda': self.lmbda,
+            'P': self.P,
+            'kernel_initializer': self.kernel_initializer
+        })
+        return config
+
+    def call(self, inputs):
+        self.add_loss = self.lmbda * 0.5 * tf.reduce_sum(vecmatvec(self.w, tf.cast(self.P, dtype="float32")))
+        return tf.matmul(inputs, self.w)
+
 def get_masks(mod):
     masks = []
     for layer in mod.layers:

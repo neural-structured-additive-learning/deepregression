@@ -421,7 +421,6 @@ cv <- function (x, ...) {
 #' \code{keras:::fit.keras.engine.training.Model}
 #' @param x deepregression object
 #' @param verbose whether to print training in each fold
-#' @param patience number of patience for early stopping
 #' @param plot whether to plot the resulting losses in each fold
 #' @param print_folds whether to print the current fold
 #' @param mylapply lapply function to be used; defaults to \code{lapply}
@@ -443,7 +442,6 @@ cv <- function (x, ...) {
 cv.deepregression <- function(
   x,
   verbose = FALSE,
-  patience = 20,
   plot = TRUE,
   print_folds = TRUE,
   cv_folds = 5,
@@ -519,7 +517,7 @@ cv.deepregression <- function(
     ret <- do.call(x$fit_fun, args)
     if(save_weights) ret$weighthistory <- weighthistory$weights_last_layer
     if(!is.null(save_fun))
-      ret$save_fun_result <- save_fun(this_mod)
+      ret$save_fun_result <- save_fun(x, train_ind, test_ind)
     
     if(stop_if_nan && any(is.nan(ret$metrics$validloss)))
       stop("Fold ", folds_iter, " with NaN's in ")
