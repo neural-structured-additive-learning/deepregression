@@ -237,7 +237,7 @@ reinit_weights <- function(object, seed) {
 #' @export
 #'
 reinit_weights.deepregression <- function(object, seed) {
-  lapply(object$model$layers, function(x) {
+  suppressWarnings(lapply(object$model$layers, function(x) {
     # x$build(x$input_shape)
     dtype <- x$dtype
     try({
@@ -247,6 +247,6 @@ reinit_weights.deepregression <- function(object, seed) {
       dweight <- dinit(shape = dshape, dtype = dtype)
       x$set_weights(weights = list(dweight))
     }, silent = TRUE)
-  })
+  }))
   return(invisible(object))
 }
