@@ -36,16 +36,19 @@ loop_through_pfc_and_call_trafo <- function(pfc, newdata = NULL)
 #' Function to prepare data based on parsed formulas
 #' 
 #' @param pfc list of processor transformed formulas 
+#' @param na_handler function to deal with NAs
 #' @param gamdata processor for gam part
 #' @return list of matrices or arrays
 #' @export
 #' 
-prepare_data <- function(pfc, gamdata = NULL)
+prepare_data <- function(pfc, na_handler = na_omit_list, gamdata = NULL)
 {
   
   ret_list <- loop_through_pfc_and_call_trafo(pfc = pfc, newdata = NULL)
   if(!is.null(gamdata))
     ret_list <- c(prepare_gamdata(gamdata), ret_list)
+  
+  ret_list <- na_handler(ret_list)
   
   return(ret_list)
   
@@ -55,17 +58,20 @@ prepare_data <- function(pfc, gamdata = NULL)
 #' 
 #' @param pfc list of processor transformed formulas 
 #' @param newdata list in the same format as the original data
+#' @param na_handler function to deal with NAs
 #' @param gamdata processor for gam part
 #' @return list of matrices or arrays
 #' @export
 #' 
-prepare_newdata <- function(pfc, newdata, gamdata = NULL)
+prepare_newdata <- function(pfc, newdata, na_handler = na_omit_list, gamdata = NULL)
 {
   
   ret_list <- loop_through_pfc_and_call_trafo(pfc = pfc, newdata = newdata)
   
   if(!is.null(gamdata))
     ret_list <- c(prepare_gamdata(gamdata, newdata), ret_list)
+  
+  ret_list <- na_handler(ret_list)
   
   return(ret_list)
   
@@ -98,5 +104,27 @@ to_matrix <- function(x)
   }
   if(is.data.frame(x)) return(as.matrix(x))
   return(x)
+  
+}
+
+#' Function to exclude NA values
+#' 
+#' @param datalist list of data as returned by \code{prepare_data} and 
+#' \code{prepare_newdata}
+#' @return list with NA values excluded and locations of original
+#' NA positions as attributes
+#' @export
+#' 
+na_omit_list <- function(datalist)
+{
+  
+  na_loc <- unique(unlist(lapply(datalist, function(x) 
+    unique(apply(x, 2, function(y) which(is.na(y)))))))
+  
+  if(length(na_loc) > 0)
+    datalist <- lapply(datalist, function(x) x[-na_loc,,drop=FALSE])
+  attr(datalist, "na_loc") <- na_loc
+  
+  return(datalist)
   
 }

@@ -161,6 +161,7 @@ plot.deepregression <- function(
 #' per default \code{tfd_mean}, i.e., predict the mean of the distribution
 #' @param convert_fun how should the resulting tensor be converted,
 #' per default \code{as.matrix}
+#' @param na_handler function to handle NAs in the data set; default is \code{na_omit_list}
 #'
 #' @export predict.deepregression
 #' @export
@@ -172,6 +173,7 @@ predict.deepregression <- function(
   batch_size = NULL,
   apply_fun = tfd_mean,
   convert_fun = as.matrix,
+  na_handler = na_omit_list,
   ...
 )
 {
@@ -185,12 +187,14 @@ predict.deepregression <- function(
     
     if(is.null(newdata)){
       yhat <- object$model(prepare_data(object$init_params$parsed_formulas_contents,
+                                        na_handler = na_handler,
                                         gamdata = object$init_params$gamdata$data_trafos))
     }else{
       # preprocess data
       if(is.data.frame(newdata)) newdata <- as.list(newdata)
       newdata_processed <- prepare_newdata(object$init_params$parsed_formulas_contents, 
                                            newdata, 
+                                           na_handler = na_handler,
                                            gamdata = object$init_params$gamdata$data_trafos)
       yhat <- object$model(newdata_processed)
     }
@@ -238,6 +242,7 @@ fitted.deepregression <- function(
 #' @param validation_split float in [0,1] defining the amount of data used for validation
 #' @param callbacks a list of callbacks for fitting
 #' @param convertfun function to convert R into Tensor object
+#' @param na_handler function to handle NAs in the data set; default is \code{na_omit_list}
 #' @param ... further arguments passed to
 #' \code{keras:::fit.keras.engine.training.Model}
 #'
@@ -261,6 +266,7 @@ fit.deepregression <- function(
   validation_split = ifelse(is.null(validation_data), 0.1, 0),
   callbacks = list(),
   convertfun = function(x) tf$constant(x, dtype="float32"),
+  na_handler = na_omit_list,
   ...
 )
 {
@@ -282,17 +288,24 @@ fit.deepregression <- function(
   args <- list(...)
 
   input_x <- prepare_data(object$init_params$parsed_formulas_content, 
+                          na_handler = na_handler,
                           gamdata = object$init_params$gamdata$data_trafos)
   input_y <- as.matrix(object$init_params$y)
+  if(length(attr(input_x, "na_loc"))>0)
+    input_y <- input_y[-attr(input_x, "na_loc"),]
   
-  if(!is.null(validation_data))
+  if(!is.null(validation_data)){
     validation_data <- 
     list(
       x = prepare_newdata(object$init_params$parsed_formulas_content, 
-                          validation_data[[1]], 
+                          validation_data[[1]],  
+                          na_handler = na_handler,
                           gamdata = object$init_params$gamdata$data_trafos),
       y = object$init_params$prepare_y_valdata(validation_data[[2]])
     )
+    if(length(attr(validation_data$x, "na_loc"))>0)
+      validation_data$y <- validation_data$y[-attr(x, "na_loc"),]  
+  }
 
   if(length(object$init_params$image_var)>0){
     

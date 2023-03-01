@@ -87,6 +87,7 @@ process_terms <- function(
                         simplify = !parsing_options$check_form)
     args$controls <- controls 
     args$controls$procs <- procs
+
     if(is.null(spec)){
       if(args$term=="(Intercept)")
         result[[i]] <- c(list_terms[[i]], do.call(procs[["int"]], args)) else
@@ -94,7 +95,7 @@ process_terms <- function(
     }else{
       result[[i]] <- c(list_terms[[i]], do.call(procs[[spec]], args))
     }
-    
+
   }
   
   if(!is.null(controls$weight_options$shared_layers)){
@@ -252,8 +253,12 @@ lin_processor <- function(term, data, output_dim, param_nr, controls){
   if(grepl("lin(.*)", term)) term <- paste(extractvar(term, allow_ia = TRUE),
                                            collapse = " + ")
   
+  
+  
+  
   data_trafo <- function(indata = data)
   {
+    options(na.action='na.pass')
     if(attr(terms.formula(as.formula(paste0("~", term))), "intercept")==0){
       model.matrix(object = as.formula(paste0("~", term)), 
                    data = indata)
@@ -374,9 +379,11 @@ l21_processor <- function(term, data, output_dim, param_nr, controls){
                            layer_class = tibgroup_layer,
   )
   
-  data_trafo <- function(indata = data) 
+  data_trafo <- function(indata = data){ 
+    options(na.action='na.pass')
     model.matrix(object = as.formula(paste0("~ 1 + ", extractvar(term))), 
                  data = indata)[,-1,drop=FALSE]
+  }
   
   list(
     data_trafo = function() data_trafo(),

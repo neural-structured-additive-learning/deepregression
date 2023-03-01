@@ -24,12 +24,14 @@ create_package_name <- function(package, version)
       suppressMessages(try(invisible(tfprobability::tfd_normal(0,1)), silent = TRUE))
     }else{
       tf <<- reticulate::import("tensorflow", delay_load = TRUE)
+      tape <<- tf$GradientTape
       keras <<- reticulate::import("keras", delay_load = TRUE)
       tfp <<- reticulate::import("tensorflow_probability", delay_load = TRUE)
     }
     
   }else{
     tf <- reticulate::import("tensorflow")
+    tape <- tf$GradientTape
   } # nocov end
   # options
   options(orthogonalize = TRUE,
