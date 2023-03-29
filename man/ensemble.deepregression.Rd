@@ -11,7 +11,6 @@
   mylapply = lapply,
   verbose = FALSE,
   patience = 20,
-  plot = TRUE,
   print_members = TRUE,
   stop_if_nan = TRUE,
   save_weights = TRUE,
@@ -35,8 +34,6 @@ not affected}
 \item{verbose}{whether to print training in each fold}
 
 \item{patience}{integer, number of rounds after which early stopping is done.}
-
-\item{plot}{whether to plot the resulting losses in each fold}
 
 \item{print_members}{logical; print results for each member}
 

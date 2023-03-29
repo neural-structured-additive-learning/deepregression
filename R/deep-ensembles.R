@@ -40,7 +40,6 @@ ensemble.deepregression <- function(
   mylapply = lapply,
   verbose = FALSE,
   patience = 20,
-  plot = TRUE,
   print_members = TRUE,
   stop_if_nan = TRUE,
   save_weights = TRUE,
@@ -56,17 +55,15 @@ ensemble.deepregression <- function(
   res <- mylapply(1:n_ensemble, function(iter) {
 
     # Randomly initialize weights
-    if (reinitialize)
-      x <- reinit_weights(x, seed[iter])
-    else
-      set_weights(x$model, original_weights)
+    member <- clone_model(x$model)
+    compile(member, loss = x$model$loss)
+    if (!reinitialize)
+      set_weights(member, original_weights)
 
     if (print_members)
       cat("Fitting member", iter, "...")
 
     st1 <- Sys.time()
-
-    this_mod <- x$model
 
     x_train <- prepare_data(x$init_params$parsed_formulas_content,
                             gamdata = x$init_params$gamdata$data_trafos)
@@ -76,7 +73,7 @@ ensemble.deepregression <- function(
 
     args <- list(...)
     args <- append(args,
-                   list(object = this_mod,
+                   list(object = member,
                         x = x_train,
                         y = x$init_params$y,
                         callbacks = this_callbacks,
@@ -90,10 +87,10 @@ ensemble.deepregression <- function(
     ret <- do.call(x$fit_fun, args)
 
     if (save_weights)
-      ret$weighthistory <- get_weights(x$model)
+      ret$weighthistory <- get_weights(member)
 
     if (!is.null(save_fun))
-      ret$save_fun_result <- save_fun(this_mod)
+      ret$save_fun_result <- save_fun(member)
 
     if(stop_if_nan && any(is.nan(ret$metrics$validloss)))
       stop("Member ", iter, " with NaN's in validation loss")
@@ -108,11 +105,9 @@ ensemble.deepregression <- function(
   })
 
   ret <- c(x, ensemble_results = list(res))
-
   class(ret) <- c("drEnsemble", class(x))
 
-  # if (plot) try(plot.drEnsemble(res), silent = TRUE)
-
+  ### Reset weights to original
   set_weights(x$model, original_weights)
 
   return(invisible(ret))

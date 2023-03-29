@@ -4,12 +4,14 @@
 \alias{prepare_newdata}
 \title{Function to prepare new data based on parsed formulas}
 \usage{
-prepare_newdata(pfc, newdata, gamdata = NULL)
+prepare_newdata(pfc, newdata, na_handler = na_omit_list, gamdata = NULL)
 }
 \arguments{
 \item{pfc}{list of processor transformed formulas}
 
 \item{newdata}{list in the same format as the original data}
+
+\item{na_handler}{function to deal with NAs}
 
 \item{gamdata}{processor for gam part}
 }
