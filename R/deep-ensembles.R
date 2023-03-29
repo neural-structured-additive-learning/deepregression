@@ -56,7 +56,7 @@ ensemble.deepregression <- function(
 
     # Randomly initialize weights
     member <- clone_model(x$model)
-    compile(member, loss = x$model$loss)
+    compile(member, loss = x$model$loss, optimizer = x$model$optimizer)
     if (!reinitialize)
       set_weights(member, original_weights)
 
