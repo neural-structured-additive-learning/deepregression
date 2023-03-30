@@ -102,13 +102,6 @@ def get_specific_layer(string_to_match, layers, index=True, invert=False):
     else:
         return(layers[wh])    
     
-
-def layer_spline(P, units, name, trainable = True, kernel_initializer = "glorot_uniform"):
-    return(tf.keras.layers.Dense(units = units, name = name, use_bias=False, kernel_regularizer = squaredPenalty(P, 1), trainable = trainable, kernel_initializer = kernel_initializer))
-
-def layer_splineVC(P, units, name, trainable = True, kernel_initializer = "glorot_uniform"):
-    return(tf.keras.layers.Dense(units = units, name = name, use_bias=False, kernel_regularizer = squaredPenaltyVC(P, 1), trainable = trainable, kernel_initializer = kernel_initializer))
-
 class squaredPenalty(regularizers.Regularizer):
 
     def __init__(self, P, strength):
@@ -137,6 +130,30 @@ class squaredPenaltyVC(regularizers.Regularizer):
 
     def get_config(self):
         return {'strength': self.strength, 'P': self.P}
+
+class SplineLayer(tf.keras.layers.Dense):
+
+    def __init__(self, P, **kwargs):
+        super(SplineLayer, self).__init__(kernel_regularizer = squaredPenalty(P, 1), **kwargs)
+        self.P = P
+
+    def get_config(self):
+
+        config = super().get_config().copy()
+        config.update({
+            'P': self.P,
+            'kernel_regularizer': self.kernel_regularizer,
+            'squaredPenalty': squaredPenalty
+        })
+        return config
+    
+
+def layer_spline(P, units, name, trainable = True, kernel_initializer = "glorot_uniform"):
+    return(SplineLayer(units = units, name = name, use_bias=False, P = P, trainable = trainable, kernel_initializer = kernel_initializer))
+
+def layer_splineVC(P, units, name, nlev, trainable = True, kernel_initializer = "glorot_uniform"):
+    return(SplineLayer(units = units, name = name, use_bias=False, P = P, trainable = trainable, kernel_initializer = kernel_initializer))
+
     
 class PenLinear(tf.keras.layers.Layer):
     def __init__(self, units, lambdas, mask, P, n, nr):

@@ -31,6 +31,7 @@
   batch_size = NULL,
   apply_fun = tfd_mean,
   convert_fun = as.matrix,
+  na_handler = na_omit_list,
   ...
 )
 
@@ -50,6 +51,7 @@
   validation_split = ifelse(is.null(validation_data), 0.1, 0),
   callbacks = list(),
   convertfun = function(x) tf$constant(x, dtype = "float32"),
+  na_handler = na_omit_list,
   ...
 )
 
@@ -113,6 +115,8 @@ per default \code{tfd_mean}}
 
 \item{convert_fun}{how should the resulting tensor be converted,
 per default \code{as.matrix}}
+
+\item{na_handler}{function to handle NAs in the data set; default is \code{na_omit_list}}
 
 \item{epochs}{integer, the number of epochs to fit the model}
 

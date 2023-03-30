@@ -17,3 +17,11 @@ class Orthogonalization(tf.keras.layers.Layer):
             return orthog_tf(Y, X)
         else:
             return Y
+            
+    def get_config(self):
+
+        config = super().get_config().copy()
+        config.update({
+            'deactivate_at_test': self.deactivate_at_test
+        })
+        return config

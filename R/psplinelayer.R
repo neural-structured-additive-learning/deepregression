@@ -219,7 +219,13 @@ remove_la <- function(object)
 
 }
 
-
+#' Handler for prediction with gam terms
+#' 
+#' @param object sterm
+#' @param newdata data.frame or list
+#' 
+#' @export 
+#' 
 predict_gam_handler <- function(object, newdata)
 {
 
