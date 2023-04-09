@@ -188,7 +188,8 @@ predict.deepregression <- function(
     if(is.null(newdata)){
       yhat <- object$model(prepare_data(object$init_params$parsed_formulas_contents,
                                         na_handler = na_handler,
-                                        gamdata = object$init_params$gamdata$data_trafos))
+                                        gamdata = object$init_params$gamdata$data_trafos),
+                           training = FALSE)
     }else{
       # preprocess data
       if(is.data.frame(newdata)) newdata <- as.list(newdata)
@@ -196,7 +197,8 @@ predict.deepregression <- function(
                                            newdata, 
                                            na_handler = na_handler,
                                            gamdata = object$init_params$gamdata$data_trafos)
-      yhat <- object$model(newdata_processed)
+      yhat <- object$model(newdata_processed,
+                           training = FALSE)
     }
   }
   
