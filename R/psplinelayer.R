@@ -229,7 +229,13 @@ remove_la <- function(object)
 predict_gam_handler <- function(object, newdata)
 {
 
-  if(is.list(object) && length(object)==1) return(PredictMat(object[[1]], as.data.frame(newdata[object[[1]]$term])))
+  if(is.list(object) && length(object)==1){ 
+    
+    terms <- object[[1]]$term 
+    if(object[[1]]$by!="NA") terms <- c(terms, object[[1]]$by)
+    return(PredictMat(object[[1]], as.data.frame(newdata[terms])))
+  
+  }
   return(do.call("cbind", lapply(object, function(obj) PredictMat(obj, as.data.frame(newdata))))  )
 
 }
