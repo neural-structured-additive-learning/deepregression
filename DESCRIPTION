@@ -1,0 +1,46 @@
+Package: deepregression
+Title: Fitting Deep Distributional Regression
+Version: 1.0.0
+Authors@R: c(
+    person("David", "Ruegamer", , "david.ruegamer@gmail.com", role = c("aut", "cre")),
+    person("Florian", "Pfisterer", , "florian.pfisterer@stat.uni-muenchen.de", role = c("ctb")),
+    person("Philipp", "Baumann", , "baumann@kof.ethz.ch", role = c("ctb")),
+    person("Chris", "Kolb", , "chris.kolb@stat.uni-muenchen.de", role = c("ctb")),
+    person("Lucas", "Kook", , "lucasheinrich.kook@uzh.ch", role = c("ctb")))
+Description:
+    Allows for the specification of semi-structured deep distributional regression models which are fitted in a neural network as 
+    proposed by Ruegamer et al. (2023) <doi:10.18637/jss.v105.i02>.
+    Predictors can be modeled using structured (penalized) linear effects, structured non-linear effects or using an unstructured deep network model.
+Config/reticulate:
+  list(
+    packages = list(
+      list(package = "six", pip = TRUE),
+      list(package = "tensorflow", version = "2.10.0", pip = TRUE),
+      list(package = "tensorflow_probability", version = "0.16", pip = TRUE),
+      list(package = "keras", version = "2.10.0", pip = TRUE))
+  )
+Depends: 
+    R (>= 4.0.0),
+    tensorflow (>= 2.2.0),
+    tfprobability,
+    keras (>= 2.2.0),
+    torch,
+    luz, 
+    torchvision
+Suggests:
+    testthat,
+    knitr,
+    covr
+Imports:
+    mgcv,
+    dplyr,
+    R6,
+    reticulate (>= 1.14),
+    Matrix,
+    magrittr,
+    tfruns,
+    methods
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.3
