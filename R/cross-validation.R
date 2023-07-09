@@ -12,8 +12,10 @@ make_cv_list_simple <- function(data_size, folds, seed = 42, shuffle = TRUE)
 
 }
 
-extract_cv_result <- function(res, name_loss = "loss", name_val_loss = "val_loss"){
+extract_cv_result <- function(res, engine,
+                              name_loss = "loss", name_val_loss = "val_loss"){
 
+  if(engine == "tf"){
   losses <- sapply(res, "[[", "metrics")
   trainloss <- data.frame(losses[name_loss,])
   validloss <- data.frame(losses[name_val_loss,])
@@ -22,7 +24,25 @@ extract_cv_result <- function(res, name_loss = "loss", name_val_loss = "val_loss
   return(list(trainloss=trainloss,
               validloss=validloss,
               weight=weightshist))
-
+  }
+  if(engine == "torch"){
+    if(engine == "torch") {
+      name_loss = "train"
+      name_val_loss = "valid"
+      }
+    # loss from last epoch rev()[[1]]
+    losses <-  sapply(res, function(x) lapply(
+      x$records$metrics, function(y) unlist(y)))
+    trainloss <- data.frame(losses[name_loss,])
+    validloss <- data.frame(losses[name_val_loss,])
+    #weightshist <- lapply(res, "[[", "weighthistory")
+    # need to save with state_dict and detach from R6 (modify on place)
+    
+    return(list(trainloss=trainloss,
+                validloss=validloss
+                #weight=weightshist
+                ))
+    }
 }
 
 #' Plot CV results from deepregression
@@ -34,10 +54,10 @@ extract_cv_result <- function(res, name_loss = "loss", name_val_loss = "val_loss
 #'
 #' @export
 #'
-plot_cv <- function(x, what=c("loss","weight"), ...){
+plot_cv <- function(x, what=c("loss","weight"), engine = "tf", ...){
 
   .pardefault <- par(no.readonly = TRUE)
-  cres <- extract_cv_result(x)
+  cres <- extract_cv_result(x, engine = engine)
 
   what <- match.arg(what)
 

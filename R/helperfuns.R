@@ -30,9 +30,12 @@ NCOL0 <- function(x)
 
 get_mod_names <- function(x)
 {
-  
-  sapply(x$model$layers,"[[","name")
-  
+  if(x$engine == "tf")  return(sapply(x$model$layers,"[[","name"))
+  if(x$engine == "torch") {
+    names <- lapply(strsplit(names(x$model()$modules),
+                                          "[.]"), FUN = function(x) x[length(x)])
+    unlist(lapply(names,function(x) if(identical(x,character(0))) ' ' else x))
+  }
 }
 
 #' Function to return weight given model and name
@@ -41,13 +44,22 @@ get_mod_names <- function(x)
 #' @param name character
 #' @param partial_match logical; whether to also check for a partial match
 #' @export
-get_weight_by_opname <- function(mod, name, partial_match = FALSE)
+get_weight_by_opname <- function(mod, name, partial_match = FALSE, 
+                                 param_nr = NULL)
 {
-  
   lay <- get_layer_by_opname(mod, name, partial_match = partial_match)
+  if(mod$engine == "tf"){
   wgts <- lay$weights
-  if(is.list(wgts) & length(wgts)==1)
-    return(as.matrix(wgts[[1]]))
+  }
+  if(mod$engine == "torch"){
+    wgts <- lay$parameters
+    wgts <- lapply(wgts, function(x) x$t())
+  }
+  
+  if(is.list(wgts) & length(wgts)==1){
+      return(as.matrix(wgts[[1]]))
+  }
+    
   return(wgts)
   
 }
@@ -62,10 +74,15 @@ get_layer_by_opname <- function(mod, name, partial_match = FALSE)
 {
   
   # names <- get_mod_names(mod)
-  w <- get_layernr_by_opname(mod, name, partial_match = partial_match)
+   w <- get_layernr_by_opname(
+    mod, name, partial_match = partial_match)
+  
   if(length(w)==0)
     stop("Cannot find specified ", name, " in model weights.")
-  return(mod$model$layers[[w]])
+  if(mod$engine == "tf") return(mod$model$layers[[w]])
+  if(mod$engine == "torch") return(
+    mod$model()$modules[[w]])
+  
   
 }
 

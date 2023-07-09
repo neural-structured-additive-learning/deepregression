@@ -4,7 +4,7 @@
 #' @param newdata list in the same format as the original data
 #' @return list of matrices or arrays
 #' 
-loop_through_pfc_and_call_trafo <- function(pfc, newdata = NULL)
+loop_through_pfc_and_call_trafo <- function(pfc, newdata = NULL, engine = "tf")
 {
   
   data_list <- list()
@@ -15,21 +15,21 @@ loop_through_pfc_and_call_trafo <- function(pfc, newdata = NULL)
     for(j in 1:length(pfc[[i]])){
       
       # skip those which are already set up by the gamdata
-      if(!is.null(pfc[[i]][[j]]$gamdata_nr))
+      if(!is.null(pfc[[i]][[j]]$gamdata_nr) & engine == 'tf')
         if(!pfc[[i]][[j]]$gamdata_combined) next
       
       if(is.null(newdata)){
         data_list[[k]] <- to_matrix(pfc[[i]][[j]]$data_trafo())
       }else{
-        data_list[[k]] <- to_matrix(pfc[[i]][[j]]$predict_trafo(newdata))
-      }
-      k <- k + 1
-      
-    }
-    
   }
-  
+    
+    }
+      
+      k <- k + 1
+      }
+        data_list[[k]] <- to_matrix(pfc[[i]][[j]]$predict_trafo(newdata))
   return(data_list)
+  
   
 }
 
@@ -44,8 +44,8 @@ loop_through_pfc_and_call_trafo <- function(pfc, newdata = NULL)
 prepare_data <- function(pfc, na_handler = na_omit_list, gamdata = NULL)
 {
   
-  ret_list <- loop_through_pfc_and_call_trafo(pfc = pfc, newdata = NULL)
-  if(!is.null(gamdata))
+  ret_list <- loop_through_pfc_and_call_trafo(pfc = pfc, engine = engine)
+  if(!is.null(gamdata) & engine == 'tf')
     ret_list <- c(prepare_gamdata(gamdata), ret_list)
   
   ret_list <- na_handler(ret_list)
@@ -57,8 +57,8 @@ prepare_data <- function(pfc, na_handler = na_omit_list, gamdata = NULL)
 #' Function to prepare new data based on parsed formulas
 #' 
 #' @param pfc list of processor transformed formulas 
-#' @param newdata list in the same format as the original data
 #' @param na_handler function to deal with NAs
+#' @param newdata list in the same format as the original data
 #' @param gamdata processor for gam part
 #' @return list of matrices or arrays
 #' @export
@@ -66,15 +66,16 @@ prepare_data <- function(pfc, na_handler = na_omit_list, gamdata = NULL)
 prepare_newdata <- function(pfc, newdata, na_handler = na_omit_list, gamdata = NULL)
 {
   
-  ret_list <- loop_through_pfc_and_call_trafo(pfc = pfc, newdata = newdata)
+  ret_list <- loop_through_pfc_and_call_trafo(pfc = pfc, newdata = newdata,
+                                              engine = engine)
   
-  if(!is.null(gamdata))
+  if(!is.null(gamdata) & engine == 'tf')
     ret_list <- c(prepare_gamdata(gamdata, newdata), ret_list)
-  
   ret_list <- na_handler(ret_list)
   
   return(ret_list)
   
+}
 }
 
 prepare_gamdata <- function(gamdata, newdata = NULL){
@@ -90,7 +91,6 @@ prepare_gamdata <- function(gamdata, newdata = NULL){
       to_matrix(x$predict_trafo(newdata))))
   )
   
-}
 
 to_matrix <- function(x)
 {

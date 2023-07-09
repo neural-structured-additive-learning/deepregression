@@ -25,6 +25,9 @@ Depends:
     tensorflow (>= 2.2.0),
     tfprobability,
     keras (>= 2.2.0)
+    torch,
+    luz, 
+    torchvision
 Suggests:
     testthat,
     knitr,

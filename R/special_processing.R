@@ -1,4 +1,4 @@
-#' Control function to define the processors for terms in the formula
+#' Control function to define the processor for terms in the formula
 #' 
 #' @param form the formula to be processed
 #' @param data the data for the terms in the formula
@@ -19,7 +19,7 @@ process_terms <- function(
   parsing_options,
   specials_to_oz = c(), 
   automatic_oz_check = TRUE, 
-  identify_intercept = FALSE,
+  identify_intercept = FALSE, engine = "tf",
   ...){
   
   defaults <- 
@@ -67,7 +67,8 @@ process_terms <- function(
       "(Intercept)"
   }
   
-  args <- list(data = data, output_dim = output_dim, param_nr = param_nr)
+  args <- list(data = data, output_dim = output_dim, param_nr = param_nr,
+               engine = engine)
   result <- list()
   
   # add intercept terms
@@ -85,9 +86,16 @@ process_terms <- function(
     args$term = list_terms[[i]]$term
     spec <- get_special(list_terms[[i]]$term, specials = specials, 
                         simplify = !parsing_options$check_form)
+    # check special 
+    if(!is.null(spec) & engine == "torch")
+      if(spec %in% c("offsetx", "rwt", "const", "mult")) 
+        stop("Special not implemented in Torch")
+    
     args$controls <- controls 
     args$controls$procs <- procs
-
+    #args$controls$intercept_included <- any(
+    #  lapply(list_terms, function(x) x$term) == "(Intercept)")
+    
     if(is.null(spec)){
       if(args$term=="(Intercept)")
         result[[i]] <- c(list_terms[[i]], do.call(procs[["int"]], args)) else
@@ -95,7 +103,7 @@ process_terms <- function(
     }else{
       result[[i]] <- c(list_terms[[i]], do.call(procs[[spec]], args))
     }
-
+    
   }
   
   if(!is.null(controls$weight_options$shared_layers)){
@@ -135,7 +143,7 @@ process_terms <- function(
 #' provide the arguments of a default Dense layer.
 #' @param units integer; number of units for layer
 #' @param data data frame; the data used in processors
-#' @param ... other layer parameters
+#' @param ... other keras layer parameters
 #' 
 #' @return a basic processor list structure
 #' 
@@ -143,12 +151,13 @@ process_terms <- function(
 #' @export
 #' 
 layer_generator <- function(term, output_dim, param_nr, controls, 
+                            name = makelayername(term, param_nr), 
                             layer_class = tf$keras$layers$Dense,
                             without_layer = tf$identity,
-                            name = makelayername(term, param_nr), 
                             further_layer_args = NULL,
                             layer_args_names = NULL,
                             units = as.integer(output_dim),
+                            engine = "tf",
                             ...
                             ){
   
@@ -157,6 +166,12 @@ layer_generator <- function(term, output_dim, param_nr, controls,
   
   layer_args <- controls$weight_options$general
   layer_args <- c(layer_args, list(...))
+  
+  #dots <- list(...)
+  #layer_dots_index <- which(names(layer_args) %in% names(dots))
+  #layer_args[layer_dots_index] <- dots
+  #dot_layer_index <- which( names(dots) %in% names(layer_args))
+  #layer_args <- c(layer_args, dots[-dot_layer_index])
   
   specific_opt <- term %in% names(controls$weight_options$specific)
   if(specific_opt){
@@ -169,10 +184,16 @@ layer_generator <- function(term, output_dim, param_nr, controls,
   
   warmstart <- term %in% names(controls$weight_options$warmstarts)
   
-  if(warmstart)
-    layer_args$kernel_initializer <- tf$keras$initializers$Constant(
-      controls$weight_options$warmstarts[[term]]
-    )
+  if(warmstart){
+    if(engine == "tf"){
+      layer_args$kernel_initializer <-
+        tf$keras$initializers$Constant(
+          controls$weight_options$warmstarts[[term]])
+    }
+    if(engine == "torch"){
+      layer_args$kernel_initializer <- "constant"
+      }
+  }
   
 
   if(!const_broadcasting) layer_args$units <- units else 
@@ -184,15 +205,34 @@ layer_generator <- function(term, output_dim, param_nr, controls,
   if(!is.null(layer_args_names)) 
     layer_args <- layer_args[layer_args_names]
   
+  if(engine == "torch"){
+    torch_not_implemented <- c("activation", "bias_initializer", "bias_regularizer",
+                               "activity_regularizer", "kernel_constraint",  
+                               "bias_constraint")
+    layer_args <- layer_args[!(names(layer_args) %in% torch_not_implemented)]
+    # has to be added after layer_args[layer_args_names] to work properly with torch
+    layer_args$kernel_initializer_value <- 
+      controls$weight_options$warmstarts[[term]]
+    }
+  
   if(controls$with_layer){
     
     if(!const_broadcasting){
-      layer = function(x){
-        return(
-          do.call(layer_class, layer_args)(x)
-        )
+      if(engine == 'tf'){
+        layer = function(x){
+          return(
+            do.call(layer_class, layer_args)(x)
+          )
+        }
+      } # add function without x as torch doesn't need input
+      if(engine == 'torch'){
+        layer = function(){
+          return(
+            do.call(layer_class, layer_args)
+          )
+        }
       }
-    }else{
+      } else{
       layer = function(x){
         layer_prev <- do.call(layer_class, layer_args)(x)
         return(
@@ -212,17 +252,34 @@ layer_generator <- function(term, output_dim, param_nr, controls,
   
 }
 
+
+
+
 #' @rdname processors
 #' @export
-int_processor <- function(term, data, output_dim, param_nr, controls){
+int_processor <- function(term, data, output_dim, param_nr, controls, engine){
   
   if(term=="(Intercept)") term <- "1"
   data <- as.data.frame(data[[1]])
   
+  if(engine != "torch"){
+    layer_class = tf$keras$layers$Dense
+    without_layer = tf$identity
+  }
+  if(engine == "torch"){
+    layer_class = layer_dense_torch
+    without_layer = nn_identity
+    input_shape = 1
+  }
+  
   layer <- layer_generator(term = term, 
                            output_dim = output_dim, 
                            param_nr = param_nr, 
-                           controls = controls)
+                           controls = controls, engine = engine, 
+                           further_layer_args = if(engine == "torch")
+                             list(input_shape=input_shape),
+                           layer_class = layer_class,
+                           without_layer = without_layer)
 
   list(
     data_trafo = function() matrix(rep(1, nrow(data)), ncol=1),
@@ -242,23 +299,15 @@ int_processor <- function(term, data, output_dim, param_nr, controls){
 
 #' @rdname processors
 #' @export
-lin_processor <- function(term, data, output_dim, param_nr, controls){
-  
-  
-  layer <- layer_generator(term = term, 
-                           output_dim = output_dim, 
-                           param_nr = param_nr, 
-                           controls = controls)
+lin_processor <- function(term, data, output_dim, param_nr, controls, engine){
   
   if(grepl("lin(.*)", term)) term <- paste(extractvar(term, allow_ia = TRUE),
                                            collapse = " + ")
-  
-  
-  
+  #if(controls$intercept_included) term <- paste0("1+", term)
+  #if(!controls$intercept_included) term <- paste0("0+", term)
   
   data_trafo <- function(indata = data)
   {
-    options(na.action='na.pass')
     if(attr(terms.formula(as.formula(paste0("~", term))), "intercept")==0){
       model.matrix(object = as.formula(paste0("~", term)), 
                    data = indata)
@@ -267,6 +316,28 @@ lin_processor <- function(term, data, output_dim, param_nr, controls){
                    data = indata)[,-1,drop=FALSE]
     }
   }
+  
+  if(engine == "tf"){
+    layer_class = tf$keras$layers$Dense
+    without_layer = tf$identity
+  }
+  if(engine == "torch"){
+    layer_class = layer_dense_torch
+    input_shape = as.integer(ncol(data_trafo()))
+    without_layer = nn_identity
+  }
+  #exclude intercept info again
+  #controls <- controls[-length(controls)]
+  layer <- layer_generator(term = term, 
+                           output_dim = output_dim, 
+                           param_nr = param_nr, 
+                           controls = controls,
+                           engine = engine,
+                           further_layer_args = if(engine == "torch") 
+                             list(input_shape=input_shape),
+                           layer_class = layer_class,
+                           without_layer = without_layer)
+
   
   list(
     data_trafo = function() data_trafo(),
@@ -277,13 +348,7 @@ lin_processor <- function(term, data, output_dim, param_nr, controls){
     },
     input_dim = as.integer(ncol(data_trafo())),
     layer = layer,
-    coef = function(weights){  
-      
-      wm <- as.matrix(weights)
-      rownames(wm) <- colnames(data_trafo())
-      return(wm)
-      
-      },
+    coef = function(weights)  as.matrix(weights),
     penalty = NULL
   )
   
@@ -291,17 +356,19 @@ lin_processor <- function(term, data, output_dim, param_nr, controls){
 
 #' @rdname processors
 #' @export
-gam_processor <- function(term, data, output_dim, param_nr, controls){
+gam_processor <- function(term, data, output_dim, param_nr, controls, engine){
   
   output_dim <- as.integer(output_dim)
   # extract mgcv smooth object
   P <- create_P(get_gamdata(term, param_nr, controls$gamdata, what="sp_and_S"),
                 controls$sp_scale(data))
   
+  if(engine == "torch") layer_spline <- layer_spline_torch
+
   layer <- layer_generator(term = term, 
                            output_dim = output_dim, 
-                           param_nr = param_nr, 
-                           controls = controls,
+                           param_nr = param_nr,
+                           controls = controls, engine = engine,
                            further_layer_args = list(P = P),
                            layer_args_names = c("name", "units", "P", "trainable", 
                                                 "kernel_initializer"),
@@ -324,23 +391,51 @@ gam_processor <- function(term, data, output_dim, param_nr, controls){
 }
 
 
-l1_processor <- function(term, data, output_dim, param_nr, controls){
+l1_processor <- function(term, data, output_dim, param_nr, controls, engine){
   # l1 (Tib)
   lambda = controls$sp_scale(data) * as.numeric(extractval(term, "la"))
+  
+  if(engine == "tf") {
+    layer_class = tib_layer
+    without_layer = function(x, ...) 
+      return(simplyconnected_layer(
+        la = lambda,
+        name = makelayername(term, param_nr),
+        ...
+      )(x))
+    further_layer_args <- list(la = lambda)
+    layer_args_names <- c("name", "units", "la")
+  }
+  
+  data_trafo <- function(indata = data) 
+    model.matrix(object = as.formula(paste0("~ 1 + ", extractvar(term))), 
+                 data = indata)[,-1,drop=FALSE]
+  
+  if(engine == "torch") {
+    layer_class = tib_layer_torch
+    input_shape = ncol(data_trafo())
+    without_layer = function(x, ...) 
+      return(simplyconnected_layer_torch(
+        la = lambda,
+        #name = makelayername(term, param_nr),
+        input_shape = input_shape,
+        ...
+      )(x))
+    further_layer_args <- list(la = lambda,
+                               input_shape = input_shape)
+    layer_args_names <- c("input_shape", "units", "la")
+  }
+  
   
   layer <- layer_generator(term = term, 
                            output_dim = output_dim, 
                            param_nr = param_nr, 
                            controls = controls,
-                           further_layer_args = list(la = lambda),
-                           layer_args_names = c("name", "units", "la"),
-                           layer_class = tib_layer,
-                           without_layer = function(x, ...) 
-                             return(simplyconnected_layer(
-                               la = lambda,
-                               name = makelayername(term, param_nr),
-                               ...
-                             )(x))
+                           further_layer_args = further_layer_args,
+                           layer_args_names = layer_args_names,
+                           engine = engine,
+                           layer_class = layer_class,
+                           without_layer = without_layer
   )
 
   penalty <- if(output_dim > 1){
@@ -350,8 +445,12 @@ l1_processor <- function(term, data, output_dim, param_nr, controls){
   }
   
   list(
-    data_trafo = function() data[extractvar(term)],
-    predict_trafo = function(newdata) newdata[extractvar(term)],
+    data_trafo = data_trafo,
+    predict_trafo =  function(newdata){ 
+      return(
+        data_trafo(as.data.frame(newdata))
+      )
+    },
     input_dim = as.integer(extractlen(term, data)),
     layer = layer,
     coef = function(weights){ 
@@ -366,24 +465,39 @@ l1_processor <- function(term, data, output_dim, param_nr, controls){
   
 }
 
-l21_processor <- function(term, data, output_dim, param_nr, controls){
+l21_processor <- function(term, data, output_dim, param_nr, controls, engine){
   
   lambda = controls$sp_scale(data) * as.numeric(extractval(term, "la"))
+  
+  if(engine == "tf") {
+    layer_class = tibgroup_layer
+    further_layer_args = list(group_idx = NULL, la = lambda)
+    layer_args_names = c("name", "units", "la", "group_idx")
+  }
+  
+  data_trafo <- function(indata = data) 
+    model.matrix(object = as.formula(paste0("~ 1 + ", extractvar(term))), 
+                 data = indata)[,-1,drop=FALSE]
+  
+  if(engine == "torch") {
+    layer_class = tibgroup_layer_torch
+    input_shape = ncol(data_trafo())
+    further_layer_args = list(group_idx = NULL, la = lambda,
+                              input_shape = input_shape)
+    layer_args_names = c("input_shape", "units", "la", "group_idx")
+  }
+  
+  
   
   layer <- layer_generator(term = term, 
                            output_dim = output_dim, 
                            param_nr = param_nr, 
                            controls = controls,
-                           further_layer_args = list(group_idx = NULL, la = lambda),
-                           layer_args_names = c("name", "units", "la", "group_idx"),
-                           layer_class = tibgroup_layer,
+                           further_layer_args = further_layer_args,
+                           layer_args_names = layer_args_names,
+                           layer_class = layer_class,
+                           engine = engine
   )
-  
-  data_trafo <- function(indata = data){ 
-    options(na.action='na.pass')
-    model.matrix(object = as.formula(paste0("~ 1 + ", extractvar(term))), 
-                 data = indata)[,-1,drop=FALSE]
-  }
   
   list(
     data_trafo = function() data_trafo(),
@@ -406,20 +520,41 @@ l21_processor <- function(term, data, output_dim, param_nr, controls){
 }
 
 
-l2_processor <- function(term, data, output_dim, param_nr, controls){
+l2_processor <- function(term, data, output_dim, param_nr, controls, engine){
   # ridge
   
   lambda = controls$sp_scale(data) * extractval(term, "la")
   
+  data_trafo = function() data[extractvar(term)]
+  if(engine == "tf") {
+    kernel_regularizer = tf$keras$regularizers$l2(l = lambda)
+    layer_class = tf$keras$layers$Dense
+    without_layer = tf$identity
+  }
+  
+  if(engine == "torch"){
+    layer_class = layer_dense_torch
+    without_layer = nn_identity
+    kernel_regularizer = list(regularizer = "l2",
+                              la = lambda)
+    input_shape <- ifelse(is.factor(data_trafo()[[1]]),
+                          yes = length(unique(data_trafo()[[1]])), 
+                          no = 1)
+  } 
+  controls$weight_options$general$kernel_regularizer <- kernel_regularizer
   layer <- layer_generator(term = term, 
                            output_dim = output_dim, 
                            param_nr = param_nr, 
+                           layer_class = layer_class,
+                           without_layer = without_layer,
                            controls = controls,
-                           kernel_regularizer = tf$keras$regularizers$l2(l = lambda)
+                           further_layer_args = 
+                             if(engine == "torch")  input_shape,
+                           engine = engine
   )
 
   list(
-    data_trafo = function() data[extractvar(term)],
+    data_trafo = data_trafo,
     predict_trafo = function(newdata) newdata[extractvar(term)],
     input_dim = as.integer(extractlen(term, data)),
     layer = layer,
@@ -429,7 +564,8 @@ l2_processor <- function(term, data, output_dim, param_nr, controls){
   
 }
 
-offset_processor <- function(term, data, output_dim, param_nr, controls=NULL){
+offset_processor <- function(term, data, output_dim, param_nr, controls=NULL, 
+                             engine){
   
   layer <- layer_generator(term = term, 
                            output_dim = output_dim, 
@@ -447,7 +583,7 @@ offset_processor <- function(term, data, output_dim, param_nr, controls=NULL){
   )
 }
 
-rwt_processor <- function(term, data, output_dim, param_nr, controls){
+rwt_processor <- function(term, data, output_dim, param_nr, controls, engine){
   
   special_layer <- suppressWarnings(extractval(term, "layer"))
   if(!is.null(special_layer)) special_layer <- as.character(special_layer)
@@ -457,7 +593,8 @@ rwt_processor <- function(term, data, output_dim, param_nr, controls){
   
   terms <- lapply(terms, function(t){ 
     args <- list(term = t, data = data, output_dim = output_dim,
-                 param_nr = param_nr, controls = controls)
+                 param_nr = param_nr, controls = controls,
+                 engine = engine)
     args$controls$with_layer <- FALSE
     spec <- get_special(t, specials = names(controls$procs))
     if(is.null(spec)){
@@ -529,7 +666,8 @@ rwt_processor <- function(term, data, output_dim, param_nr, controls){
   
 }
 
-multiply_processor <- function(term, data, output_dim, param_nr, controls){
+multiply_processor <- function(term, data, output_dim, param_nr, controls,
+                               engine){
   
   terms <- get_terms_mult(term)
   
@@ -622,7 +760,7 @@ dnn_processor <- function(dnn){
 }
 
 dnn_placeholder_processor <- function(dnn){
-  function(term, data, output_dim, param_nr, controls=NULL){
+  function(term, data, output_dim, param_nr, controls=NULL, engine){
     list(
       data_trafo = function() data[extractvar(term)],
       predict_trafo = function(newdata) newdata[extractvar(term)],
@@ -633,7 +771,7 @@ dnn_placeholder_processor <- function(dnn){
 }
 
 dnn_image_placeholder_processor <- function(dnn, size){
-  function(term, data, output_dim, param_nr, controls=NULL){
+  function(term, data, output_dim, param_nr, controls=NULL, engine){
     list(
       data_trafo = function() as.data.frame(data[extractvar(term)]),
       predict_trafo = function(newdata) as.data.frame(newdata[extractvar(term)]),

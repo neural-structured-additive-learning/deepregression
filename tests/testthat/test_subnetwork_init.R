@@ -28,7 +28,7 @@ test_that("subnetwork_init", {
                   automatic_oz_check = TRUE,
                   param_nr = 1,
                   controls = controls,
-                  parsing_options = form_control())
+                  parsing_options = form_control(), engine = "tf")
   )
   
   gaminputs <- gaminputs <- makeInputs(controls$gamdata$data_trafos, "gam_inp")
