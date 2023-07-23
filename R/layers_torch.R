@@ -1,14 +1,96 @@
+#' Function to define a torch layer similar to a tf dense layer
+#' 
+#' @param input_shape integer; number of input units
+#' @param units integer; number of output units
+#' @param name string; string defining the layer's name
+#' @param trainable logical; whether layer is trainable
+#' @param kernel_initializer initializer; for coefficients
+#' @param use_bias logical; wether bias is used (default no)
+#' @param kernel_regularizer regularizer; for coefficients
+#' @param ... arguments used in choose_kernel_initializer_torch
+#' @return torch layer
+#' @export
+layer_dense_torch <- function(input_shape, units = 1L, name, trainable = TRUE,
+                              kernel_initializer = "glorot_uniform",
+                              use_bias = FALSE, kernel_regularizer = NULL, ...){
+  
+  dots <- list(...)
+  kernel_initializer <- do.call(
+    choose_kernel_initializer_torch, list(kernel_initializer,
+                                          dots$kernel_initializer_value))
+  
+  layer_module <- layer_dense_module(kernel_initializer)
+  layer <-  layer_module(in_features = input_shape,
+                         out_features = units, bias = use_bias)
+  
+  if(!trainable) layer$parameters$weight$requires_grad_(F)
+  
+  
+  if(!is.null(kernel_regularizer)){
+    if(kernel_regularizer$regularizer == "l2") {
+      layer$parameters$weight$register_hook(function(grad){
+        grad + 2*(kernel_regularizer$la)*(layer$parameters$weight)
+      })
+    }}
+  
+  layer
+}
+
+#' Function to choose a kernel initializer for a torch layer
+#' 
+#' @param kernel_initializer string; initializer
+#' @param value numeric; value used for a constant initializer
+#' @return kernel initializer
+#' @export
+choose_kernel_initializer_torch <- function(kernel_initializer, value = NULL){
+  kernel_initializer_value <- value
+  
+  if( kernel_initializer == "constant"){
+    kernel_initializer <-  function(value)
+      nn_init_no_grad_constant_deepreg(
+        tensor = self$weight, value = value)
+    formals(kernel_initializer)$value <- kernel_initializer_value
+    return(kernel_initializer)
+  }
+  
+  kernel_initializer <- switch(kernel_initializer,
+                               "glorot_uniform" = 
+                                 function(){
+                                   nn_init_xavier_uniform_(tensor = self$weight,
+                                                           gain = nn_init_calculate_gain(
+                                                             nonlinearity = "linear"))},
+                               "torch_ones" = function() 
+                                 nn_init_ones_(self$weight),
+                               "he_normal" = function()
+                                 nn_init_kaiming_normal_(self$weight)
+  )
+  
+  kernel_initializer
+}
+
+
+#' Function to create custom nn_linear module to overwrite reset_parameters
+#' 
+#' @param kernel_initializer string; initializer used to reset_parameters
+#' @return nn module
 
 layer_dense_module <- function(kernel_initializer){
-  nn_module(classname = "nn_linear_deepregression",
+  nn_module(classname = "custom_nn_linear_deepregression",
             initialize = nn_linear$public_methods$initialize,
             forward = nn_linear$public_methods$forward,
             reset_parameters = kernel_initializer
             )
 }
 
-# nn_init constand does not work if value is more than 1
-# so warmstarts for gam doesnot wokr
+
+
+#' custom nn_linear module to overwrite reset_parameters
+#' # nn_init_constant works only if value is scalar; so warmstarts for gam does'not work
+#' 
+#' @param tensor scalar or vector
+#' @param value value used for constant initialization
+#' @return tensor
+
 nn_init_no_grad_constant_deepreg <- function(tensor, value){
   
   if(length(value) == 1){
@@ -28,40 +110,9 @@ nn_init_no_grad_constant_deepreg <- function(tensor, value){
 }
 
 
-#' Function to define a torch layer similar to a tf dense layer
+#' Custom nn module
 #' 
-#' @param units integer; number of output units
-#' @param name string; string defining the layer's name
-#' @param trainable logical; whether layer is trainable
-#' @param kernel_initializer initializer; for coefficients
-#' @return Torch layer
-#' @export
-layer_dense_torch <- function(input_shape, units = 1L, name, trainable = TRUE,
-                              kernel_initializer = "glorot_uniform",
-                              use_bias = FALSE, kernel_regularizer = NULL, ...){
-  
-  dots <- list(...)
-  kernel_initializer <- do.call(
-    choose_kernel_initializer_torch, list(kernel_initializer,
-                                          dots$kernel_initializer_value))
-  
-  layer_module <- layer_dense_module(kernel_initializer)
-  layer <-  layer_module(in_features = input_shape,
-                     out_features = units, bias = use_bias)
-  
-  if(!trainable) layer$parameters$weight$requires_grad_(F)
-  
-  
-  if(!is.null(kernel_regularizer)){
-    if(kernel_regularizer$regularizer == "l2") {
-      layer$parameters$weight$register_hook(function(grad){
-        grad + 2*(kernel_regularizer$la)*(layer$parameters$weight)
-      })
-    }}
-  
-  layer
-}
-
+#' @return nn module
 simplyconnected_layer_torch <-
   nn_module(
     classname = "simply_con",
@@ -84,7 +135,15 @@ simplyconnected_layer_torch <-
     }
   )
 
-
+#' Hadamard-type layers torch
+#' 
+#' @param la numeric; regularization value (> 0)
+#' @param input_shape integer; number of input dimension
+#' @param units integer; number of units
+#' @param kernel_initializer initializer
+#' @return torch layer object
+#' @export
+#' @rdname hadamard_layers
 tiblinlasso_layer_torch <- function(la, input_shape = 1, units = 1,
                                     kernel_initializer = "he_normal"){
   
@@ -102,6 +161,10 @@ tiblinlasso_layer_torch <- function(la, input_shape = 1, units = 1,
   tiblinlasso_layer
 }
 
+
+#' Custom nn_module for Hadamard-type layer
+#' 
+#' @return nn module
 tib_layer_torch <-
   nn_module(
     classname = "TibLinearLasso_torch",
@@ -124,6 +187,9 @@ tib_layer_torch <-
     }
   )
 
+#' Custom nn_module for Group-Hadamard-type layer
+#' 
+#' @return nn module
 tibgroup_layer_torch <-
   nn_module(
     classname = "TibGroupLasso_torch",
