@@ -10,7 +10,7 @@ ensemble <- function (x, ...) {
   UseMethod("ensemble", x)
 }
 
-#' Ensemblind deepregression models
+#' Ensembling deepregression models
 #'
 #' @param x object of class \code{"deepregression"} to ensemble
 #' @param n_ensemble numeric; number of ensemble members to fit
@@ -51,9 +51,12 @@ ensemble.deepregression <- function(
 )
 {
 
-  if(x$engine == "tf") original_weights <- x$model$get_weights()
-  if(x$engine ==  "torch") original_weights <- x %>% get_weights_torch()
-  
+  if(x$engine == "tf") {
+    original_weights <- x$model$get_weights()
+  } else {
+      original_weights <- x %>% get_weights_torch()
+      }
+
 
   res <- mylapply(1:n_ensemble, function(iter) {
 
@@ -61,8 +64,11 @@ ensemble.deepregression <- function(
     if (reinitialize){
       x <- reinit_weights(x, seed[iter])
     } else {
-      if(x$engine == "tf") set_weights(x$model, original_weights)
-      if(x$engine == "torch") x$model()$load_state_dict(original_weights)
+      if(x$engine == "tf") {
+        set_weights(x$model, original_weights)
+        } else {
+          x$model()$load_state_dict(original_weights)
+          }
     }
 
     if (print_members)
@@ -70,8 +76,11 @@ ensemble.deepregression <- function(
 
     st1 <- Sys.time()
 
-    if(x$engine == "tf") this_mod <- x$model
-    if(x$engine == "torch") this_mod <- x$model()
+    if(x$engine == "tf") {
+      this_mod <- x$model
+    } else{
+      this_mod <- x$model()
+      }
 
     x_train <- prepare_data(x$init_params$parsed_formulas_content,
                             gamdata = x$init_params$gamdata$data_trafos, 
@@ -115,8 +124,11 @@ ensemble.deepregression <- function(
   
   
     if (save_weights){
-      if(x$engine == "tf") ret$weighthistory <- get_weights(x$model)
-     if(x$engine == "torch") ret$weighthistory <- x %>% get_weights_torch()
+      if(x$engine == "tf") {
+        ret$weighthistory <- get_weights(x$model)
+      } else {
+        ret$weighthistory <- x %>% get_weights_torch()
+        }
     }
 
     if (!is.null(save_fun)){
@@ -139,8 +151,11 @@ ensemble.deepregression <- function(
   class(ret) <- c("drEnsemble", class(x))
   # if (plot) try(plot.drEnsemble(res), silent = TRUE)
 
-  if(x$engine == "tf") set_weights(x$model, original_weights)
-  if(x$engine == "torch") x$model()$load_state_dict(original_weights)
+  if(x$engine == "tf") {
+    set_weights(x$model, original_weights)
+  } else{
+    x$model()$load_state_dict(original_weights)
+  }
 
 
   return(invisible(ret))
@@ -164,8 +179,11 @@ get_ensemble_distribution <- function(object, data = NULL, topK = NULL, ...) {
   ens <- object$ensemble_results
   n_ensemble <- length(ens)
   
-  if(object$engine == "tf") original_weights <- get_weights(object$model)
-  if(object$engine == "torch") original_weights <- get_weights_torch(object)
+  if(object$engine == "tf") {
+    original_weights <- get_weights(object$model)
+  } else {
+    original_weights <- get_weights_torch(object)
+    }
   
   if (is.null(topK))
     topK <- n_ensemble
@@ -178,32 +196,44 @@ get_ensemble_distribution <- function(object, data = NULL, topK = NULL, ...) {
 
   dists <- .call_for_all_members(object, get_distribution, data = data)
   
-  if(object$engine == "tf") shp <- dists[[1]]$shape$as_list()
-  if(object$engine == "torch") shp <- dists[[1]]$batch_shape[1]
+  if(object$engine == "tf") {
+    shp <- dists[[1]]$shape$as_list()
+  } else {
+    shp <- dists[[1]]$batch_shape[1]
+    }
   
-  if(object$engine == "tf") probs <- k_constant(1 / topK,
-                                                shape = c(shp, n_ensemble))
-  if(object$engine == "torch") probs <- torch_full(size =  c(shp, n_ensemble),
-                                                   fill_value = 1 / topK)
-  
-  if(object$engine == "tf") dcat <- tfd_categorical(probs = probs)
-  if(object$engine == "torch") dcat <- distr_categorical(probs = probs)
+  if(object$engine == "tf") {
+    probs <- k_constant(1 / topK,
+                        shape = c(shp, n_ensemble))
+  } else {
+    probs <- torch_full(size =  c(shp, n_ensemble),
+                        fill_value = 1 / topK)
+    }
 
+  if(object$engine == "tf") {
+    dcat <- tfd_categorical(probs = probs)
+  } else {
+    dcat <- distr_categorical(probs = probs)
+    }
   
-  if(object$engine == "tf") mix_dist <- tfd_mixture(dcat, dists)
-  
-  if(object$engine == "torch"){
+  if(object$engine == "tf") {
+    mix_dist <- tfd_mixture(dcat, dists)
+  } else {
     used_distr <- family_to_trochd(family = object$init_params$family)
     distr_parameters <- prepare_torch_distr_mixdistr(object, dists)
     dists <- do.call(used_distr, distr_parameters)
     mix_dist <- distr_mixture_same_family(dcat, dists)
-  }
-
-
-  if(object$engine == "tf") set_weights(object$model, original_weights)
-  if(object$engine == "torch") object$model()$load_state_dict(original_weights)
+    }
   
 
+
+  if(object$engine == "tf") {
+    set_weights(object$model, original_weights)
+  } else {
+    object$model()$load_state_dict(original_weights)
+    }
+
+  
   return(mix_dist)
 }
 
@@ -260,13 +290,16 @@ fitted.drEnsemble <- function(object, apply_fun = tfd_mean, ...) {
     x$weighthistory
   })
   lapply(ens_weights, function(x) {
-    if(object$engine == "tf") set_weights(object$model, x)
-    if(object$engine == "torch") object$model()$load_state_dict(x)
+    if(object$engine == "tf") {
+      set_weights(object$model, x)
+    } else {
+      object$model()$load_state_dict(x)
+      } 
     FUN(object, ... = ...)
   })
 }
 
-#' Genereic function to re-intialize model weights
+#' Generic function to re-intialize model weights
 #'
 #' @param object model to re-initialize
 #' @param seed seed for reproducibility
@@ -299,11 +332,10 @@ reinit_weights.deepregression <- function(object, seed) {
       x$set_weights(weights = list(dweight))
     }, silent = TRUE)
   })
-  return(invisible(object))
-  }
-  if(object$engine == "torch"){
+  } else {
     torch_manual_seed(seed)
     object$model()$apply(weight_reset)
-    invisible(object)
   }
+  return(invisible(object))
+  
 }
