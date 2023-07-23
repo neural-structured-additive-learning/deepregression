@@ -2,7 +2,7 @@
 #' Forward functions works with a list. The entries of the list are the input of 
 #' the subnetworks
 #' 
-#' @param submodules_list list; subnetworks of distribution parameter
+#' @param submodules_list list; subnetworks 
 #' @return nn_module
 #' @export
 
@@ -36,17 +36,16 @@ model_torch <-  function(submodules_list){
 #' \code{subnetwork_init}
 #' @param weights vector of positive values; optional (default = 1 for all observations)
 #' @param optimizer optimizer used. Per default Adam
-#' @param model_fun which function to use for model building (default \code{keras_model})
+#' @param model_fun NULL not needed for torch
 #' @param monitor_metrics Further metrics to monitor
 #' @param from_preds_to_output function taking the list_pred_param outputs
 #' and transforms it into a single network output
 #' @param loss the model's loss function; per default evaluated based on
 #' the arguments \code{family} and \code{weights} using \code{from_dist_to_loss}
 #' @param additional_penalty a penalty that is added to the negative log-likelihood;
-#' must be a function of model$trainable_weights with suitable subsetting
+#' must be a function of model$trainable_weights with suitable subsetting (not implemented for torch)
 #' @param ... arguments passed to \code{from_preds_to_output}
-#' @return a list with input tensors and output tensors that can be passed
-#' to, e.g., \code{keras_model}
+#' @return a luz_module_generator
 #'
 torch_dr <- function(
     list_pred_param,
@@ -63,6 +62,11 @@ torch_dr <- function(
   out <- from_preds_to_output(list_pred_param, ...)
   # define model
   model <- out
+  
+  # additional loss
+  if(!is.null(additional_penalty)){
+    stop("Not implemented yet.")
+  }
   
   # compile model
   model <- out %>% luz::setup(optimizer = optimizer,
@@ -109,8 +113,7 @@ from_preds_to_dist_torch <- function(
                         use_bias = FALSE),
     trafo_list = NULL, mapping_now = F){
   
-  # i think its better to do combination later,
-  # because if i do this way i have to load data for each parameter 
+  # i think its better to combine them in the forward pass
   if(mapping_now){
     if(!is.null(mapping)){
       
