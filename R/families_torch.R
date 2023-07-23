@@ -131,6 +131,47 @@ family_to_trafo_torch <- function(family, add_const = 1e-8){
   
 }
 
+#' Character-to-parameter collection function needed for mixture of same distribution (torch)
+#' 
+#' @param family character defining the distribution
+#' @return a list of extractions for each supported distribution
+#' @export
+#' 
+collect_distribution_parameters <- function(family){
+  parameter_list <- switch(family,
+                           normal = function(x) list("loc" = x$loc,
+                                                     "scale" = x$scale),
+                           bernoulli = function(x) list("logits" = x$logits),
+                           bernoulli_prob = function(x) list("probs" = x$probs),
+                           poisson = function(x) list("rate" = x$rate),
+                           gamma = function(x) list("concentration" = 
+                                                      x$concentration,
+                                                    "rate" = x$rate))
+  parameter_list
+}
+
+
+#' Prepares distributions for mixture process
+#' 
+#' @param object object of class \code{"drEnsemble"}
+#' @param dists fitted distributions 
+#' @return distribution parameters used for mixture of same distribution
+#' @export
+#' 
+prepare_torch_distr_mixdistr <- function(object, dists){
+  
+  helper_collector <- collect_distribution_parameters(object$init_params$family)
+  distr_parameters <- lapply(dists, helper_collector)
+  num_params <- length(distr_parameters[[1]])
+  
+  distr_parameters <- lapply(seq_len(num_params),
+                             function(y) lapply(distr_parameters,
+                                                FUN = function(x) x[[y]]))
+  distr_parameters <- lapply(distr_parameters, FUN = function(x) torch_cat(x, 2))
+  distr_parameters
+}
+
+
 #' Function to create (custom) family
 #' 
 #' @param torch_dist a torch probability distribution
