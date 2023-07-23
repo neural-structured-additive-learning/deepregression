@@ -202,8 +202,11 @@ predict.deepregression <- function(
         object$model <- object$model()
         object$model$eval()
       }
-      
-      yhat <- object$model(input_model)
+      if(object$engine == "tf"){
+        yhat <- object$model(input_model, training = FALSE)
+      } else {
+        yhat <- object$model(input_model)
+      }
     }else{
       # preprocess data
       if(is.data.frame(newdata)) newdata <- as.list(newdata)
@@ -221,7 +224,12 @@ predict.deepregression <- function(
         object$model <- object$model()
         object$model$eval()
       }
-      yhat <- object$model(newdata_processed)
+      
+      if(object$engine == "tf"){
+        yhat <- object$model(newdata_processed, training = FALSE)
+      } else {
+        yhat <- object$model(newdata_processed)
+      }
     }
   }
   
