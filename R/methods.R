@@ -174,11 +174,11 @@ predict.deepregression <- function(
   convert_fun = as.matrix,
   ...
 ){
-  # Setup defaults 
-  # check if it really is a good idea to always assign apply_fun
-  # problem with last if check
+  
   if(object$engine == "torch" & identical(apply_fun,tfd_mean))
       apply_fun = function(x) x$mean
+  if(object$engine == "torch" & identical(apply_fun,tfd_stddev))
+    apply_fun = function(x) x$stddev
     
   # image case
   if(length(object$init_params$image_var)>0 | !is.null(batch_size)){
@@ -653,7 +653,7 @@ mean.deepregression <- function(
 )
 {
   
-  predict.deepregression(x, newdata = data, ...)
+  predict.deepregression(x, apply_fun = tfd_mean, newdata = data, ...)
 }
 
 
@@ -682,11 +682,7 @@ stddev.deepregression <- function(
   ...
 )
 {
-  
-  if(x$engine == "tf") apply_fun = tfd_stddev
-  if(x$engine == "torch") apply_fun = function(x) x$stddev
-  
-  predict.deepregression(x, newdata = data, apply_fun = apply_fun, ...)
+  predict.deepregression(x, newdata = data, apply_fun = tfd_stddev, ...)
 }
 
 #' Generic quantile function
@@ -794,8 +790,7 @@ log_score <- function(
   if(x$engine == "tf") {
     ind_fun <- function(x) tfd_independent(x)
     log_prob <- function(x, value) tfd_log_prob(x, value)
-    }
-  if(x$engine == "torch") {
+    } else {
     ind_fun <- function(x) x
     log_prob <- function(x, value) x$log_prob(value)
     summary_fun <- rowSums
@@ -868,8 +863,12 @@ get_weight_by_name <- function(mod, name, param_nr=1, postfixes="")
   if(!is.null(pfc_term$shared_name)){
     this_name <- paste0(pfc_term$shared_name, postfixes)
   }else{
-    if(mod$engine == "tf")  this_name <- paste0(makelayername(name, param_nr), postfixes)
-    if(mod$engine == "torch") this_name <- paste(name, param_nr, sep = "_")
+    
+    if(mod$engine == "tf"){
+      this_name <- paste0(makelayername(name, param_nr), postfixes)
+      } else {
+        this_name <- paste(name, param_nr, sep = "_")
+        }
   }
   # names <- get_mod_names(mod)
   if(length(this_name)>1){
