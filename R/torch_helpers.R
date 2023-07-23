@@ -101,8 +101,6 @@ get_weights_torch <- function(model){
   old_weights <- lapply(model$model()$parameters, function(x) as_array(x))
   lapply(old_weights, function(x) torch_tensor(x))
 }
-# prepare_input_list_model()
-
 
 
 weight_reset <-  function(m) {
