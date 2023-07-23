@@ -507,9 +507,11 @@ cv.deepregression <- function(
       data_size = NROW(x$init_params$y),
       cv_folds)
   }
-  if(x$engine ==  "tf") old_weights <- x$model$get_weights()
-  # clone does not work
-  if(x$engine ==  "torch") old_weights <- x %>% get_weights_torch()
+  if(x$engine ==  "tf") {
+    old_weights <- x$model$get_weights()
+  } else {
+    old_weights <- x %>% get_weights_torch()
+    }
   
   
   # subset fun
@@ -541,8 +543,14 @@ cv.deepregression <- function(
     
     this_callbacks <- callbacks
     if(save_weights){
-      weighthistory <- WeightHistory$new()
-      this_callbacks <- append(this_callbacks, weighthistory)
+      if(x$engine=="tf"){
+        weighthistory <- WeightHistory$new()
+        this_callbacks <- append(this_callbacks, weighthistory)
+        } else {
+          
+          stop("Not implemented yet.")
+        
+          }
     }
 
     args <- list(...)
@@ -569,7 +577,15 @@ cv.deepregression <- function(
 
     ret <- do.call(x$fit_fun, args)
     
-    if(save_weights) ret$weighthistory <- weighthistory$weights_last_layer
+    if(save_weights){
+      if(x$engine=="tf"){
+        ret$weighthistory <- weighthistory$weights_last_layer
+      } else {
+          
+        stop("Not implemented yet.")
+        
+        }
+      }
     
     if(!is.null(save_fun))
       ret$save_fun_result <- save_fun(this_mod)
@@ -577,9 +593,12 @@ cv.deepregression <- function(
     if(stop_if_nan && any(is.nan(ret$metrics$validloss)))
       stop("Fold ", folds_iter, " with NaN's in ")
     
-    if(x$engine == "tf") this_mod$model$set_weights(old_weights)
-    if(x$engine == "torch") this_mod$model()$load_state_dict(old_weights)
-    
+    if(x$engine == "tf") {
+      this_mod$model$set_weights(old_weights)
+    } else {
+      this_mod$model()$load_state_dict(old_weights)
+      }
+
     td <- Sys.time()-st1
     if(print_folds) cat("\nDone in", as.numeric(td), "", attr(td,"units"), "\n")
 
@@ -591,10 +610,13 @@ cv.deepregression <- function(
 
   if(plot) try(plot_cv(res, engine = x$engine), silent = TRUE)
 
+  # CM:why is this needed? We don't use x in the cv
+  if(x$engine == "tf") {
+    x$model$set_weights(old_weights)
+  } else {
+    x$model()$load_state_dict(old_weights)
+  }
   
-  if(x$engine == "tf")   x$model$set_weights(old_weights)
-  if(x$engine == "torch") x$model()$load_state_dict(old_weights)
-
   invisible(return(res))
 
 }
