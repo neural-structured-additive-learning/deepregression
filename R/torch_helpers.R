@@ -120,7 +120,8 @@ check_data_for_image <- function(data){
 }
 
 
-#' Helper function to calculate amount of layers; Needed when shared layers are used, because of layers have same names
+#' Helper function to calculate amount of layers
+#' Needed when shared layers are used, because of layers have same names
 
 #' @param list_pred_param list; subnetworks 
 #' @return layers
