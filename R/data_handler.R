@@ -21,13 +21,14 @@ loop_through_pfc_and_call_trafo <- function(pfc, newdata = NULL, engine = "tf")
       if(is.null(newdata)){
         data_list[[k]] <- to_matrix(pfc[[i]][[j]]$data_trafo())
       }else{
+        data_list[[k]] <- to_matrix(pfc[[i]][[j]]$predict_trafo(newdata))
   }
-    
+      k <- k + 1
     }
       
-      k <- k + 1
-      }
-        data_list[[k]] <- to_matrix(pfc[[i]][[j]]$predict_trafo(newdata))
+      
+  }
+  
   return(data_list)
   
   
@@ -41,11 +42,12 @@ loop_through_pfc_and_call_trafo <- function(pfc, newdata = NULL, engine = "tf")
 #' @return list of matrices or arrays
 #' @export
 #' 
-prepare_data <- function(pfc, na_handler = na_omit_list, gamdata = NULL)
+prepare_data <- function(pfc, na_handler = na_omit_list, gamdata = NULL,
+                         engine = "tf")
 {
   
   ret_list <- loop_through_pfc_and_call_trafo(pfc = pfc, engine = engine)
-  if(!is.null(gamdata) & engine == 'tf')
+  if(!is.null(gamdata) & engine == "tf")
     ret_list <- c(prepare_gamdata(gamdata), ret_list)
   
   ret_list <- na_handler(ret_list)
@@ -63,7 +65,8 @@ prepare_data <- function(pfc, na_handler = na_omit_list, gamdata = NULL)
 #' @return list of matrices or arrays
 #' @export
 #' 
-prepare_newdata <- function(pfc, newdata, na_handler = na_omit_list, gamdata = NULL)
+prepare_newdata <- function(pfc, newdata, na_handler = na_omit_list, gamdata = NULL,
+                            engine = "tf")
 {
   
   ret_list <- loop_through_pfc_and_call_trafo(pfc = pfc, newdata = newdata,
@@ -76,7 +79,7 @@ prepare_newdata <- function(pfc, newdata, na_handler = na_omit_list, gamdata = N
   return(ret_list)
   
 }
-}
+
 
 prepare_gamdata <- function(gamdata, newdata = NULL){
   
@@ -90,7 +93,7 @@ prepare_gamdata <- function(gamdata, newdata = NULL){
     unname(lapply(gamdata, function(x) 
       to_matrix(x$predict_trafo(newdata))))
   )
-  
+}
 
 to_matrix <- function(x)
 {
