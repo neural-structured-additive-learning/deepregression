@@ -62,9 +62,7 @@ prepare_input_list_model <- function(input_x, input_y,
                           list(x = input_x, y = input_y))
     
     return(input_list_model)
-  }
-  
-  if(object$engine == "torch"){
+  } else {
     input_dataloader <- prepare_data_torch(
       pfc  = object$init_params$parsed_formulas_content,
       input_x = input_x,
