@@ -16,6 +16,7 @@ prepare_data_torch <- function(pfc, input_x, target = NULL, object){
   df_list <- lapply(distr_datasets_index, function(x){ input_x[x] })
   
   # special case
+  special_case <- FALSE
   if(!attr(make_torch_dist(object$init_params$family), "nrparams_dist") == 1){
     if(sum(names(object$model()$modules) == "subnetwork") == 1){ 
       # if is also triggered when binomal or poisson (distribution with one parameter)
@@ -24,9 +25,12 @@ prepare_data_torch <- function(pfc, input_x, target = NULL, object){
                      function(x) tail(x, 1)))
       amount_params <- seq_len(length(object$init_params$parsed_formulas_contents))
       df_list_index <- which(amount_params %in% helper_df_list)
-      df_list <- df_list[df_list_index]}
+      df_list <- df_list[df_list_index]
+      special_case <-  TRUE}
   }
   
+  #predict cases
+  if(is.null(target) & special_case)  return(unlist(df_list, recursive = F))  
   if(is.null(target)) return(df_list)
   
   get_luz_dataset(df_list = df_list, target = torch_tensor(target)$to(torch_float()),
