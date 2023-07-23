@@ -598,8 +598,10 @@ cv.deepregression <- function(
         }
       }
     
-    if(!is.null(save_fun))
-      ret$save_fun_result <- save_fun(this_mod)
+    if(!is.null(save_fun)){
+      #ret$save_fun_result <- save_fun(x, train_ind, test_ind)
+      ret$save_fun_result <- save_fun(this_mod, train_ind, test_ind)
+    }
     
     if(stop_if_nan && any(is.nan(ret$metrics$validloss)))
       stop("Fold ", folds_iter, " with NaN's in ")
