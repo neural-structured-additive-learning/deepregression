@@ -170,18 +170,16 @@ predict.deepregression <- function(
   object,
   newdata = NULL,
   batch_size = NULL,
-  apply_fun = NULL,
+  apply_fun = tfd_mean,
   convert_fun = as.matrix,
   ...
 ){
   # Setup defaults 
   # check if it really is a good idea to always assign apply_fun
   # problem with last if check
-  if(is.null(apply_fun)) {
-    if(object$engine == "tf") apply_fun = tfd_mean
-    if(object$engine == "torch") apply_fun = function(x) x$mean
+  if(object$engine == "torch" & identical(apply_fun,tfd_mean))
+      apply_fun = function(x) x$mean
     
-  }
   # image case
   if(length(object$init_params$image_var)>0 | !is.null(batch_size)){
     
@@ -243,7 +241,7 @@ predict.deepregression <- function(
 #'
 #' @param object a deepregression object
 #' @param apply_fun function applied to fitted distribution,
-#' per default \code{tfd_mean} (Better inside predict; torch are tf different)
+#' per default \code{tfd_mean}
 #' @param ... further arguments passed to the predict function
 #'
 #' @export
@@ -251,11 +249,11 @@ predict.deepregression <- function(
 #' @rdname methodDR
 #'
 fitted.deepregression <- function(
-  object, ...
+  object, apply_fun = tfd_mean, ...
 )
 {
   return(
-    predict.deepregression(object, ...)
+    predict.deepregression(object, apply_fun = apply_fun, ...)
   )
 }
 
