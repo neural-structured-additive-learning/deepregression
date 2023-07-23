@@ -24,7 +24,7 @@ Depends:
     R (>= 4.0.0),
     tensorflow (>= 2.2.0),
     tfprobability,
-    keras (>= 2.2.0)
+    keras (>= 2.2.0),
     torch,
     luz, 
     torchvision
