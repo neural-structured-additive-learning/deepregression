@@ -7,7 +7,7 @@
 #' @param name string; string defining the layer's name
 #' @param trainable logical; whether layer is trainable
 #' @param kernel_initializer initializer; for basis coefficients
-#' @return Torch layer
+#' @return Torch spline layer
 #' @export
 layer_spline_torch <- function(P, units = 1L, name, trainable = TRUE,
                                kernel_initializer = "glorot_uniform", ...){
