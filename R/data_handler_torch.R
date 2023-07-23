@@ -1,3 +1,12 @@
+#' Function to additionally prepare data for fit process (torch)
+#' 
+#' @param pfc list of processor transformed formulas 
+#' @param input_x output of prepare_data()
+#' @param target target values
+#' @param object a deepregression object
+#' @return list of matrices or arrays for predict or a dataloader for fit process
+#' 
+
 prepare_data_torch <- function(pfc, input_x, target = NULL, object){
   
   distr_datasets_length <- sapply(
@@ -37,6 +46,22 @@ prepare_data_torch <- function(pfc, input_x, target = NULL, object){
                   object = object)
   }
 
+
+#' Function to prepare input list for fit process, due to different approaches
+#' 
+#' @param input_x output of prepare_data()
+#' @param input_y target
+#' @param object a deepregression object
+#' @param epochs integer, the number of epochs to fit the model
+#' @param batch_size integer, the batch size used for mini-batch training
+#' @param validation_split float in [0,1] defining the amount of data used for validation
+#' @param validation_data optional specified validation data
+#' @param callbacks a list of callbacks for fitting
+#' @param verbose logical, whether to print losses during training.
+#' @param view_metrics logical, whether to trigger the Viewer in RStudio / Browser.
+#' @param early_stopping logical, whether early stopping should be user.
+#' @return list of arguments used in fit function
+#' 
 prepare_input_list_model <- function(input_x, input_y,
                                      object, epochs = 10, batch_size = 32,
                                      validation_split = 0, validation_data = NULL,
