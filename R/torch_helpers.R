@@ -119,33 +119,12 @@ check_data_for_image <- function(data){
   image_yes
 }
 
-choose_kernel_initializer_torch <- function(kernel_initializer, value = NULL){
-  kernel_initializer_value <- value
-  
-  if( kernel_initializer == "constant"){
-    kernel_initializer <-  function(value)
-      nn_init_no_grad_constant_deepreg(
-        tensor = self$weight, value = value)
-    formals(kernel_initializer)$value <- kernel_initializer_value
-    return(kernel_initializer)
-  }
-  
-  kernel_initializer <- switch(kernel_initializer,
-                               "glorot_uniform" = 
-                                 function(){
-                                   nn_init_xavier_uniform_(tensor = self$weight,
-                                                           gain = nn_init_calculate_gain(
-                                                             nonlinearity = "linear"))},
-                               "torch_ones" = function() 
-                                 nn_init_ones_(self$weight),
-                               "he_normal" = function()
-                                 nn_init_kaiming_normal_(self$weight)
-  )
-  
-  kernel_initializer
-}
 
+#' Helper function to calculate amount of layers; Needed when shared layers are used, because of layers have same names
 
+#' @param list_pred_param list; subnetworks 
+#' @return layers
+#' @export
 get_help_forward_torch <- function(list_pred_param){
   
   layer_names <- names(list_pred_param)
