@@ -108,34 +108,7 @@ weight_reset <-  function(m) {
 }
 
 
-collect_distribution_parameters <- function(family){
-  parameter_list <- switch(family,
-                           normal = function(x) list("loc" = x$loc,
-                                                     "scale" = x$scale),
-                           bernoulli = function(x) list("logits" = x$logits),
-                           bernoulli_prob = function(x) list("probs" = x$probs),
-                           poisson = function(x) list("rate" = x$rate),
-                           gamma = function(x) list("concentration" = 
-                                                      x$concentration,
-                                                    "rate" = x$rate))
-  parameter_list
-}
 
-
-
-
-prepare_torch_distr_mixdistr <- function(object, dists){
-  
-  helper_collector <- collect_distribution_parameters(object$init_params$family)
-  distr_parameters <- lapply(dists, helper_collector)
-  num_params <- length(distr_parameters[[1]])
-  
-  distr_parameters <- lapply(seq_len(num_params),
-                             function(y) lapply(distr_parameters,
-                                                FUN = function(x) x[[y]]))
-  distr_parameters <- lapply(distr_parameters, FUN = function(x) torch_cat(x, 2))
-  distr_parameters
-}
 
 # check if variable contains image data
 
