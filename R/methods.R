@@ -233,7 +233,7 @@ predict.deepregression <- function(
   
   if(!is.null(apply_fun))
     return(convert_fun(apply_fun(yhat))) else
-      return(convert_fun(yhat)) # CM: which case is this?
+      return(convert_fun(yhat))
   
 }
 
