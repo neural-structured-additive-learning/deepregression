@@ -1,9 +1,9 @@
 #' Initializes a Subnetwork based on the Processed Additive Predictor
 #' 
 #' @param pp list of processed predictor lists from \code{processor}
-#' @param deep_top keras layer if the top part of the deep network after orthogonalization
+#' @param deep_top In tf approach: keras layer if the top part of the deep network after orthogonalization; Not yet implemented for torch
 #' is different to the one extracted from the provided network 
-#' @param orthog_fun function used for orthogonalization
+#' @param orthog_fun function used for orthogonalization; Not yet implemented for torch
 #' @param split_fun function to split the network to extract head
 #' @param shared_layers list defining shared weights within one predictor;
 #' each list item is a vector of characters of terms as given in the parameter formula
@@ -11,7 +11,7 @@
 #' @param selectfun_in,selectfun_lay functions defining which subset of pp to
 #' take as inputs and layers for this subnetwork; per default the \code{param_nr}'s entry
 #' @param gaminputs input tensors for gam terms
-#' @param summary_layer keras layer that combines inputs (typically adding or concatenating)
+#' @param summary_layer torch layer that combines inputs (typically adding or concatenating)
 #' @return returns a list of input and output for this additive predictor
 #' 
 #' @export
@@ -24,7 +24,7 @@ subnetwork_init_torch <- function(pp, deep_top = NULL,
                                   selectfun_in = function(pp) pp[[param_nr]],
                                   selectfun_lay = function(pp) pp[[param_nr]],
                                   gaminputs,
-                                  summary_layer = layer_add_identity)
+                                  summary_layer = model_torch)
 {
   
   # subnetwork builder for torch is still rudimentary. It only initializes the
@@ -71,8 +71,7 @@ subnetwork_init_torch <- function(pp, deep_top = NULL,
     
     names(outputs) <- paste(sapply(1:length(pp_in),
                              function(i) pp_lay[[i]]$term), param_nr, sep = "_")
-    outputs
-    model_torch(outputs)
+    summary_layer(outputs)
   } else{
     
     stop("Orthogonalization not implemented for torch")
