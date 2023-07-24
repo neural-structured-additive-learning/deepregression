@@ -337,6 +337,8 @@ fit.deepregression <- function(
                           na_handler = na_handler,
                           engine = object$engine)
   input_y <- as.matrix(object$init_params$y)
+  if(length(attr(input_x, "na_loc"))>0)
+    input_y <- input_y[-attr(input_x, "na_loc"),]
   
   if(!is.null(validation_data)){
     validation_data <- 
@@ -348,6 +350,8 @@ fit.deepregression <- function(
                               engine = object$engine),
           y = object$init_params$prepare_y_valdata(validation_data[[2]])
         )
+    if(length(attr(validation_data$x, "na_loc"))>0)
+      validation_data$y <- validation_data$y[-attr(x, "na_loc"),]  
       }
 
   if(length(object$init_params$image_var)>0 & object$engine == "tf"){
@@ -365,7 +369,7 @@ fit.deepregression <- function(
       callbacks = callbacks,
       ...
     )
-  }
+  } else{
     
     input_list_model <- 
       prepare_input_list_model(input_x = input_x,
@@ -383,9 +387,20 @@ fit.deepregression <- function(
     args <- append(args,
                    input_list_model[!names(input_list_model) %in%
                                       names(args)])
+    check_input_args_fit(args = args, engine = object$engine)
+  }
 
   ret <- suppressWarnings(do.call(object$fit_fun, args))
-  if(save_weights) ret$weighthistory <- weighthistory$weights_last_layer
+  if(save_weights){
+    if(object$engine == "tf"){
+      ret$weighthistory <- weighthistory$weights_last_layer
+      }else {
+        
+        stop("Not implemented yet")
+        
+      }
+    }
+    
   invisible(ret)
 }
 
