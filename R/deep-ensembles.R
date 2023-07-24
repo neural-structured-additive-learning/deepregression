@@ -82,6 +82,7 @@ ensemble.deepregression <- function(
       this_mod <- x$model()
       }
 
+    
     x_train <- prepare_data(x$init_params$parsed_formulas_content,
                             gamdata = x$init_params$gamdata$data_trafos, 
                             engine = x$engine)
@@ -99,9 +100,9 @@ ensemble.deepregression <- function(
     
     # make callbacks
     this_callbacks <- callbacks
-   
+    args <- list(...)
+    
     if(x$engine == "tf"){
-      args <- list(...)
       args <- append(args,
                      list(object = this_mod,
                           x = x_train,
@@ -111,13 +112,12 @@ ensemble.deepregression <- function(
                           view_metrics = FALSE
                      )
       )
-    }
-    if(x$engine == "torch"){
-      args <- list()
+    } else {
       args <- append(args,
                      input_list_model[!names(input_list_model) %in%
                                       names(args)])
-      }
+    }
+    
     args <- append(args, x$init_params$ellipsis)
 
     ret <- do.call(x$fit_fun, args)
