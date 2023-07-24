@@ -136,3 +136,25 @@ get_help_forward_torch <- function(list_pred_param){
   
   used_layers
 }
+
+
+
+
+check_input_args_fit <- function(args, engine){
+  if(engine == "tf") {
+    if(!all(names(args) %in% formalArgs(keras:::fit.keras.engine.training.Model))){
+      stop("Some arguments for the fit process are not supported by fit.
+           See keras:::keras.engine.training.Model")
+    }
+  } else {
+    if(!all(names(args) %in% formalArgs(luz:::fit.luz_module_generator))){
+      stop("Some arguments for the fit process are not supported by fit.
+           See luz:::fit.luz_module_generator")
+    }
+    
+  }
+  
+}
+
+
+
