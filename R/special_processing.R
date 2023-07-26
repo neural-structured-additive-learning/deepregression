@@ -9,6 +9,7 @@
 #' @param identify_intercept logical; whether to make the intercept automatically identifiable
 #' @param param_nr integer; identifier for the distribution parameter
 #' @param parsing_options options 
+#' @param engine character; the engine which is used to setup the NN (tf or torch)
 #' @param ... further processors
 #' @return returns a processor function
 #' 

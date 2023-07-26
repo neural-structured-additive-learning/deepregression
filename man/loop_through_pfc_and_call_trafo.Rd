@@ -4,12 +4,14 @@
 \alias{loop_through_pfc_and_call_trafo}
 \title{Function to loop through parsed formulas and apply data trafo}
 \usage{
-loop_through_pfc_and_call_trafo(pfc, newdata = NULL)
+loop_through_pfc_and_call_trafo(pfc, newdata = NULL, engine = "tf")
 }
 \arguments{
 \item{pfc}{list of processor transformed formulas}
 
 \item{newdata}{list in the same format as the original data}
+
+\item{engine}{character; the engine which is used to setup the NN (tf or torch)}
 }
 \value{
 list of matrices or arrays

@@ -2,6 +2,7 @@
 #' 
 #' @param pfc list of processor transformed formulas 
 #' @param newdata list in the same format as the original data
+#' @param engine character; the engine which is used to setup the NN (tf or torch)
 #' @return list of matrices or arrays
 #' 
 loop_through_pfc_and_call_trafo <- function(pfc, newdata = NULL, engine = "tf")
@@ -39,6 +40,7 @@ loop_through_pfc_and_call_trafo <- function(pfc, newdata = NULL, engine = "tf")
 #' @param pfc list of processor transformed formulas 
 #' @param na_handler function to deal with NAs
 #' @param gamdata processor for gam part
+#' @param engine the engine which is used to setup the NN (tf or torch)
 #' @return list of matrices or arrays
 #' @export
 #' 
@@ -62,6 +64,7 @@ prepare_data <- function(pfc, na_handler = na_omit_list, gamdata = NULL,
 #' @param na_handler function to deal with NAs
 #' @param newdata list in the same format as the original data
 #' @param gamdata processor for gam part
+#' @param engine character; the engine which is used to setup the NN (tf or torch)
 #' @return list of matrices or arrays
 #' @export
 #' 

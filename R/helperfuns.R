@@ -44,8 +44,7 @@ get_mod_names <- function(x)
 #' @param name character
 #' @param partial_match logical; whether to also check for a partial match
 #' @export
-get_weight_by_opname <- function(mod, name, partial_match = FALSE, 
-                                 param_nr = NULL)
+get_weight_by_opname <- function(mod, name, partial_match = FALSE)
 {
   lay <- get_layer_by_opname(mod, name, partial_match = partial_match)
   if(mod$engine == "tf"){

@@ -2,6 +2,8 @@
 #' class dataset
 #' @param df_list list; data for the distribution learning model (data for every distributional parameter)
 #' @param target vector; target value
+#' @param length amount of inputs
+#' @param object deepregression object
 #' @return R6 instances of class dataset
 #' @export
 get_luz_dataset <- dataset(

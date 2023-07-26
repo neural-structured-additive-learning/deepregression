@@ -12,20 +12,21 @@ layer_generator(
   output_dim,
   param_nr,
   controls,
+  name = makelayername(term, param_nr),
   layer_class = tf$keras$layers$Dense,
   without_layer = tf$identity,
-  name = makelayername(term, param_nr),
   further_layer_args = NULL,
   layer_args_names = NULL,
   units = as.integer(output_dim),
+  engine = "tf",
   ...
 )
 
-int_processor(term, data, output_dim, param_nr, controls)
+int_processor(term, data, output_dim, param_nr, controls, engine)
 
-lin_processor(term, data, output_dim, param_nr, controls)
+lin_processor(term, data, output_dim, param_nr, controls, engine)
 
-gam_processor(term, data, output_dim, param_nr, controls)
+gam_processor(term, data, output_dim, param_nr, controls, engine)
 }
 \arguments{
 \item{term}{character; term in the formula}
@@ -38,13 +39,13 @@ than one additive predictor}
 \item{controls}{list; control arguments which allow
 to pass further information}
 
+\item{name}{character; name of layer. 
+if NULL, \code{makelayername} will be used to create layer name}
+
 \item{layer_class}{a tf or keras layer function}
 
 \item{without_layer}{function to be used as 
 layer if \code{controls$with_layer} is FALSE}
-
-\item{name}{character; name of layer. 
-if NULL, \code{makelayername} will be used to create layer name}
 
 \item{further_layer_args}{named list; further arguments passed to
 the layer}
@@ -55,7 +56,7 @@ provide the arguments of a default Dense layer.}
 
 \item{units}{integer; number of units for layer}
 
-\item{...}{other layer parameters}
+\item{...}{other keras layer parameters}
 
 \item{data}{data frame; the data used in processors}
 }

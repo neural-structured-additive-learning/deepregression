@@ -34,6 +34,7 @@
 #' @param penalty_options options for smoothing and penalty terms defined by \code{\link{penalty_control}}
 #' @param orthog_options options for the orthgonalization defined by \code{\link{orthog_control}}
 #' @param verbose logical; whether to print progress of model initialization to console
+#' @param engine character; the engine which is used to setup the NN (tf or torch)
 #' @param weight_options options for layer weights defined by \code{\link{weight_control}}
 #' @param formula_options options for formula parsing (mainly used to make calculation more efficiently)
 #' @param output_dim dimension of the output, per default 1L
@@ -361,7 +362,6 @@ deepregression <- function(
 
 #' @title Define Predictor of a Deep Distributional Regression Model
 #'
-#'
 #' @param list_pred_param list of input-output(-lists) generated from
 #' \code{subnetwork_init}
 #' @param family see \code{?deepregression}; if NULL, concatenated
@@ -527,7 +527,6 @@ distfun_to_dist <- function(dist_fun, preds)
 }
 
 #' @title Compile a Deep Distributional Regression Model
-#'
 #'
 #' @param list_pred_param list of input-output(-lists) generated from
 #' \code{subnetwork_init}

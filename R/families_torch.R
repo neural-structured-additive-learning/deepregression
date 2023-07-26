@@ -21,6 +21,7 @@
 #'  \item{"exponential": }{exponential with lambda (exp)}
 #'  \item{"gamma": }{gamma with concentration (exp) and rate (exp)}
 #'  \item{"poisson": }{poisson with rate (exp)}
+#'  }
 #' @param add_const small positive constant to stabilize calculations
 #' @param trafo_list list of transformations for each distribution parameter.
 #' Per default the transformation listed in details is applied.

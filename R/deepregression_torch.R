@@ -31,7 +31,6 @@ model_torch <-  function(submodules_list){
 
 #' @title Compile a Deep Distributional Regression Model (Torch)
 #'
-#'
 #' @param list_pred_param list of output(-lists) generated from
 #' \code{subnetwork_init}
 #' @param weights vector of positive values; optional (default = 1 for all observations)
@@ -78,7 +77,6 @@ torch_dr <- function(
 
 #' @title Define Predictor of a Deep Distributional Regression Model
 #'
-#'
 #' @param list_pred_param list of output(-lists) generated from
 #' \code{subnetwork_init}
 #' @param family see \code{?deepregression}; if NULL, concatenated
@@ -99,7 +97,7 @@ torch_dr <- function(
 #' @param trafo_list a list of transformation function to convert the scale of the
 #' additive predictors to the respective distribution parameter
 #' @return a list with input tensors and output tensors that can be passed
-#' to, e.g., \code{keras_model}
+#' to, e.g., \code{torch_model}
 #'
 #' @export
 from_preds_to_dist_torch <- function(
@@ -111,69 +109,9 @@ from_preds_to_dist_torch <- function(
     add_layer_shared_pred = function(input_shape, units) 
       layer_dense_torch(input_shape = input_shape, units = units,
                         use_bias = FALSE),
-    trafo_list = NULL, mapping_now = F){
+    trafo_list = NULL){
   
-  # i think its better to combine them in the forward pass
-  if(mapping_now){
-    if(!is.null(mapping)){
-      
-      lpp <- list_pred_param
-      list_pred_param <- list()
-      nr_params <- max(unlist(mapping))
-      
-      if(!is.null(add_layer_shared_pred)){
-        
-        len_map <- sapply(mapping, length)
-        multiple_param <- which(len_map>1)
-        
-        for(ind in multiple_param){
-          amount_layers <- length(lpp[[ind]][[1]]$children)
-          # add units (not implemented JUST COPIED)
-          if(lpp[[ind]][[1]][[amount_layers]]$weight$shape[1] < len_map[ind]){
-            # less units than needed => add layer and then split
-            
-            #input_shape <- lpp[[ind]][[1]][[amount_layers]]$weight$size()[2]
-            #lpp[[ind]] <- torch_cat(
-            #  tensors = list(lpp[[ind]][[1]][[amount_layers]]$weight,
-            #                add_layer_shared_pred(input_shape = input_shape,
-            #                                       units = len_map[ind]*output_dim)
-            #                 ))
-          } else if(lpp[[ind]][[1]][[amount_layers]]$weight$shape[1] == 
-                    len_map[ind]){
-            # not sure if good idea
-            # maybe better add in model_torch mapping
-            lpp[[ind]] <- lapply(seq_len(len_map[ind]), function(x){
-              split_torch(module = lpp[[ind]][[1]], index = x)})
-            
-          }else{
-            # more units than needed
-            stop("Node ", lpp[[ind]]$name, " has more units than defined by the mapping.\n",
-                 "  Does your deep neural network has the correct output dimensions?")
-          }
-          
-        }
-        
-        lpp <- unlist(lpp, recursive = FALSE)
-        mapping <- as.list(unlist(mapping))
-        
-      }
-      
-      # store names as they are obstructive later
-      names_lpp <- names(lpp)
-      lpp <- unname(lpp)
-      
-      for(i in 1:nr_params){
-        list_pred_param[[i]] <- unlist(
-          lpp[which(sapply(mapping, function(mp) i %in% mp))])
-      }
-      
-      if(!is.null(names_lpp)) names(list_pred_param) <- names_lpp[1:nr_params]
-      
-    }}else{
-      
-      nr_params <- length(list_pred_param)
-      
-    }
+  nr_params <- length(list_pred_param)
   
   # check family
   if(!is.null(family)){

@@ -889,7 +889,7 @@ get_weight_by_name <- function(mod, name, param_nr=1, postfixes="")
   if(length(this_name)>1){
     wgts <- lapply(this_name, function(name) get_weight_by_opname(mod, name))
   }else{
-    wgts <- get_weight_by_opname(mod, this_name, param_nr = param_nr)
+    wgts <- get_weight_by_opname(mod, this_name)
   }
   return(wgts)
   

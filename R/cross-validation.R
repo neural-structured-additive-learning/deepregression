@@ -45,6 +45,7 @@ extract_cv_result <- function(res, engine,
 #' @param x \code{drCV} object returned by \code{cv.deepregression}
 #' @param what character indicating what to plot (currently supported 'loss'
 #' or 'weights')
+#' @param engine character indicating which engine was used to setup the NN
 #' @param ... further arguments passed to \code{matplot}
 #'
 #' @export
