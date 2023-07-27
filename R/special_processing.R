@@ -144,6 +144,7 @@ process_terms <- function(
 #' provide the arguments of a default Dense layer.
 #' @param units integer; number of units for layer
 #' @param data data frame; the data used in processors
+#' @param engine character; the engine which is used to setup the NN (tf or torch)
 #' @param ... other keras layer parameters
 #' 
 #' @return a basic processor list structure
