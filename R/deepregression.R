@@ -144,6 +144,8 @@ deepregression <- function(
   if(engine == "torch"){
     subnetwork_builder <- subnetwork_init_torch
     model_builder <- torch_dr
+    fitting_function <- utils::getFromNamespace("fit.luz_module_generator",
+                                                "luz") 
   }
   
   # convert data.frame to list
@@ -348,9 +350,7 @@ deepregression <- function(
                   image_var = image_var,
                   prepare_y_valdata = function(x) as.matrix(x)
                 ),
-              fit_fun = ifelse(engine == 'tf',
-                               fitting_function, 
-                               luz::fit),
+              fit_fun = fitting_function,
               engine = engine)
   
  
