@@ -110,9 +110,9 @@ nn_init_no_grad_constant_deepreg <- function(tensor, value){
 }
 
 
-#' Custom nn module used for lasso layer
-#' 
+#' @param multfac_initialier initializer for parameters
 #' @return nn_module
+#' @rdname hadamard_layers_torch
 simplyconnected_layer_torch <-
   nn_module(
     classname = "simply_con",
@@ -143,7 +143,7 @@ simplyconnected_layer_torch <-
 #' @param kernel_initializer initializer
 #' @return torch layer object
 #' @export
-#' @rdname hadamard_layers
+#' @rdname hadamard_layers_torch
 tiblinlasso_layer_torch <- function(la, input_shape = 1, units = 1,
                                     kernel_initializer = "he_normal"){
   
@@ -162,9 +162,8 @@ tiblinlasso_layer_torch <- function(la, input_shape = 1, units = 1,
 }
 
 
-#' Custom nn_module for Hadamard-type layer
-#' 
 #' @return nn_module
+#' @rdname hadamard_layers_torch
 tib_layer_torch <-
   nn_module(
     classname = "TibLinearLasso_torch",
@@ -187,9 +186,10 @@ tib_layer_torch <-
     }
   )
 
-#' Custom nn_module for Group-Hadamard-type layer
-#' 
+#' @param group_idx list of group indices
+#' @export
 #' @return nn_module
+#' @rdname hadamard_layers_torch
 tibgroup_layer_torch <-
   nn_module(
     classname = "TibGroupLasso_torch",
