@@ -387,7 +387,7 @@ fit.deepregression <- function(
     args <- append(args,
                    input_list_model[!names(input_list_model) %in%
                                       names(args)])
-    check_input_args_fit(args = args, engine = object$engine)
+    check_input_args_fit(args = args, fit_fun = object$fit_fun)
   }
 
   ret <- suppressWarnings(do.call(object$fit_fun, args))
