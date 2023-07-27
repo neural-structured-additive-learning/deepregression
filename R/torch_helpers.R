@@ -141,21 +141,19 @@ get_help_forward_torch <- function(list_pred_param){
 
 
 
-
-check_input_args_fit <- function(args, engine){
-  if(engine == "tf") {
-    if(!all(names(args) %in% formalArgs(keras:::fit.keras.engine.training.Model))){
-      stop("Some arguments for the fit process are not supported by fit.
-           See keras:::keras.engine.training.Model")
-    }
-  } else {
-    if(!all(names(args) %in% formalArgs(luz:::fit.luz_module_generator))){
-      stop("Some arguments for the fit process are not supported by fit.
-           See luz:::fit.luz_module_generator")
-    }
-    
-  }
-  
+#' Function to check if inputs are supported by corresponding fit function
+#' @param args list; list of arguments used in fit process 
+#' @param fit_fun used fit function (e.g. fit.keras.engine.training.Model)
+#' @return stop message if inputs are not supported
+#' @export
+check_input_args_fit <- function(args, fit_fun){
+    if(!all(names(args) %in% formalArgs(fit_fun))){
+      not_supported <- names(
+        args[which(!(names(args) %in% formalArgs(fit_fun)))])
+      stop(sprintf("Following arguments are not supported by fit: %s",
+                   not_supported))
+      
+      }
 }
 
 
