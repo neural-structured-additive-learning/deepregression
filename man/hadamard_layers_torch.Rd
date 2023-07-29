@@ -34,6 +34,8 @@ tibgroup_layer_torch(
 \arguments{
 \item{la}{numeric; regularization value (> 0)}
 
+\item{multfac_initializer}{initializer for parameters}
+
 \item{input_shape}{integer; number of input dimension}
 
 \item{units}{integer; number of units}
@@ -41,8 +43,6 @@ tibgroup_layer_torch(
 \item{kernel_initializer}{initializer}
 
 \item{group_idx}{list of group indices}
-
-\item{multfac_initialier}{initializer for parameters}
 }
 \value{
 nn_module
