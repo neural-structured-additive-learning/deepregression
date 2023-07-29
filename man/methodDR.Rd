@@ -139,6 +139,8 @@ early stopping be trigged (default: "val_loss")}
 
 \item{convertfun}{function to convert R into Tensor object}
 
+\item{na_handler}{function to deal with NAs}
+
 \item{plot}{whether to plot the resulting losses in each fold}
 
 \item{print_folds}{whether to print the current fold}
