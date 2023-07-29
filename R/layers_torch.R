@@ -77,7 +77,7 @@ choose_kernel_initializer_torch <- function(kernel_initializer, value = NULL){
 layer_dense_module <- function(kernel_initializer){
   torch::nn_module(classname = "custom_nn_linear_deepregression",
             initialize = torch::nn_linear$public_methods$initialize,
-            forward = nn_linear$public_methods$forward,
+            forward = torch::nn_linear$public_methods$forward,
             reset_parameters = kernel_initializer
             )
 }
@@ -100,7 +100,7 @@ nn_init_no_grad_constant_deepreg <- function(tensor, value){
     return(tensor)
   }
   
-  with_no_grad({
+  torch::with_no_grad({
     tensor <- tensor$t()
     lapply(1:length(value),
            function(x) tensor[x] = tensor$index_fill(1, x, value[x])[x])
@@ -118,7 +118,7 @@ simplyconnected_layer_torch <-
     classname = "simply_con",
     initialize = function(la = la,  multfac_initializer = torch_ones, 
                           input_shape){
-      self$la <- torch_tensor(la)
+      self$la <- torch::torch_tensor(la)
       self$multfac_initializer <- multfac_initializer
       
       sc <- nn_parameter(x = self$multfac_initializer(input_shape))

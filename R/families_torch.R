@@ -119,7 +119,7 @@ family_to_trafo_torch <- function(family, add_const = 1e-8){
   
   trafo_list <- switch(family,
                        normal = list(function(x) x,
-                                     function(x) torch::torch_add(add_const, torch_exp(x))),
+                                     function(x) torch::torch_add(add_const, torch::torch_exp(x))),
                        bernoulli = list(function(x) x),
                        bernoulli_prob = list(function(x) torch::torch_sigmoid(x)),
                        gamma = list(

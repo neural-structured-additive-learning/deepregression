@@ -47,9 +47,9 @@ get_luz_dataset <- dataset(
       lapply(x, function(y){
         if((ncol(y)==1) & check_data_for_image(y)){
           return( 
-            function(index) torch_stack(
-              lapply(index, function(x) y[x, ,drop = F] %>% base_loader() %>%
-                       transform_to_tensor())))
+            function(index) torch::torch_stack(
+              lapply(index, function(x) y[x, ,drop = F] %>% torchvision::base_loader() %>%
+                       torchvision::transform_to_tensor())))
           # this torch_stack(...) allows to use .getbatch also when
           # we use image data.
         }
@@ -63,13 +63,14 @@ get_luz_dataset <- dataset(
     lapply(df_list, function(y){
         if((ncol(y)==1) & check_data_for_image(y)){
           return( 
-            function(index) torch_stack(
-              lapply(index, function(x) y[x, ,drop = F] %>% base_loader() %>%
-                       transform_to_tensor())))
+            function(index) torch::torch_stack(
+              lapply(index, function(x) y[x, ,drop = F] %>%
+                       torchvision::base_loader() %>%
+                       torchvision::transform_to_tensor())))
           # this torch_stack(...) allows to use .getbatch also when
           # we use image data.
         }
-        function(index) torch_tensor(y[index, ,drop = F])
+        function(index) torch::torch_tensor(y[index, ,drop = F])
       })
   },
   
@@ -149,7 +150,7 @@ get_help_forward_torch <- function(list_pred_param){
 check_input_args_fit <- function(args, fit_fun){
     if(!all(names(args) %in% methods::formalArgs(fit_fun))){
       not_supported <- names(
-        args[which(!(names(args) %in% formalArgs(fit_fun)))])
+        args[which(!(names(args) %in% methods::formalArgs(fit_fun)))])
       stop(sprintf("Following arguments are not supported by fit: %s",
                    not_supported))
       
