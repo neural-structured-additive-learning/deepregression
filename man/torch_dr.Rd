@@ -10,7 +10,7 @@ torch_dr(
   model_fun = NULL,
   monitor_metrics = list(),
   from_preds_to_output = from_preds_to_dist_torch,
-  loss = from_dist_to_loss_torch(family = list(...)$family, weights = weights),
+  loss = from_dist_to_loss_torch(family = list(...)$family, weights = NULL),
   additional_penalty = NULL,
   ...
 )

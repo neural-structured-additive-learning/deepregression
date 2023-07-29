@@ -4,10 +4,12 @@
 \alias{check_and_install}
 \title{Function to check python environment and install necessary packages}
 \usage{
-check_and_install(force = FALSE)
+check_and_install(force = FALSE, engine)
 }
 \arguments{
 \item{force}{if TRUE, forces the installations}
+
+\item{engine}{character; check if tf(= tensorflow) or torch is available}
 }
 \value{
 Function that checks if a Python environment is available
