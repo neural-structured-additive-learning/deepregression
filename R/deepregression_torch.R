@@ -53,7 +53,7 @@ torch_dr <- function(
     monitor_metrics = list(),
     from_preds_to_output = from_preds_to_dist_torch,
     loss = from_dist_to_loss_torch(family = list(...)$family,
-                                   weights = weights),
+                                   weights = NULL),
     additional_penalty = NULL,
     ...
 ){
@@ -155,7 +155,7 @@ from_preds_to_dist_torch <- function(
 #' @export
 #'
 from_distfun_to_dist_torch <- function(dist_fun, preds){
-  nn_module(
+  torch::nn_module(
     
     initialize = function() {
       
