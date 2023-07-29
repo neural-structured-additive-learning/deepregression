@@ -261,7 +261,7 @@ predict_gen <- function(
     
     predict_ds <- get_luz_dataset(df_list = newdata_processed,
                                   length = max_data, object = object)
-    predict_dl <- predict_ds %>% dataloader(batch_size = batch_size)
+    predict_dl <- predict_ds %>% torch::dataloader(batch_size = batch_size)
     
     iter <- predict_dl$.iter()
     b <- iter$.next()
@@ -271,7 +271,7 @@ predict_gen <- function(
     
     res <- list()[1:iter$.length()]
     i <- 1
-    with_no_grad({
+    torch::with_no_grad({
       coro::loop(for (b in predict_dl) {
         res[[i]] <- convert_fun(apply_fun(object$model(b[[1]])))
         i <- i+1

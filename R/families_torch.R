@@ -100,12 +100,12 @@ make_torch_dist <- function(family, add_const = 1e-8, output_dim = 1L,
 family_to_trochd <- function(family){
   # define dist_fun
   torchd_dist <- switch(family,
-                        normal = distr_normal,
+                        normal = torch::distr_normal,
                         bernoulli = function(logits)
-                          distr_bernoulli(logits = logits),
-                        bernoulli_prob = distr_bernoulli,
-                        gamma = distr_gamma,
-                        poisson = distr_poisson)
+                          torch::distr_bernoulli(logits = logits),
+                        bernoulli_prob = torch::distr_bernoulli,
+                        gamma = torch::distr_gamma,
+                        poisson = torch::distr_poisson)
 }
 
 #' Character-to-transformation mapping function
@@ -119,13 +119,13 @@ family_to_trafo_torch <- function(family, add_const = 1e-8){
   
   trafo_list <- switch(family,
                        normal = list(function(x) x,
-                                     function(x) torch_add(add_const, torch_exp(x))),
+                                     function(x) torch::torch_add(add_const, torch_exp(x))),
                        bernoulli = list(function(x) x),
-                       bernoulli_prob = list(function(x) torch_sigmoid(x)),
+                       bernoulli_prob = list(function(x) torch::torch_sigmoid(x)),
                        gamma = list(
-                         function(x) torch_add(add_const, torch_exp(x)),
-                         function(x) torch_add(add_const, torch_exp(x))),
-                       poisson = list(function(x) torch_add(add_const, torch_exp(x)))
+                         function(x) torch::torch_add(add_const, torch::torch_exp(x)),
+                         function(x) torch::torch_add(add_const, torch::torch_exp(x))),
+                       poisson = list(function(x) torch::torch_add(add_const, torch::torch_exp(x)))
   )
   
   return(trafo_list)
@@ -168,7 +168,7 @@ prepare_torch_distr_mixdistr <- function(object, dists){
   distr_parameters <- lapply(seq_len(num_params),
                              function(y) lapply(distr_parameters,
                                                 FUN = function(x) x[[y]]))
-  distr_parameters <- lapply(distr_parameters, FUN = function(x) torch_cat(x, 2))
+  distr_parameters <- lapply(distr_parameters, FUN = function(x) torch::torch_cat(x, 2))
   distr_parameters
 }
 

@@ -94,7 +94,7 @@ ensemble.deepregression <- function(
                                object = x,
                                callbacks = callbacks,
                                verbose = verbose,
-                               view_metrics = view_metrics,
+                               view_metrics = F,
                                ...)
     }
     
@@ -206,14 +206,14 @@ get_ensemble_distribution <- function(object, data = NULL, topK = NULL, ...) {
     probs <- k_constant(1 / topK,
                         shape = c(shp, n_ensemble))
   } else {
-    probs <- torch_full(size =  c(shp, n_ensemble),
+    probs <- torch::torch_full(size =  c(shp, n_ensemble),
                         fill_value = 1 / topK)
     }
 
   if(object$engine == "tf") {
     dcat <- tfd_categorical(probs = probs)
   } else {
-    dcat <- distr_categorical(probs = probs)
+    dcat <- torch::distr_categorical(probs = probs)
     }
   
   if(object$engine == "tf") {
@@ -222,7 +222,7 @@ get_ensemble_distribution <- function(object, data = NULL, topK = NULL, ...) {
     used_distr <- family_to_trochd(family = object$init_params$family)
     distr_parameters <- prepare_torch_distr_mixdistr(object, dists)
     dists <- do.call(used_distr, distr_parameters)
-    mix_dist <- distr_mixture_same_family(dcat, dists)
+    mix_dist <- torch::distr_mixture_same_family(dcat, dists)
     }
   
 
@@ -333,7 +333,7 @@ reinit_weights.deepregression <- function(object, seed) {
     }, silent = TRUE)
   })
   } else {
-    torch_manual_seed(seed)
+    torch::torch_manual_seed(seed)
     object$model()$apply(weight_reset)
   }
   return(invisible(object))

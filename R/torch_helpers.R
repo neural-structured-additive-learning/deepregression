@@ -100,8 +100,8 @@ check_input_torch <- function(orthog_options){
 
 
 get_weights_torch <- function(model){
-  old_weights <- lapply(model$model()$parameters, function(x) as_array(x))
-  lapply(old_weights, function(x) torch_tensor(x))
+  old_weights <- lapply(model$model()$parameters, function(x) torch::as_array(x))
+  lapply(old_weights, function(x) torch::torch_tensor(x))
 }
 
 
@@ -147,7 +147,7 @@ get_help_forward_torch <- function(list_pred_param){
 #' @return stop message if inputs are not supported
 #' @export
 check_input_args_fit <- function(args, fit_fun){
-    if(!all(names(args) %in% formalArgs(fit_fun))){
+    if(!all(names(args) %in% methods::formalArgs(fit_fun))){
       not_supported <- names(
         args[which(!(names(args) %in% formalArgs(fit_fun)))])
       stop(sprintf("Following arguments are not supported by fit: %s",

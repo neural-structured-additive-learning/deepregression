@@ -273,6 +273,7 @@ fitted.deepregression <- function(
 #' @param validation_split float in [0,1] defining the amount of data used for validation
 #' @param callbacks a list of callbacks for fitting
 #' @param convertfun function to convert R into Tensor object
+#' @param na_handler function to deal with NAs
 #' @param ... further arguments passed to
 #' \code{keras:::fit.keras.engine.training.Model}
 #'
@@ -323,8 +324,8 @@ fit.deepregression <- function(
                         )
     )} else {
       callbacks <- append(callbacks,
-        list(luz_callback_early_stopping(patience = patience),
-              luz_callback_keep_best_model()
+        list(luz::luz_callback_early_stopping(patience = patience),
+             luz::luz_callback_keep_best_model()
         ))
     }
   }

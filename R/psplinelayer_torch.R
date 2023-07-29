@@ -13,7 +13,7 @@
 layer_spline_torch <- function(P, units = 1L, name, trainable = TRUE,
                                kernel_initializer = "glorot_uniform", ...){
   
-  P <- torch_tensor(P)
+  P <- torch::torch_tensor(P)
   input_shape <- P$size(1)
 
   dots <- list(...)
@@ -26,7 +26,7 @@ layer_spline_torch <- function(P, units = 1L, name, trainable = TRUE,
                          out_features = units, bias = F)
   
   spline_layer$parameters$weight$register_hook(function(grad){
-    grad + torch_matmul((P+P$t()), spline_layer$weight$t())$t()
+    grad + torch::torch_matmul((P+P$t()), spline_layer$weight$t())$t()
   })
   
   if(!trainable) spline_layer$parameters$weight$requires_grad_(F)

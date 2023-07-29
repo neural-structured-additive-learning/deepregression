@@ -270,7 +270,7 @@ int_processor <- function(term, data, output_dim, param_nr, controls, engine){
   }
   if(engine == "torch"){
     layer_class = layer_dense_torch
-    without_layer = nn_identity
+    without_layer = torch::nn_identity
     input_shape = 1
   }
   
@@ -326,7 +326,7 @@ lin_processor <- function(term, data, output_dim, param_nr, controls, engine){
   if(engine == "torch"){
     layer_class = layer_dense_torch
     input_shape = as.integer(ncol(data_trafo()))
-    without_layer = nn_identity
+    without_layer = torch::nn_identity
   }
   #exclude intercept info again
   #controls <- controls[-length(controls)]
@@ -536,7 +536,7 @@ l2_processor <- function(term, data, output_dim, param_nr, controls, engine){
   
   if(engine == "torch"){
     layer_class = layer_dense_torch
-    without_layer = nn_identity
+    without_layer = torch::nn_identity
     kernel_regularizer = list(regularizer = "l2",
                               la = lambda)
     input_shape <- ifelse(is.factor(data_trafo()[[1]]),

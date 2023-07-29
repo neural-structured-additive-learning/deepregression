@@ -65,11 +65,10 @@ check_and_install <- function(force = FALSE) {
       reticulate::py_install(packages = c(create_package_name("tensorflow_probability", VERSIONTFP), 
                                           "six")) # nocov
     }
-  } else{
-    if(!torch::torch_is_installed()){
-       torch::install_torch()
-     }
   }
+  if(!torch::torch_is_installed()){
+       torch::install_torch()
+    }
 }
 
 #' Function to update miniconda and packages

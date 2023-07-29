@@ -56,13 +56,13 @@ choose_kernel_initializer_torch <- function(kernel_initializer, value = NULL){
   kernel_initializer <- switch(kernel_initializer,
                                "glorot_uniform" = 
                                  function(){
-                                   nn_init_xavier_uniform_(tensor = self$weight,
-                                                           gain = nn_init_calculate_gain(
+                                   torch::nn_init_xavier_uniform_(tensor = self$weight,
+                                                           gain = torch::nn_init_calculate_gain(
                                                              nonlinearity = "linear"))},
                                "torch_ones" = function() 
-                                 nn_init_ones_(self$weight),
+                                 torch::nn_init_ones_(self$weight),
                                "he_normal" = function()
-                                 nn_init_kaiming_normal_(self$weight)
+                                 torch::nn_init_kaiming_normal_(self$weight)
   )
   
   kernel_initializer
@@ -75,8 +75,8 @@ choose_kernel_initializer_torch <- function(kernel_initializer, value = NULL){
 #' @return nn module
 
 layer_dense_module <- function(kernel_initializer){
-  nn_module(classname = "custom_nn_linear_deepregression",
-            initialize = nn_linear$public_methods$initialize,
+  torch::nn_module(classname = "custom_nn_linear_deepregression",
+            initialize = torch::nn_linear$public_methods$initialize,
             forward = nn_linear$public_methods$forward,
             reset_parameters = kernel_initializer
             )
@@ -94,7 +94,7 @@ layer_dense_module <- function(kernel_initializer){
 nn_init_no_grad_constant_deepreg <- function(tensor, value){
   
   if(length(value) == 1){
-    with_no_grad({
+    torch::with_no_grad({
       tensor$fill_(value)
     })
     return(tensor)
@@ -110,7 +110,7 @@ nn_init_no_grad_constant_deepreg <- function(tensor, value){
 }
 
 
-#' @param multfac_initialier initializer for parameters
+#' @param multfac_initializer initializer for parameters
 #' @return nn_module
 #' @rdname hadamard_layers_torch
 simplyconnected_layer_torch <-
@@ -147,7 +147,7 @@ simplyconnected_layer_torch <-
 tiblinlasso_layer_torch <- function(la, input_shape = 1, units = 1,
                                     kernel_initializer = "he_normal"){
   
-  la <- torch_tensor(la)
+  la <- torch::torch_tensor(la)
   
   kernel_initializer <- choose_kernel_initializer_torch(kernel_initializer)
 

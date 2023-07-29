@@ -7,11 +7,11 @@
 #' @export
 
 model_torch <-  function(submodules_list){
-  nn_module(
+  torch::nn_module(
     classname = "torch_model",
     initialize = function() {
       self$help_forward <- get_help_forward_torch(submodules_list)
-      self$subnetwork <- nn_module_dict(submodules_list)
+      self$subnetwork <- torch::nn_module_dict(submodules_list)
       
     },
     
@@ -22,7 +22,7 @@ model_torch <-  function(submodules_list){
                               self$subnetwork[[used_layer]](dataset_list[[x]])
       })
       
-      Reduce(f = torch_add, subnetworks)
+      Reduce(f = torch::torch_add, subnetworks)
     }
   )}
 
@@ -159,7 +159,7 @@ from_distfun_to_dist_torch <- function(dist_fun, preds){
     
     initialize = function() {
       
-      self$distr_parameters <- nn_module_dict(
+      self$distr_parameters <- torch::nn_module_dict(
         lapply(preds, function(x) x()))
       self$amount_distr_parameters <- length(preds)
       #names(self$distr_parameters$.__enclos_env__$private$modules_) <- 
@@ -173,15 +173,15 @@ from_distfun_to_dist_torch <- function(dist_fun, preds){
         })
       
       if(any(names(self[[1]]$.__enclos_env__$private$modules_) == "both")){
-        distribution_parameters <- torch_sum(
-          torch_stack(
+        distribution_parameters <- torch::torch_sum(
+          torch::torch_stack(
             list(
-              torch_cat(distribution_parameters[-length(dataset_list)], dim = 2),
+              torch::torch_cat(distribution_parameters[-length(dataset_list)], dim = 2),
               distribution_parameters[[length(dataset_list)]])
           ), dim = 1)
         
         distribution_parameters <- 
-          torch_split(distribution_parameters, split_size = 1, dim = 2) }
+          torch::torch_split(distribution_parameters, split_size = 1, dim = 2) }
       
       dist_fun(distribution_parameters)
     }
@@ -201,7 +201,7 @@ from_dist_to_loss_torch <- function(family, weights = NULL){
   
   # the negative log-likelihood is given by the negative weighted
   # log probability of the dist
-  negloglik <- function(input, target) torch_mean(-input$log_prob(target))
+  negloglik <- function(input, target) torch::torch_mean(-input$log_prob(target))
   negloglik
 }
 
