@@ -106,9 +106,9 @@ deepregression <- function(
   data,
   seed = as.integer(1991-5-4),
   return_prepoc = FALSE,
-  subnetwork_builder = NULL,
-  model_builder = NULL,
-  fitting_function = NULL,
+  subnetwork_builder = subnetwork_init,
+  model_builder = keras_dr,
+  fitting_function = utils::getFromNamespace("fit.keras.engine.training.Model", "keras"),
   additional_processors = list(),
   penalty_options = penalty_control(),
   orthog_options = orthog_control(),
@@ -143,18 +143,19 @@ deepregression <- function(
     invisible(return(NULL))
   }
   
-  if(engine == "tf"){
-    if(is.null(subnetwork_builder)) subnetwork_builder = subnetwork_init
-    if(is.null(model_builder)) model_builder = keras_dr
-    if(is.null(fitting_function)) fitting_function =
-        utils::getFromNamespace("fit.keras.engine.training.Model", "keras")
-  } else {
-    if(is.null(subnetwork_builder)) subnetwork_builder <- subnetwork_init_torch
-    if(is.null(model_builder)) model_builder <- torch_dr
-    if(is.null(fitting_function)) fitting_function <-
-        utils::getFromNamespace("fit.luz_module_generator",
-                                                "luz")
-  }
+  if(engine == "torch"){
+    if(identical(subnetwork_builder, subnetwork_init)){
+      subnetwork_builder = subnetwork_init_torch
+    }
+    if(identical(model_builder, keras_dr)) {
+      model_builder = torch_dr
+    }
+    if(identical(fitting_function,
+                 utils::getFromNamespace("fit.keras.engine.training.Model",
+                                         "keras"))){
+      fitting_function = utils::getFromNamespace("fit.luz_module_generator",
+                              "luz")
+    }} 
   
   # convert data.frame to list
   if(is.data.frame(data)){
