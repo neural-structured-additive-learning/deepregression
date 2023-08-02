@@ -272,7 +272,6 @@ fitted.deepregression <- function(
 #' @param validation_data optional specified validation data
 #' @param validation_split float in [0,1] defining the amount of data used for validation
 #' @param callbacks a list of callbacks for fitting
-#' @param convertfun function to convert R into Tensor object
 #' @param na_handler function to deal with NAs
 #' @param ... further arguments passed to
 #' \code{keras:::fit.keras.engine.training.Model}
@@ -296,7 +295,6 @@ fit.deepregression <- function(
   validation_data = NULL,
   validation_split = ifelse(is.null(validation_data), 0.1, 0),
   callbacks = list(),
-  convertfun = function(x) tf$constant(x, dtype="float32"),
   na_handler = na_omit_list,
   ...
 )
