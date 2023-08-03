@@ -26,8 +26,7 @@ Depends:
     tfprobability,
     keras (>= 2.2.0),
     torch,
-    luz, 
-    torchvision
+    luz
 Suggests:
     testthat,
     knitr,
@@ -41,7 +40,8 @@ Imports:
     magrittr,
     tfruns,
     methods,
-    coro
+    coro,
+    torchvision
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
