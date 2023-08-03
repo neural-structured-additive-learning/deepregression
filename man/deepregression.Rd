@@ -10,12 +10,11 @@ deepregression(
   list_of_deep_models = NULL,
   family = "normal",
   data,
-  tf_seed = as.integer(1991 - 5 - 4),
+  seed = as.integer(1991 - 5 - 4),
   return_prepoc = FALSE,
   subnetwork_builder = subnetwork_init,
   model_builder = keras_dr,
-  fitting_function = utils::getFromNamespace("fit.keras.engine.training.Model",
-    "keras"),
+  fitting_function = utils::getFromNamespace("fit.keras.engine.training.Model", "keras"),
   additional_processors = list(),
   penalty_options = penalty_control(),
   orthog_options = orthog_control(),
@@ -23,6 +22,7 @@ deepregression(
   formula_options = form_control(),
   output_dim = 1L,
   verbose = FALSE,
+  engine = "tf",
   ...
 )
 }
@@ -50,7 +50,7 @@ be a custom distribution.}
 
 \item{data}{data.frame or named list with input features}
 
-\item{tf_seed}{a seed for TensorFlow (only works with R version >= 2.2.0)}
+\item{seed}{a seed for TensorFlow or Torch (only works with R version >= 2.2.0)}
 
 \item{return_prepoc}{logical; if TRUE only the pre-processed data and layers are returned 
 (default FALSE).}
@@ -80,6 +80,8 @@ Can have an attribute \code{"controls"} to pass additional controls}
 \item{output_dim}{dimension of the output, per default 1L}
 
 \item{verbose}{logical; whether to print progress of model initialization to console}
+
+\item{engine}{character; the engine which is used to setup the NN (tf or torch)}
 
 \item{...}{further arguments passed to the \code{model_builder} function}
 }

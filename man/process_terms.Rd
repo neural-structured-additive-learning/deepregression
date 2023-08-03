@@ -2,7 +2,7 @@
 % Please edit documentation in R/special_processing.R
 \name{process_terms}
 \alias{process_terms}
-\title{Control function to define the processors for terms in the formula}
+\title{Control function to define the processor for terms in the formula}
 \usage{
 process_terms(
   form,
@@ -14,6 +14,7 @@ process_terms(
   specials_to_oz = c(),
   automatic_oz_check = TRUE,
   identify_intercept = FALSE,
+  engine = "tf",
   ...
 )
 }
@@ -36,11 +37,13 @@ process_terms(
 
 \item{identify_intercept}{logical; whether to make the intercept automatically identifiable}
 
+\item{engine}{character; the engine which is used to setup the NN (tf or torch)}
+
 \item{...}{further processors}
 }
 \value{
 returns a processor function
 }
 \description{
-Control function to define the processors for terms in the formula
+Control function to define the processor for terms in the formula
 }

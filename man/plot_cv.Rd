@@ -4,13 +4,15 @@
 \alias{plot_cv}
 \title{Plot CV results from deepregression}
 \usage{
-plot_cv(x, what = c("loss", "weight"), ...)
+plot_cv(x, what = c("loss", "weight"), engine = "tf", ...)
 }
 \arguments{
 \item{x}{\code{drCV} object returned by \code{cv.deepregression}}
 
 \item{what}{character indicating what to plot (currently supported 'loss'
 or 'weights')}
+
+\item{engine}{character indicating which engine was used to setup the NN}
 
 \item{...}{further arguments passed to \code{matplot}}
 }
