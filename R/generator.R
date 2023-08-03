@@ -127,11 +127,9 @@ prepare_generator_deepregression <- function(
   ...
 )
 {
-  
 
   if(validation_split==0 | is.null(validation_split) | !is.null(validation_data))
   {
-    
     # only fit generator
     max_data <- NROW(input_x[[1]])
     steps_per_epoch <- ceiling(max_data/batch_size)
@@ -229,25 +227,19 @@ predict_gen <- function(
   ret_dist = FALSE
 )
 {
+  if(is.null(batch_size)) batch_size <- 20
+  
   
   if(!is.null(newdata)){
     newdata_processed <- prepare_newdata(object$init_params$parsed_formulas_contents, 
                                          newdata, 
-                                         gamdata = object$init_params$gamdata$data_trafos)
+                                         gamdata = object$init_params$gamdata$data_trafos,
+                                         engine = object$engine)
   }else{
     newdata_processed <- prepare_data(object$init_params$parsed_formulas_contents,
-                                      gamdata = object$init_params$gamdata$data_trafos)
-  }
-  # prepare generator
+                                      gamdata = object$init_params$gamdata$data_trafos,
+                                      engine = object$engine)}
   max_data <- NROW(newdata_processed[[1]])
-  if(is.null(batch_size)) batch_size <- 20
-  steps_per_epoch <- ceiling(max_data/batch_size)
-  
-  generator <- make_generator(input_x = newdata_processed,
-                              input_y = NULL,
-                              batch_size = batch_size,
-                              sizes = object$init_params$image_var,
-                              shuffle = FALSE)
   
   if(is.null(apply_fun)){ 
     
@@ -259,6 +251,47 @@ predict_gen <- function(
     ret_dist <- FALSE
     
   }
+  
+  if(object$engine == "torch"){
+    newdata_processed <-  prepare_data_torch(
+      pfc  = object$init_params$parsed_formulas_content,
+      input_x = newdata_processed, object = object)
+    
+    cat(sprintf("Found %s validated image filenames \n", max_data))
+    
+    predict_ds <- get_luz_dataset(df_list = newdata_processed,
+                                  length = max_data, object = object)
+    predict_dl <- predict_ds %>% torch::dataloader(batch_size = batch_size)
+    
+    iter <- predict_dl$.iter()
+    b <- iter$.next()
+    
+    object$model <- object$model()
+    object$model$eval()
+    
+    res <- list()[1:iter$.length()]
+    i <- 1
+    torch::with_no_grad({
+      coro::loop(for (b in predict_dl) {
+        res[[i]] <- convert_fun(apply_fun(object$model(b[[1]])))
+        i <- i+1
+        })
+    })
+      
+
+    #yhat <- Reduce(x = res, f = c)
+    yhat <- do.call("rbind", (res))
+    return(yhat)
+  }
+  # prepare generator
+  
+  steps_per_epoch <- ceiling(max_data/batch_size)
+  
+  generator <- make_generator(input_x = newdata_processed,
+                              input_y = NULL,
+                              batch_size = batch_size,
+                              sizes = object$init_params$image_var,
+                              shuffle = FALSE)
   
   res <- lapply(1:steps_per_epoch, function(i) 
     convert_fun(apply_fun(suppressWarnings(

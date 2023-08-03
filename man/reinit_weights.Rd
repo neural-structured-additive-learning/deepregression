@@ -2,7 +2,7 @@
 % Please edit documentation in R/deep-ensembles.R
 \name{reinit_weights}
 \alias{reinit_weights}
-\title{Genereic function to re-intialize model weights}
+\title{Generic function to re-intialize model weights}
 \usage{
 reinit_weights(object, seed)
 }
@@ -12,5 +12,5 @@ reinit_weights(object, seed)
 \item{seed}{seed for reproducibility}
 }
 \description{
-Genereic function to re-intialize model weights
+Generic function to re-intialize model weights
 }

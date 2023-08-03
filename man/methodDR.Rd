@@ -31,7 +31,6 @@
   batch_size = NULL,
   apply_fun = tfd_mean,
   convert_fun = as.matrix,
-  na_handler = na_omit_list,
   ...
 )
 
@@ -50,7 +49,6 @@
   validation_data = NULL,
   validation_split = ifelse(is.null(validation_data), 0.1, 0),
   callbacks = list(),
-  convertfun = function(x) tf$constant(x, dtype = "float32"),
   na_handler = na_omit_list,
   ...
 )
@@ -62,6 +60,7 @@
 \method{cv}{deepregression}(
   x,
   verbose = FALSE,
+  patience = 20,
   plot = TRUE,
   print_folds = TRUE,
   cv_folds = 5,
@@ -116,8 +115,6 @@ per default \code{tfd_mean}}
 \item{convert_fun}{how should the resulting tensor be converted,
 per default \code{as.matrix}}
 
-\item{na_handler}{function to handle NAs in the data set; default is \code{na_omit_list}}
-
 \item{epochs}{integer, the number of epochs to fit the model}
 
 \item{early_stopping}{logical, whether early stopping should be user.}
@@ -129,7 +126,7 @@ early stopping be trigged (default: "val_loss")}
 
 \item{view_metrics}{logical, whether to trigger the Viewer in RStudio / Browser.}
 
-\item{patience}{integer, number of rounds after which early stopping is done.}
+\item{patience}{number of patience for early stopping}
 
 \item{save_weights}{logical, whether to save weights in each epoch.}
 
@@ -139,7 +136,7 @@ early stopping be trigged (default: "val_loss")}
 
 \item{callbacks}{a list of callbacks used for fitting}
 
-\item{convertfun}{function to convert R into Tensor object}
+\item{na_handler}{function to deal with NAs}
 
 \item{plot}{whether to plot the resulting losses in each fold}
 

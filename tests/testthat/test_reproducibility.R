@@ -27,7 +27,7 @@ test_that("reproducibility", {
   mod1 <- deepregression(
     y = y,
     data = data,
-    tf_seed = 1L,
+    seed = 1L,
     list_of_formulas = list(loc = ~ 1 + d(x), scale = ~1),
     list_of_deep_models = list(d = deep_model)
   )
@@ -35,12 +35,12 @@ test_that("reproducibility", {
   mod2 <- deepregression(
     y = y,
     data = data,
-    tf_seed = 1L,
+    seed = 1L,
     list_of_formulas = list(loc = ~ 1 + d(x), scale = ~1),
     list_of_deep_models = list(d = deep_model)
   )
   mean1 <- mod1 %>% fitted()
-  mean2 <- mod1 %>% fitted()
+  mean2 <- mod2 %>% fitted()
   # before training
   expect_equal(coef(mod1), coef(mod2))
   expect_equal(mean1, mean2)
@@ -49,7 +49,7 @@ test_that("reproducibility", {
   mean1 <- mod1 %>% fitted()
 
   mod2 %>% fit(epochs=2L, verbose = FALSE, view_metrics = FALSE)
-  mean2 <- mod1 %>% fitted()
+  mean2 <- mod2 %>% fitted()
 
   # after training
   expect_equal(coef(mod1), coef(mod2))

@@ -49,6 +49,7 @@ jobs:
           reticulate::install_miniconda(update = TRUE)
           reticulate::conda_create('r-reticulate', packages = c('python==3.8'))
           keras::install_keras(version = "2.10.0", tensorflow = "2.10.0", extra_packages = c('IPython', 'requests', 'certifi', 'urllib3', 'six', 'tensorflow_probability==0.16.0'))
+          torch::install_torch()
         shell: Rscript {0}
       - name: Install dependencies - Tutorial (Vignette)
         run: |

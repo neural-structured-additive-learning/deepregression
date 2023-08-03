@@ -12,17 +12,32 @@ make_cv_list_simple <- function(data_size, folds, seed = 42, shuffle = TRUE)
 
 }
 
-extract_cv_result <- function(res, name_loss = "loss", name_val_loss = "val_loss"){
+extract_cv_result <- function(res, engine,
+                              name_loss = "loss", name_val_loss = "val_loss"){
+  
+  if(engine == "torch") {
+    name_loss = "train"
+    name_val_loss = "valid"
+  }
 
-  losses <- sapply(res, "[[", "metrics")
+  if (engine == "tf"){
+    losses <- sapply(res, "[[", "metrics")
+    } else {
+      losses <-  sapply(res, function(x) lapply(
+        x$records$metrics, function(y) unlist(y)))
+      }
+  
   trainloss <- data.frame(losses[name_loss,])
   validloss <- data.frame(losses[name_val_loss,])
   weightshist <- lapply(res, "[[", "weighthistory")
-
-  return(list(trainloss=trainloss,
-              validloss=validloss,
-              weight=weightshist))
-
+  # weight history not yet implemented for torch as plot_cv does'not support 
+  # anything else than losses. Needs to be implemented in cv.deepregression
+  # Need to save with state_dict and detach from R6 (modify on place).
+  
+    return(list(trainloss=trainloss,
+                validloss=validloss,
+                weight=weightshist)
+           )
 }
 
 #' Plot CV results from deepregression
@@ -30,14 +45,15 @@ extract_cv_result <- function(res, name_loss = "loss", name_val_loss = "val_loss
 #' @param x \code{drCV} object returned by \code{cv.deepregression}
 #' @param what character indicating what to plot (currently supported 'loss'
 #' or 'weights')
+#' @param engine character indicating which engine was used to setup the NN
 #' @param ... further arguments passed to \code{matplot}
 #'
 #' @export
 #'
-plot_cv <- function(x, what=c("loss","weight"), ...){
+plot_cv <- function(x, what=c("loss","weight"), engine = "tf", ...){
 
   .pardefault <- par(no.readonly = TRUE)
-  cres <- extract_cv_result(x)
+  cres <- extract_cv_result(x, engine = engine)
 
   what <- match.arg(what)
 

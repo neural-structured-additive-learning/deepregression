@@ -24,7 +24,9 @@ Depends:
     R (>= 4.0.0),
     tensorflow (>= 2.2.0),
     tfprobability,
-    keras (>= 2.2.0)
+    keras (>= 2.2.0),
+    torch,
+    luz
 Suggests:
     testthat,
     knitr,
@@ -37,8 +39,10 @@ Imports:
     Matrix,
     magrittr,
     tfruns,
-    methods
+    methods,
+    coro,
+    torchvision
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3

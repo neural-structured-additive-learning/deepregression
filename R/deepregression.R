@@ -18,7 +18,7 @@
 #' possible distribution and parameters, see \code{\link{make_tfd_dist}}. Can also
 #' be a custom distribution.
 #' @param data data.frame or named list with input features
-#' @param tf_seed a seed for TensorFlow (only works with R version >= 2.2.0)
+#' @param seed a seed for TensorFlow or Torch (only works with R version >= 2.2.0)
 #' @param additional_processors a named list with additional processors to convert the formula(s).
 #' Can have an attribute \code{"controls"} to pass additional controls
 #' @param return_prepoc logical; if TRUE only the pre-processed data and layers are returned 
@@ -34,12 +34,13 @@
 #' @param penalty_options options for smoothing and penalty terms defined by \code{\link{penalty_control}}
 #' @param orthog_options options for the orthgonalization defined by \code{\link{orthog_control}}
 #' @param verbose logical; whether to print progress of model initialization to console
+#' @param engine character; the engine which is used to setup the NN (tf or torch)
 #' @param weight_options options for layer weights defined by \code{\link{weight_control}}
 #' @param formula_options options for formula parsing (mainly used to make calculation more efficiently)
 #' @param output_dim dimension of the output, per default 1L
 #' @param ... further arguments passed to the \code{model_builder} function
 #'
-#' @import tensorflow tfprobability keras mgcv dplyr R6 reticulate Matrix
+#' @import tensorflow tfprobability keras mgcv dplyr R6 reticulate Matrix 
 #'
 #' @importFrom keras fit compile
 #' @importFrom tfruns is_run_active view_run_metrics update_run_metrics write_run_metadata
@@ -103,7 +104,7 @@ deepregression <- function(
   list_of_deep_models = NULL,
   family = "normal",
   data,
-  tf_seed = as.integer(1991-5-4),
+  seed = as.integer(1991-5-4),
   return_prepoc = FALSE,
   subnetwork_builder = subnetwork_init,
   model_builder = keras_dr,
@@ -115,26 +116,46 @@ deepregression <- function(
   formula_options = form_control(),
   output_dim = 1L,
   verbose = FALSE,
+  engine = "tf",
   ...
 )
 {
   
-  if(!is.null(tf_seed))
-    try(tensorflow::set_random_seed(tf_seed), silent = TRUE)
-  
+  if(!is.null(seed)){
+    if(engine == "tf"){
+      try(tensorflow::set_random_seed(seed), silent = TRUE)
+    } else {
+      try(torch::torch_manual_seed(seed), silent = TRUE)
+      }
+    }
+
   # first check if an env is available
-  if(!reticulate::py_available())
+  if(!reticulate::py_available() & engine == "tf")
   {
     message("No Python Environemt available. Use check_and_install() ",
             "to install recommended environment.")
     invisible(return(NULL))
   }
 
-  if(!py_module_available("tensorflow"))
+  if(!py_module_available("tensorflow")  & engine == "tf")
   {
     message("Tensorflow not available. Use install_tensorflow().")
     invisible(return(NULL))
   }
+  
+  if(engine == "torch"){
+    if(identical(subnetwork_builder, subnetwork_init)){
+      subnetwork_builder = subnetwork_init_torch
+    }
+    if(identical(model_builder, keras_dr)) {
+      model_builder = torch_dr
+    }
+    if(identical(fitting_function,
+                 utils::getFromNamespace("fit.keras.engine.training.Model",
+                                         "keras"))){
+      fitting_function = utils::getFromNamespace("fit.luz_module_generator",
+                              "luz")
+    }} 
   
   # convert data.frame to list
   if(is.data.frame(data)){
@@ -257,7 +278,8 @@ deepregression <- function(
                                                            automatic_oz_check =
                                                              automatic_oz_check,
                                                            identify_intercept =
-                                                             orthog_options$identify_intercept
+                                                             orthog_options$identify_intercept,
+                                                           engine
                                                            ),
                                                         list_of_deep_models,
                                                         additional_processors))
@@ -287,7 +309,7 @@ deepregression <- function(
   if(verbose) cat("Preparing subnetworks...")
 
   # create gam data inputs
-  if(!is.null(so$gamdata)){
+  if(!is.null(so$gamdata) & engine != 'torch'){
     gaminputs <- makeInputs(so$gamdata$data_trafos, "gam_inp")
   }
 
@@ -305,13 +327,14 @@ deepregression <- function(
   if(verbose) cat(" Done.\n")
 
   names(additive_predictors) <- names(list_of_formulas)
-  if(!is.null(so$gamdata)){
+  if(!is.null(so$gamdata) & engine != 'torch'){
     gaminputs <- list(gaminputs)
     names(gaminputs) <- "gaminputs"
     additive_predictors <- c(gaminputs, additive_predictors)
-  }else{
+  }else if(engine != 'torch'){
     additive_predictors <- c(list(NULL), additive_predictors)
-  }
+  } else  additive_predictors <- additive_predictors
+
 
   # initialize model
   if(verbose) cat("Building model...")
@@ -320,7 +343,7 @@ deepregression <- function(
                          output_dim = output_dim,
                          ...)
   if(verbose) cat(" Done.\n")
-
+  
   ret <- list(model = model,
               init_params =
                 list(
@@ -336,9 +359,10 @@ deepregression <- function(
                   image_var = image_var,
                   prepare_y_valdata = function(x) as.matrix(x)
                 ),
-              fit_fun = fitting_function)
-
-
+              fit_fun = fitting_function,
+              engine = engine)
+  
+ 
   class(ret) <- "deepregression"
 
   return(ret)
@@ -346,7 +370,6 @@ deepregression <- function(
 }
 
 #' @title Define Predictor of a Deep Distributional Regression Model
-#'
 #'
 #' @param list_pred_param list of input-output(-lists) generated from
 #' \code{subnetwork_init}
@@ -514,7 +537,6 @@ distfun_to_dist <- function(dist_fun, preds)
 
 #' @title Compile a Deep Distributional Regression Model
 #'
-#'
 #' @param list_pred_param list of input-output(-lists) generated from
 #' \code{subnetwork_init}
 #' @param weights vector of positive values; optional (default = 1 for all observations)
@@ -626,12 +648,10 @@ keras_dr <- function(
 from_dist_to_loss <- function(
   family,
   ind_fun = function(x) tfd_independent(x),
-  weights = NULL
-){
+  weights = NULL){
 
   # define weights to be equal to 1 if not given
   if(is.null(weights)) weights <- 1
-
   # the negative log-likelihood is given by the negative weighted
   # log probability of the dist
   if(!is.character(family) || family!="pareto_ls"){

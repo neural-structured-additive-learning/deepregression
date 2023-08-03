@@ -13,8 +13,7 @@ penalty_control(
   zero_constraint_for_smooths = TRUE,
   no_linear_trend_for_smooths = FALSE,
   hat1 = FALSE,
-  sp_scale = function(x) ifelse(is.list(x) | is.data.frame(x), 1/NROW(x[[1]]),
-    1/NROW(x))
+  sp_scale = function(x) ifelse(is.list(x) | is.data.frame(x), 1/NROW(x[[1]]), 1/NROW(x))
 )
 }
 \arguments{

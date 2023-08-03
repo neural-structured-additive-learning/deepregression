@@ -2,7 +2,7 @@
 % Please edit documentation in R/deep-ensembles.R
 \name{ensemble.deepregression}
 \alias{ensemble.deepregression}
-\title{Ensemblind deepregression models}
+\title{Ensembling deepregression models}
 \usage{
 \method{ensemble}{deepregression}(
   x,
@@ -34,7 +34,7 @@ not affected}
 
 \item{verbose}{whether to print training in each fold}
 
-\item{patience}{integer, number of rounds after which early stopping is done.}
+\item{patience}{number of patience for early stopping}
 
 \item{plot}{whether to plot the resulting losses in each fold}
 
@@ -61,5 +61,5 @@ object of class \code{"drEnsemble"}, containing the original
     the trained weights of each ensemble member)
 }
 \description{
-Ensemblind deepregression models
+Ensembling deepregression models
 }
