@@ -91,7 +91,7 @@ torch_dr <- function(
 #' once to \code{list_pred_param[[2]]})
 #' @param from_family_to_distfun function to create a \code{dist_fun} 
 #' (see \code{?distfun_to_dist}) from the given character \code{family}
-#' @param from_distfun_to_dist function creating a tfp distribution based on the
+#' @param from_distfun_to_dist function creating a torch distribution based on the
 #' prediction tensors and \code{dist_fun}. See \code{?distfun_to_dist}
 #' @param add_layer_shared_pred layer to extend shared layers defined in \code{mapping}
 #' @param trafo_list a list of transformation function to convert the scale of the
@@ -105,7 +105,7 @@ from_preds_to_dist_torch <- function(
     output_dim = 1L,
     mapping = NULL, # not implemented
     from_family_to_distfun = make_torch_dist,
-    from_distfun_to_dist = distfun_to_dist_torch,
+    from_distfun_to_dist = from_distfun_to_dist_torch,
     add_layer_shared_pred = function(input_shape, units) 
       layer_dense_torch(input_shape = input_shape, units = units,
                         use_bias = FALSE),
@@ -162,8 +162,6 @@ from_distfun_to_dist_torch <- function(dist_fun, preds){
       self$distr_parameters <- torch::nn_module_dict(
         lapply(preds, function(x) x()))
       self$amount_distr_parameters <- length(preds)
-      #names(self$distr_parameters$.__enclos_env__$private$modules_) <- 
-      #  names(preds)
     },
     
     forward = function(dataset_list) {
