@@ -40,7 +40,7 @@
 #' @param output_dim dimension of the output, per default 1L
 #' @param ... further arguments passed to the \code{model_builder} function
 #'
-#' @import tensorflow tfprobability keras mgcv dplyr R6 reticulate Matrix
+#' @import tensorflow tfprobability keras mgcv dplyr R6 reticulate Matrix 
 #'
 #' @importFrom keras fit compile
 #' @importFrom tfruns is_run_active view_run_metrics update_run_metrics write_run_metadata
