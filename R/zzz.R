@@ -5,6 +5,8 @@ VERSIONTF = "2.10"
 VERSIONKERAS = "2.10"
 VERSIONTFP = "0.16"
 
+globalVariables("self")
+
 create_package_name <- function(package, version)
   paste(package, version, sep="==")
 
