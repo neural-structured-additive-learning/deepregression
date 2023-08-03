@@ -226,9 +226,8 @@ layer_generator <- function(term, output_dim, param_nr, controls,
             do.call(layer_class, layer_args)(x)
           )
         }
-      } # add function without x as torch doesn't need input
-      if(engine == 'torch'){
-        layer = function(){
+      }else{
+        layer = function(x){
           return(
             do.call(layer_class, layer_args)
           )
@@ -244,13 +243,9 @@ layer_generator <- function(term, output_dim, param_nr, controls,
     }
     
   }else{
-    
     layer = without_layer
-    
+    return(layer)
   }
-  
-  return(layer)
-  
   
 }
 
@@ -264,11 +259,10 @@ int_processor <- function(term, data, output_dim, param_nr, controls, engine){
   if(term=="(Intercept)") term <- "1"
   data <- as.data.frame(data[[1]])
   
-  if(engine != "torch"){
+  if(engine == "tf"){
     layer_class = tf$keras$layers$Dense
     without_layer = tf$identity
-  }
-  if(engine == "torch"){
+  }else{
     layer_class = layer_dense_torch
     without_layer = torch::nn_identity
     input_shape = 1
