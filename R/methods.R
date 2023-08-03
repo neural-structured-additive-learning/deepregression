@@ -277,8 +277,11 @@ fitted.deepregression <- function(
 #' \code{keras:::fit.keras.engine.training.Model}
 #'
 #'
+#'
 #' @export fit.deepregression
 #' @export
+#' 
+#' @importFrom luz luz_callback_early_stopping luz_callback_keep_best_model
 #' 
 #' @rdname methodDR
 #'
@@ -805,10 +808,9 @@ log_score <- function(
     ind_fun <- function(x) tfd_independent(x)
     log_prob <- function(x, value) tfd_log_prob(x, value)
     } else {
-    ind_fun <- function(x) x
-    log_prob <- function(x, value) x$log_prob(value)
-    summary_fun <- rowSums
-    }
+      ind_fun <- function(x) x
+      log_prob <- function(x, value) x$log_prob(value)
+      }
   
   
   
@@ -844,7 +846,7 @@ log_score <- function(
   disthat <- x$model(this_data)
     
   if(is.null(this_y)){
-    this_y <- x$init_params$y
+    this_y <- as.matrix(x$init_params$y)
   }else{
     if(is.null(dim(this_y))){
       warning("Meaningful log-score calculations require this_y to be a matrix (forced now).")
