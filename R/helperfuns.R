@@ -457,3 +457,32 @@ subset_list_and_df <- function(x, sel){
   return(x[sel])
   
 }
+
+#' Function to import required packages
+#' 
+#' @param engine tensorflow or torch
+
+import_packages <- function(engine){
+  switch (engine,
+    "torch" = import_torch_dependings(),
+    "tf" = import_tf_dependings()
+  )
+}
+
+
+#' Function to import required packages for torch
+#'  
+#'  @import torch torchvision luz
+import_torch_dependings <- function(){
+  
+}
+
+#' Function to import required packages for tensorflow
+#'  
+#'  @import tensorflow tfprobability keras
+import_tf_dependings <- function(){
+  
+}
+
+
+
