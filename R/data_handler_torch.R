@@ -6,6 +6,7 @@
 #' @param object a deepregression object
 #' @return list of matrices or arrays for predict or a dataloader for fit process
 #' 
+#' @importFrom torch torch_tensor
 
 prepare_data_torch <- function(pfc, input_x, target = NULL, object){
   
@@ -61,6 +62,8 @@ prepare_data_torch <- function(pfc, input_x, target = NULL, object){
 #' @param view_metrics logical, whether to trigger the Viewer in RStudio / Browser.
 #' @param early_stopping logical, whether early stopping should be user.
 #' @return list of arguments used in fit function
+#' 
+#' @importFrom torch dataloader dataset_subset
 #' 
 prepare_input_list_model <- function(input_x, input_y,
                                      object, epochs = 10, batch_size = 32,
