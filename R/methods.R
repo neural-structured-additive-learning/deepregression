@@ -353,7 +353,7 @@ fit.deepregression <- function(
           y = object$init_params$prepare_y_valdata(validation_data[[2]])
         )
     if(length(attr(validation_data$x, "na_loc"))>0)
-      validation_data$y <- validation_data$y[-attr(x, "na_loc"),]  
+      validation_data$y <- validation_data$y[-attr(validation_data$x, "na_loc"),]  
       }
 
   if(length(object$init_params$image_var)>0 & object$engine == "tf"){
