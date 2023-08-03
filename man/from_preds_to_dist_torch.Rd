@@ -10,7 +10,7 @@ from_preds_to_dist_torch(
   output_dim = 1L,
   mapping = NULL,
   from_family_to_distfun = make_torch_dist,
-  from_distfun_to_dist = distfun_to_dist_torch,
+  from_distfun_to_dist = from_distfun_to_dist_torch,
   add_layer_shared_pred = function(input_shape, units) layer_dense_torch(input_shape =
     input_shape, units = units, use_bias = FALSE),
   trafo_list = NULL
@@ -36,7 +36,7 @@ once to \code{list_pred_param[[2]]})}
 \item{from_family_to_distfun}{function to create a \code{dist_fun} 
 (see \code{?distfun_to_dist}) from the given character \code{family}}
 
-\item{from_distfun_to_dist}{function creating a tfp distribution based on the
+\item{from_distfun_to_dist}{function creating a torch distribution based on the
 prediction tensors and \code{dist_fun}. See \code{?distfun_to_dist}}
 
 \item{add_layer_shared_pred}{layer to extend shared layers defined in \code{mapping}}
