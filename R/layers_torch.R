@@ -41,7 +41,7 @@ layer_dense_torch <- function(input_shape, units = 1L, name, trainable = TRUE,
 #' @param kernel_initializer string; initializer
 #' @param value numeric; value used for a constant initializer
 #' @return kernel initializer
-#' @export
+
 choose_kernel_initializer_torch <- function(kernel_initializer, value = NULL){
   kernel_initializer_value <- value
   
