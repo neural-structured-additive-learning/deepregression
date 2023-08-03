@@ -4,7 +4,7 @@
 \alias{prepare_data}
 \title{Function to prepare data based on parsed formulas}
 \usage{
-prepare_data(pfc, na_handler = na_omit_list, gamdata = NULL)
+prepare_data(pfc, na_handler = na_omit_list, gamdata = NULL, engine = "tf")
 }
 \arguments{
 \item{pfc}{list of processor transformed formulas}
@@ -12,6 +12,8 @@ prepare_data(pfc, na_handler = na_omit_list, gamdata = NULL)
 \item{na_handler}{function to deal with NAs}
 
 \item{gamdata}{processor for gam part}
+
+\item{engine}{the engine which is used to setup the NN (tf or torch)}
 }
 \value{
 list of matrices or arrays

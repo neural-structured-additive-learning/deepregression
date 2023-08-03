@@ -4,17 +4,17 @@ test_that("lin_processor", {
   
   data = data.frame(a=rnorm(2), b=rnorm(2), c=rnorm(2))
   term="lin(a + b + c)"
-  expect_equal(lin_processor(term, data, 1, 1, 
-                             controls = list(with_layer = TRUE))$input_dim, 3)
+  expect_equal(lin_processor(term, data, 1, 1, engine = "tf",
+                             controls = list(with_layer = TRUE))$input_dim, 3,)
   term="lin(1 + b + c)"
-  expect_equal(lin_processor(term, data, 1, 1,
+  expect_equal(lin_processor(term, data, 1, 1, engine = "tf",
                              controls = list(with_layer = TRUE))$input_dim, 2)
   # -> 2 because intercepts must be added explicitly to the formula
   term="lin(a, b, c)"
-  expect_equal(lin_processor(term, data, 1, 1, 
+  expect_equal(lin_processor(term, data, 1, 1, engine = "tf",
                              controls = list(with_layer = TRUE))$input_dim, 3)
   term="lin(1, b, c)" # intercept is treated separately
-  expect_equal(lin_processor(term, data, 1, 1, 
+  expect_equal(lin_processor(term, data, 1, 1, engine = "tf", 
                              controls = list(with_layer = TRUE))$input_dim, 2)
   
 })
@@ -89,11 +89,11 @@ test_that("rwt", {
 
 test_that("fixed weights", {
   
-  form = ~ 1 + lin(u) + s(x)
+  form = ~ 1 + u + s(x)
   data = data.frame(x = rnorm(100), y = rnorm(100), z = rnorm(100), u = rnorm(100))
   controls = penalty_control()
   controls$with_layer <- TRUE
-  controls$weight_options$warmstarts <- list("lin(u)" = 1.337)
+  controls$weight_options$warmstarts <- list("u" = 1.337)
   output_dim = 1L
   param_nr = 1L
   d = dnn_placeholder_processor(function(x) layer_dense(x, units=1L))
