@@ -35,7 +35,7 @@ test_that("array inputs", {
                                                    conv_mod = conv_mod),
                         family = "multinoulli")
 
-  cvres <- mod %>% cv(epochs = 2, cv_folds = 2, batch_size=100)
+  cvres <- mod %>% cv(epochs = 2, cv_folds = 2, batch_size=100, plot = F)
 
   expect_is(cvres, "drCV")
   lapply(cvres, function(x) {
