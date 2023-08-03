@@ -6,6 +6,9 @@
 #' @param object deepregression object
 #' @return R6 instances of class dataset
 #' @export
+#' 
+#' @importFrom torchvision base_loader transform_to_tensor
+#' @importFrom torch torch_tensor torch_stack
 get_luz_dataset <- dataset(
   "deepregression_luz_dataset",
   
@@ -31,7 +34,6 @@ get_luz_dataset <- dataset(
     
   },
   
-  # has to be fast because is used very often (very sure this a bottle neck)
   .getbatch = function(index) {
     self$getbatch(index)
   },
@@ -48,10 +50,8 @@ get_luz_dataset <- dataset(
         if((ncol(y)==1) & check_data_for_image(y)){
           return( 
             function(index) torch::torch_stack(
-              lapply(index, function(x) y[x, ,drop = F] %>% torchvision::base_loader() %>%
-                       torchvision::transform_to_tensor())))
-          # this torch_stack(...) allows to use .getbatch also when
-          # we use image data.
+              lapply(index, function(x) y[x, ,drop = F] %>% base_loader() %>%
+                       transform_to_tensor())))
         }
         function(index) torch_tensor(y[index, ,drop = F])
       }))
@@ -63,14 +63,14 @@ get_luz_dataset <- dataset(
     lapply(df_list, function(y){
         if((ncol(y)==1) & check_data_for_image(y)){
           return( 
-            function(index) torch::torch_stack(
+            function(index) torch_stack(
               lapply(index, function(x) y[x, ,drop = F] %>%
-                       torchvision::base_loader() %>%
-                       torchvision::transform_to_tensor())))
+                       base_loader() %>%
+                       transform_to_tensor())))
           # this torch_stack(...) allows to use .getbatch also when
           # we use image data.
         }
-        function(index) torch::torch_tensor(y[index, ,drop = F])
+        function(index) torch_tensor(y[index, ,drop = F])
       })
   },
   
