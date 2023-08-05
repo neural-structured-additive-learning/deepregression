@@ -5,6 +5,12 @@
   [![Codecov test coverage](https://codecov.io/gh/neural-structured-additive-learning/deepregression/branch/main/graph/badge.svg)](https://codecov.io/gh/neural-structured-additive-learning/deepregression?branch=main)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
+## Version 2.0
+
+`deepregression` now has an `engine` argument that allows the support of `torch`!
+
+## Version 1.0
+
 This is a refactored version of the old [deepregression](https://github.com/davidruegamer/deepregression) package.
 
 # Installation
@@ -21,15 +27,13 @@ The requirements are given in the `DESCRIPTION`. If you load the package manuall
 
   - Matrix
   - dplyr
-  - keras
   - mgcv
-  - reticulate
-  - tensorflow
-  - tfprobability
-
-If you set up a Python environment for the first time, install `reticulate` and run the `check_and_install` function from the `deepregression` package. This tries to install miniconda, TF 2.8.0, TFP 0.16 and keras 2.8.0, which seems to be the most reliable setup for `deepregression` at the moment.
 
 # Troubleshooting
+
+## TensorFlow
+
+If you have problems with TensorFlow and these cannot be solved with our `check_and_install` function nor with the comments mentioned below, consider using our `torch` engine instead.
 
 ## Python Path and Conda / Virtual Environment
 
