@@ -328,6 +328,7 @@ deepregression <- function(
 
   names(additive_predictors) <- names(list_of_formulas)
   if(!is.null(so$gamdata) & engine != 'torch'){
+    
     gaminputs <- list(gaminputs)
     names(gaminputs) <- "gaminputs"
     additive_predictors <- c(gaminputs, additive_predictors)
