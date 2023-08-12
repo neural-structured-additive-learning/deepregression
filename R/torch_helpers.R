@@ -9,7 +9,7 @@
 #' 
 #' @importFrom torchvision base_loader transform_to_tensor
 #' @importFrom torch torch_tensor torch_stack
-get_luz_dataset <- dataset(
+get_luz_dataset <- torch::dataset(
   "deepregression_luz_dataset",
   
   initialize = function(df_list, target = NULL, length = NULL, object) {
