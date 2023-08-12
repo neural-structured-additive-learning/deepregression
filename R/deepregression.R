@@ -24,13 +24,13 @@
 #' @param return_prepoc logical; if TRUE only the pre-processed data and layers are returned 
 #' (default FALSE).
 #' @param subnetwork_builder function to build each subnetwork (network for each distribution parameter;
-#' per default \code{subnetwork_init}). Can also be a list of the same size as
+#' per default \code{NULL}). subnetwork builder will be chosen depending on the engine. Can also be a list of the same size as
 #' \code{list_of_formulas}.
 #' @param model_builder function to build the model based on additive predictors 
-#' (per default \code{keras_dr}). In order to work with the methods defined for the class 
-#' \code{deepregression}, the model should behave like a keras model
+#' (per default \code{NULL}). model builder will be chosen depending on the engine.
+#'  In order to work with the methods defined for the class \code{deepregression}, the model should behave like a keras model
 #' @param fitting_function function to fit the instantiated model when calling \code{fit}. Per default
-#' the keras \code{fit} function.
+#' the keras \code{NULL} function. fit will be chosen depending on the engine.
 #' @param penalty_options options for smoothing and penalty terms defined by \code{\link{penalty_control}}
 #' @param orthog_options options for the orthgonalization defined by \code{\link{orthog_control}}
 #' @param verbose logical; whether to print progress of model initialization to console
@@ -41,6 +41,8 @@
 #' @param ... further arguments passed to the \code{model_builder} function
 #'
 #' @import tensorflow tfprobability keras mgcv dplyr R6 reticulate Matrix 
+#' @rawNamespace import(luz, except = evaluate)
+#' @rawNamespace import(torch, except = as_iterator)
 #'
 #' @importFrom keras fit compile
 #' @importFrom tfruns is_run_active view_run_metrics update_run_metrics write_run_metadata
@@ -106,9 +108,9 @@ deepregression <- function(
   data,
   seed = as.integer(1991-5-4),
   return_prepoc = FALSE,
-  subnetwork_builder = subnetwork_init,
-  model_builder = keras_dr,
-  fitting_function = utils::getFromNamespace("fit.keras.engine.training.Model", "keras"),
+  subnetwork_builder = NULL,
+  model_builder = NULL,
+  fitting_function = NULL,
   additional_processors = list(),
   penalty_options = penalty_control(),
   orthog_options = orthog_control(),
@@ -129,33 +131,32 @@ deepregression <- function(
       }
     }
 
-  # first check if an env is available
-  if(!reticulate::py_available() & engine == "tf")
-  {
-    message("No Python Environemt available. Use check_and_install() ",
-            "to install recommended environment.")
-    invisible(return(NULL))
-  }
-
-  if(!py_module_available("tensorflow")  & engine == "tf")
-  {
-    message("Tensorflow not available. Use install_tensorflow().")
-    invisible(return(NULL))
-  }
   
-  if(engine == "torch"){
-    if(identical(subnetwork_builder, subnetwork_init)){
-      subnetwork_builder = subnetwork_init_torch
-    }
-    if(identical(model_builder, keras_dr)) {
-      model_builder = torch_dr
-    }
-    if(identical(fitting_function,
-                 utils::getFromNamespace("fit.keras.engine.training.Model",
-                                         "keras"))){
-      fitting_function = utils::getFromNamespace("fit.luz_module_generator",
-                              "luz")
-    }} 
+  if(engine == "tf"){
+    if(!reticulate::py_available())
+    {
+      message("No Python Environemt available. Use check_and_install() ",
+              "to install recommended environment.")
+      invisible(return(NULL))
+    } 
+    if(!py_module_available("tensorflow"))
+    {
+      message("Tensorflow not available. Use install_tensorflow().")
+      invisible(return(NULL))
+    }}
+  
+  if(engine == "tf"){
+    if(is.null(subnetwork_builder)) subnetwork_builder = subnetwork_init
+    if(is.null(model_builder)) model_builder = keras_dr
+    if(is.null(fitting_function)) fitting_function =
+        utils::getFromNamespace("fit.keras.engine.training.Model", "keras")
+  } else {
+    if(is.null(subnetwork_builder)) subnetwork_builder <- subnetwork_init_torch
+    if(is.null(model_builder)) model_builder <- torch_dr
+    if(is.null(fitting_function)) fitting_function <-
+        utils::getFromNamespace("fit.luz_module_generator",
+                                "luz")
+  }
   
   # convert data.frame to list
   if(is.data.frame(data)){
@@ -328,6 +329,7 @@ deepregression <- function(
 
   names(additive_predictors) <- names(list_of_formulas)
   if(!is.null(so$gamdata) & engine != 'torch'){
+    
     gaminputs <- list(gaminputs)
     names(gaminputs) <- "gaminputs"
     additive_predictors <- c(gaminputs, additive_predictors)

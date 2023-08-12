@@ -12,9 +12,9 @@ deepregression(
   data,
   seed = as.integer(1991 - 5 - 4),
   return_prepoc = FALSE,
-  subnetwork_builder = subnetwork_init,
-  model_builder = keras_dr,
-  fitting_function = utils::getFromNamespace("fit.keras.engine.training.Model", "keras"),
+  subnetwork_builder = NULL,
+  model_builder = NULL,
+  fitting_function = NULL,
   additional_processors = list(),
   penalty_options = penalty_control(),
   orthog_options = orthog_control(),
@@ -56,15 +56,15 @@ be a custom distribution.}
 (default FALSE).}
 
 \item{subnetwork_builder}{function to build each subnetwork (network for each distribution parameter;
-per default \code{subnetwork_init}). Can also be a list of the same size as
+per default \code{NULL}). subnetwork builder will be chosen depending on the engine. Can also be a list of the same size as
 \code{list_of_formulas}.}
 
 \item{model_builder}{function to build the model based on additive predictors 
-(per default \code{keras_dr}). In order to work with the methods defined for the class 
-\code{deepregression}, the model should behave like a keras model}
+(per default \code{NULL}). model builder will be chosen depending on the engine.
+ In order to work with the methods defined for the class \code{deepregression}, the model should behave like a keras model}
 
 \item{fitting_function}{function to fit the instantiated model when calling \code{fit}. Per default
-the keras \code{fit} function.}
+the keras \code{NULL} function. fit will be chosen depending on the engine.}
 
 \item{additional_processors}{a named list with additional processors to convert the formula(s).
 Can have an attribute \code{"controls"} to pass additional controls}
