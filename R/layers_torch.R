@@ -114,7 +114,7 @@ nn_init_no_grad_constant_deepreg <- function(tensor, value){
 #' @return nn_module
 #' @rdname hadamard_layers_torch
 simplyconnected_layer_torch <-
-  nn_module(
+  torch::nn_module(
     classname = "simply_con",
     initialize = function(la = la,  multfac_initializer = torch_ones, 
                           input_shape){
@@ -165,7 +165,7 @@ tiblinlasso_layer_torch <- function(la, input_shape = 1, units = 1,
 #' @return nn_module
 #' @rdname hadamard_layers_torch
 tib_layer_torch <-
-  nn_module(
+  torch::nn_module(
     classname = "TibLinearLasso_torch",
     initialize = function(units, la, input_shape, multfac_initializer = torch_ones){
       self$units = units
@@ -191,7 +191,7 @@ tib_layer_torch <-
 #' @return nn_module
 #' @rdname hadamard_layers_torch
 tibgroup_layer_torch <-
-  nn_module(
+  torch::nn_module(
     classname = "TibGroupLasso_torch",
     initialize = function(units, group_idx=NULL, la = 0, input_shape,
                           kernel_initializer = "torch_ones", 
