@@ -280,7 +280,7 @@ deepregression <- function(
                                                              automatic_oz_check,
                                                            identify_intercept =
                                                              orthog_options$identify_intercept,
-                                                           engine
+                                                           engine = engine
                                                            ),
                                                         list_of_deep_models,
                                                         additional_processors))
