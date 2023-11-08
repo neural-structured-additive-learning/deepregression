@@ -708,7 +708,8 @@ multiply_processor <- function(term, data, output_dim, param_nr, controls,
 
 }
 
-const_broadcasting_processor <- function(term, data, output_dim, param_nr, controls){
+const_broadcasting_processor <- function(term, data, output_dim, param_nr, controls,
+                                         engine = "tf"){
 
   #controls$const_broadcasting <-
   # as.integer(extractval(term, name="dim", TRUE, 1L))
