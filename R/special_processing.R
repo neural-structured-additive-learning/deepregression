@@ -167,7 +167,8 @@ layer_generator <- function(term, output_dim, param_nr, controls,
     controls$const_broadcasting & output_dim>1)
 
   layer_args <- controls$weight_options$general
-  layer_args <- c(layer_args, list(...))
+  layer_args <- c(layer_args[!names(layer_args)%in%names(list(...))], 
+                  list(...))
 
   #dots <- list(...)
   #layer_dots_index <- which(names(layer_args) %in% names(dots))
