@@ -187,6 +187,7 @@ handle_gam_term <- function(
   # check for df argument and remove
   object <- remove_df_wrapper(object)
   names_s <- all.vars(as.formula(paste0("~", object)))
+  names_s <- names_s[names_s %in% names(data)]
   sterm <- smoothCon(eval(parse(text=object)),
                      data=data.frame(data[names_s]),
                      absorb.cons = controls$absorb_cons,
