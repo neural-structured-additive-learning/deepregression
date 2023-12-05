@@ -35,7 +35,8 @@ process_terms <- function(
          offsetx = offset_processor,
          rwt = rwt_processor,
          const = const_broadcasting_processor,
-         mult = multiply_processor
+         mult = multiply_processor,
+         node = node_processor
     )
 
   dots <- list(...)
@@ -778,3 +779,55 @@ dnn_image_placeholder_processor <- function(dnn, size){
     )
   }
 }
+
+#' @rdname processors
+#' @export
+node_processor <-
+  function(term,
+           data,
+           output_dim,
+           param_nr,
+           controls,
+           engine = "tf") {
+    ### extract node attributes
+    # units = as.integer(extractval(term, "units", default = 1L)) --> kommt drauf an ob units == output_dim sein soll
+    n_layers = as.integer(extractval(term, "n_layers", default = 1L))
+    link = extractval(term, "link", default = tf$identity)
+    n_trees = as.integer(extractval(term, "n_trees", default = 1L))
+    tree_depth = as.integer(extractval(term, "tree_depth", default = 1L))
+    threshold_init_beta = as.integer(extractval(term, "threshold_init_beta", default = 1L))
+    
+    
+    layer <- layer_generator(
+      term = term,
+      output_dim = output_dim,
+      further_layer_args = list(
+        n_layers = n_layers,
+        link = link,
+        n_trees = n_trees,
+        tree_depth = tree_depth,
+        threshold_init_beta = threshold_init_beta
+      ),
+      layer_class = layer_node,
+      layer_args_names = c(
+        "name",
+        "n_layers",
+        "link",
+        "n_trees",
+        "tree_depth",
+        "threshold_init_beta"
+      ),
+      controls = controls,
+      param_nr = param_nr
+    )
+    
+    list(
+      data_trafo = function()
+        data[extractvar(term)],
+      predict_trafo = function(newdata)
+        newdata[extractvar(term)],
+      input_dim = as.integer(extractlen(term, data)),
+      layer = layer
+    )
+  }
+
