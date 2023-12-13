@@ -37,6 +37,7 @@
 #' @param engine character; the engine which is used to setup the NN (tf or torch)
 #' @param weight_options options for layer weights defined by \code{\link{weight_control}}
 #' @param formula_options options for formula parsing (mainly used to make calculation more efficiently)
+#' @param node_options further parameters of node layer
 #' @param output_dim dimension of the output, per default 1L
 #' @param ... further arguments passed to the \code{model_builder} function
 #'
@@ -116,13 +117,14 @@ deepregression <- function(
   orthog_options = orthog_control(),
   weight_options = weight_control(),
   formula_options = form_control(),
+  node_options = node_control(),
   output_dim = 1L,
   verbose = FALSE,
   engine = "tf",
   ...
 )
 {
-  
+
   if(!is.null(seed)){
     if(engine == "tf"){
       try(tensorflow::set_random_seed(seed), silent = TRUE)
@@ -199,6 +201,9 @@ deepregression <- function(
     names(list_of_deep_models) <- netnames
 
   }
+  
+  # node_options for further parameters of node_layer
+  node_options <- do.call(node_control,node_options)
 
   # check if user wants automatic orthogonalization
   if(orthog_options$orthogonalize){
@@ -274,6 +279,7 @@ deepregression <- function(
                                                            output_dim = od,
                                                            param_nr = i,
                                                            parsing_options = formula_options,
+                                                           node_options = node_options,
                                                            specials_to_oz =
                                                              specials_to_oz,
                                                            automatic_oz_check =
@@ -358,6 +364,7 @@ deepregression <- function(
                   family = family,
                   penalty_options = penalty_options,
                   orthog_options = orthog_options,
+                  node_options = node_options, 
                   image_var = image_var,
                   prepare_y_valdata = function(x) as.matrix(x)
                 ),

@@ -180,11 +180,15 @@ separate_define_relation <- function(
     }
   }
   # define which terms are related to which other terms due to OZ
+  # per term in formula at least one element (term itself)
+  # if orthoginalization necessary connected terms at pos. 2
   terms <- strsplit(trmstrings, "%OZ%", fixed=TRUE)
   terms_left <- lapply(terms, function(x) trimws(x[[1]]))
   terms_right <- lapply(terms, function(trm){
     if(length(trm)>1) remove_brackets(trimws(trm[[2]])) else return(NULL)
-  }) 
+  })
+  
+  # splits right terms into single elements per connected term 
   terms_right <- lapply(terms_right, function(trm)
   {
     if(is.null(trm)) return(NULL)
@@ -210,31 +214,69 @@ separate_define_relation <- function(
   j <- 1
   
   for(i in 1:length(terms_right)){
-    
     if(is.null(terms_right[[i]])) next
     for(k in 1:length(terms_right[[i]])){
-      
+      # check if terms_right[[i]][[k]] already exists in terms (due to being left)
       is_already_left <- is_equal_not_null(terms_right[[i]][[k]], sapply(terms, "[[", "term"))
       if(terms_right[[i]][[k]]==".")
         is_already_left <- seq_along(terms_right) != i
+      
       is_already_right <- FALSE
       if(length(add_terms)>0)
+        # check if terms_right[[i]][[k]] already exists in add_terms
         is_already_right <- is_equal_not_null(terms_right[[i]][[k]], 
                                               sapply(add_terms, "[[", "term"))
       if(any(is_already_left)){
         for(m in 1:sum(is_already_left)){
-          terms[[which(is_already_left)[m]]]$right_from_oz <- 
-            c(terms[[which(is_already_left)[m]]]$right_from_oz, i) 
+          check_node <- grepl("^node\\(", terms[[which(is_already_left)[m]]]$term)
+          if(check_node) {
+            warning("Overlap in features used in node and deep_model")
+            terms[[which(is_already_left)[m]]] <- list(
+              term = terms[[which(is_already_left)[m]]]$term,
+              nr = terms[[which(is_already_left)[m]]]$nr,
+              left_from_oz = terms[[which(is_already_left)[m]]]$left_from_oz,
+              right_from_oz = NULL
+            )
+          } else terms[[which(is_already_left)[m]]]$right_from_oz <- c(terms[[which(is_already_left)[m]]]$right_from_oz, i)
+          
+          # Shorter alternative -- not working properly 
+          #terms[[which(is_already_left)[m]]]$right_from_oz =
+          #  ifelse(check_node, list(NULL),
+          #         c(terms[[which(is_already_left)[m]]]$right_from_oz, i)) 
+          
+          # OG code: 
+          # terms[[which(is_already_left)[m]]]$right_from_oz <- 
+          #   c(terms[[which(is_already_left)[m]]]$right_from_oz, temp_i) 
         }
       }else if(any(is_already_right)){
-        add_terms[[which(is_already_right)]]$right_from_oz <- 
-          c(add_terms[[which(is_already_right)]]$right_from_oz, i)
+        check_node <- grepl("^node\\(", add_terms[[which(is_already_right)]]$term)
+        if(check_node) {
+          warning("Overlap in features used in node and deep_model")
+          add_terms[[which(is_already_right)]] <- list(
+            term = add_terms[[which(is_already_right)]]$term,
+            nr = add_terms[[which(is_already_right)]]$nr,
+            left_from_oz = add_terms[[which(is_already_right)]]$left_from_oz,
+            right_from_oz = NULL
+          )
+        } else add_terms[[which(is_already_right)]]$right_from_oz <- c(add_terms[[which(is_already_right)]]$right_from_oz, temp_i)
+        
+        # OG code: 
+        # add_terms[[which(is_already_right)]]$right_from_oz <- 
+        #   c(add_terms[[which(is_already_right)]]$right_from_oz, i)
       }else{ # add
+        check_node <- grepl("^node\\(", terms_right[[i]][[k]])
+        
+        if(check_node) {
+          temp_i <- NULL
+          warning("Overlap in features used in node and deep_model")
+        }
+        else temp_i <- i
+        
         add_terms[[j]] <- list(
           term = terms_right[[i]][[k]],
           nr = length(terms) + j,
           left_from_oz = FALSE,
-          right_from_oz = i
+          right_from_oz = temp_i
         )
         j <- j + 1
       }
@@ -244,7 +286,8 @@ separate_define_relation <- function(
   }
   
   terms <- c(terms, add_terms)
-  
+  print("terms after orthogonalozation")
+  print(terms)
   if(has_intercept){
     
     terms[[which(sapply(terms, "[[", "term")=="1")]]$left_from_oz <- TRUE

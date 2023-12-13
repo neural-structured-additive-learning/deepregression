@@ -103,7 +103,6 @@ extractvar <- function(term, allow_ia = FALSE)
 #'
 extractval <- function(term, name, default_for_missing = FALSE, default = NULL)
 {
-
   if(is.character(term)) term <- as.formula(paste0("~", term))
   inputs <- as.list(as.list(term)[[2]])[-1]
   if(name %in% names(inputs)) return(inputs[[name]])
