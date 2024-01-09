@@ -286,7 +286,7 @@ int_processor <- function(term, data, output_dim, param_nr, controls, engine){
     },
     input_dim = 1L,
     layer = layer,
-    coef = function(weights)  as.matrix(weights),
+    coef = function(weights) as.matrix(weights[[1]]),
     penalty = NULL
   )
   
