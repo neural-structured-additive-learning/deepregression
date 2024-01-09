@@ -6,3 +6,4 @@ tests/testthat/*.pdf
 */__pycache__
 *.cpython
 .Rproj.user
+*.DS_Store
