@@ -389,10 +389,24 @@ create_data_trafos <- function(evaluated_gam_term, controls, xlin)
 #' @export
 create_penalty <- function(evaluated_gam_term, df, controls, Z = NULL)
 {
+  
+  # support for custom smoothing parameters
+  if (length(evaluated_gam_term) == 1 && !is.null(evaluated_gam_term[[1]][["sp"]])) {
+    
+    if (length(evaluated_gam_term[[1]][["sp"]]) != length(evaluated_gam_term[[1]]$S)) {
+      stop("incorrect number of smoothing parameters supplied for smooth term ",
+           evaluated_gam_term[[1]][["label"]])
+    } else {
+      sp <- evaluated_gam_term[[1]][["sp"]]
+      message("using custom smoothing parameter(s) for smooth term ",
+              evaluated_gam_term[[1]][["label"]])
+    }
+    
+  }
 
   # get sp and S
   sp_and_S <- list(
-    sp = controls$defaultSmoothing(evaluated_gam_term, df),
+    sp = if (exists("sp")) sp else controls$defaultSmoothing(evaluated_gam_term, df),
     S = extract_S(evaluated_gam_term)
   )
 
