@@ -106,7 +106,7 @@ separate_define_relation <- function(
   simplify = FALSE
   )
 {
-  
+  #print("-----------------------------seperate define relation")
   if(simplify){
     terms <- trimws(strsplit(as.character(form)[[2]], split = "+", fixed = TRUE)[[1]])
     terms <- terms[terms!=""]
@@ -123,9 +123,15 @@ separate_define_relation <- function(
     return(terms)
     
   }
+  # print("specials")
+  # print(specials)
   tf <- terms.formula(form, specials = specials)
+  # print("tf")
+  # print(tf)
   has_intercept <- attr(tf, "intercept")
   trmstrings <- attr(tf, "term.labels")
+  #print("trmstrings")
+  #print(trmstrings)
   if(length(trmstrings)==0 & has_intercept)
     return(
       list(list(
@@ -136,19 +142,31 @@ separate_define_relation <- function(
       ))
     )
   variables_per_trmstring <- sapply(trmstrings, function(x) all.vars(as.formula(paste0("~",x))))
+  # print("variables per trmstring")
+  # print(variables_per_trmstring)
+  # 
+  ## check if contains %OZ%
   manual_oz <- grepl("%OZ%", trmstrings)
   # do a check for automatic OZ if defined
   # and add it via the %OZ% operator
+  # print("specials to oz --- should be equal to net-names")
+  # print(specials_to_oz)
+  #check if node in trmstrings and add it to specials to oz
+  node_to_oz <- c()
+  if (!is.null(attr(tf, "specials")$node)) node_to_oz <- c("node")
+  else node_to_oz <- NULL
+  
   if(automatic_oz_check){
     # if no specials_to_oz are present, return function call without automatic oz
-    if(is.null(specials_to_oz) | length(specials_to_oz)==0)
+    if(is.null(specials_to_oz) & is.null(node_to_oz) | length(specials_to_oz)==0 & length(node_to_oz)==0)
       return(separate_define_relation(form, specials = specials, 
                                       specials_to_oz = specials_to_oz,
                                       automatic_oz_check = FALSE))
     # otherwise start checking
     oz_to_add <- rep(list(NULL), length(trmstrings))
     for(i in 1:length(trmstrings)){
-      
+      #print("sapply(specials_to_oz, function(nn) trmstrings[i]))")
+      #print(sapply(specials_to_oz, function(nn) grepl(paste0(nn,"\\(.*\\)"), trmstrings[i])))
       if(any(sapply(specials_to_oz, function(nn) grepl(paste0(nn,"\\(.*\\)"), trmstrings[i]))) & 
          !manual_oz[i]){
         # term is checked for automatic orthogonalization
@@ -165,7 +183,28 @@ separate_define_relation <- function(
           paste0(" %OZ% (", paste(these_terms, collapse = "+"), ")")
         
       }
+      ### similar approach for node
+      if(any(sapply(node_to_oz, function(nn) grepl(paste0(nn,"\\(.*\\)"), trmstrings[i]))) & 
+         !manual_oz[i]){
+        # term is checked for automatic orthogonalization
+        # find structured term with same variable
+        these_vars <- variables_per_trmstring[[i]]
+        these_terms <- trmstrings[sapply(1:length(trmstrings), function(j){ 
+          !manual_oz[j] & 
+            any(sapply(these_vars, function(tv) tv%in%variables_per_trmstring[[j]])) & 
+            i != j
+        })]
+        # TODO: check if this is actually necessary
+        if(has_intercept & identify_intercept) these_terms <- c("1", these_terms)
+        if(length(these_terms)>0) {
+          warning("Overlap in features used in node and structured parts")
+          #oz_to_add[[i]] <- 
+          #paste0(" %OZ% (", paste(these_terms, collapse = "+"), ")")
+        }
+      }
     }
+    #print("oz to add")
+    #print(oz_to_add)
     no_changes <- sapply(oz_to_add,is.null)
     if(any(!no_changes)){
       trmstrings[!no_changes] <- mapply(function(x,y) paste0(x, y), 
@@ -286,8 +325,8 @@ separate_define_relation <- function(
   }
   
   terms <- c(terms, add_terms)
-  print("terms after orthogonalozation")
-  print(terms)
+  #print("terms after orthogonalization")
+  #print(terms)
   if(has_intercept){
     
     terms[[which(sapply(terms, "[[", "term")=="1")]]$left_from_oz <- TRUE

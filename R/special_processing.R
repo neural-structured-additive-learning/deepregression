@@ -9,7 +9,6 @@
 #' @param identify_intercept logical; whether to make the intercept automatically identifiable
 #' @param param_nr integer; identifier for the distribution parameter
 #' @param parsing_options options
-#' @param node_options options
 #' @param engine character; the engine which is used to setup the NN (tf or torch)
 #' @param ... further processors
 #' @return returns a processor function
@@ -19,7 +18,7 @@ process_terms <- function(
   form, data, controls,
   output_dim, param_nr,
   parsing_options,
-  node_options, 
+  # node_options, 
   specials_to_oz = c(),
   automatic_oz_check = TRUE,
   identify_intercept = FALSE, engine = "tf",
@@ -84,9 +83,10 @@ process_terms <- function(
          nr = length(list_terms)+1,
          left_from_oz = TRUE,
          right_from_oz = NULL)
-
+  #print("list_terms")
+  #print(list_terms)
   for(i in 1:length(list_terms)){
-    # print(list_terms[[i]]$term)
+    #print(list_terms[[i]]$term)
     args$term = list_terms[[i]]$term
     spec <- get_special(list_terms[[i]]$term, specials = specials,
                         simplify = !parsing_options$check_form)
@@ -97,7 +97,7 @@ process_terms <- function(
 
     args$controls <- controls
     args$controls$procs <- procs
-    args$controls$node_options <- node_options
+    #args$controls$node_options <- node_options
     #args$controls$intercept_included <- any(
     #  lapply(list_terms, function(x) x$term) == "(Intercept)")
 
@@ -166,7 +166,8 @@ layer_generator <- function(term, output_dim, param_nr, controls,
                             engine = "tf",
                             ...
                             ){
-
+  # print("layer_class")
+  # print(term)
   const_broadcasting <- !is.null(controls$const_broadcasting) && (
     controls$const_broadcasting & output_dim>1)
 
@@ -357,15 +358,18 @@ lin_processor <- function(term, data, output_dim, param_nr, controls, engine = "
 #' @rdname processors
 #' @export
 gam_processor <- function(term, data, output_dim, param_nr, controls, engine = "tf") {
-  print("gam_processor")
+  #print("gam_processor -------------------------------------------------")
   output_dim <- as.integer(output_dim)
   # extract mgcv smooth object
   P <- create_P(get_gamdata(term, param_nr, controls$gamdata, what="sp_and_S"),
                 controls$sp_scale(data))
-  print("term")
-  print(term)
-  print("P")
-  print(P)
+  #print("term")
+  #print(term)
+  #print("P")
+  #print(P)
+  
+  #print("controls")
+  #print(controls$gamdata)
   
   if(engine == "torch") layer_spline <- layer_spline_torch
 
@@ -794,14 +798,25 @@ node_processor <-
            data,
            output_dim,
            param_nr,
-           controls,
+           controls = NULL,
            engine = "tf") {
-
-    n_layers = as.integer(controls$node_options$n_layers)
-    link = controls$node_options$link
-    n_trees = as.integer(controls$node_options$n_trees)
-    tree_depth = as.integer(controls$node_options$tree_depth)
-    threshold_init_beta = as.integer(controls$node_options$threshold_init_beta)
+    n_layers = get_nodedata(term, "n_layers")
+    #print(n_layers)
+    
+    link = get_nodedata(term, "link")
+    #print(link)
+    
+    n_trees = get_nodedata(term, "n_trees")
+    #print(n_trees)
+    
+    tree_depth = get_nodedata(term, "tree_depth")
+    #print(tree_depth)
+    
+    threshold_init_beta = get_nodedata(term, "threshold_init_beta")
+    #print(threshold_init_beta)
+    
+    term <- get_nodedata(term, "reduced_term")
+    #print(term)
     
     layer <- layer_generator(
       term = term,
@@ -826,6 +841,9 @@ node_processor <-
       controls = controls,
       param_nr = param_nr
     )
+    # print("input dim")
+    # print(as.integer(extractlen(term, data)))
+    # print(data[extractvar(term)])
     
     list(
       data_trafo = function()
@@ -834,8 +852,58 @@ node_processor <-
         newdata[extractvar(term)],
       input_dim = as.integer(extractlen(term, data)),
       layer = layer
+      # hier node options
     )
   }
+
+
+#' node_processor <-
+#'   function(term,
+#'            data,
+#'            output_dim,
+#'            param_nr,
+#'            controls,
+#'            engine = "tf") {
+#' 
+#'     n_layers = as.integer(controls$node_options$n_layers)
+#'     link = controls$node_options$link
+#'     n_trees = as.integer(controls$node_options$n_trees)
+#'     tree_depth = as.integer(controls$node_options$tree_depth)
+#'     threshold_init_beta = as.integer(controls$node_options$threshold_init_beta)
+#'     
+#'     layer <- layer_generator(
+#'       term = term,
+#'       output_dim = output_dim,
+#'       further_layer_args = list(
+#'         n_layers = n_layers,
+#'         link = link,
+#'         n_trees = n_trees,
+#'         tree_depth = tree_depth,
+#'         threshold_init_beta = threshold_init_beta
+#'       ),
+#'       layer_class = layer_node,
+#'       layer_args_names = c(
+#'         "name",
+#'         "units",
+#'         "n_layers",
+#'         "link",
+#'         "n_trees",
+#'         "tree_depth",
+#'         "threshold_init_beta"
+#'       ),
+#'       controls = controls,
+#'       param_nr = param_nr
+#'     )
+#'     
+#'     list(
+#'       data_trafo = function()
+#'         data[extractvar(term)],
+#'       predict_trafo = function(newdata)
+#'         newdata[extractvar(term)],
+#'       input_dim = as.integer(extractlen(term, data)),
+#'       layer = layer
+#'     )
+#'   }
 
 
 #' node_processor <-

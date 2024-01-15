@@ -91,7 +91,8 @@ class ObliviousDecisionTree(tf.keras.layers.Layer):
         #print(dim)
         #print(self.depth)
         n_trees, depth, units = self.n_trees, self.depth, self.units
-        # trainable parameter 
+        
+        # trainable parameters 
         ### initialization of feature_selection_logits weights via random_uniform(), shape: (dim, n_trees, depth)
         self.feature_selection_logits = get_feature_selection_logits(n_trees,
                                                                      depth,
@@ -186,6 +187,7 @@ class ObliviousDecisionTree(tf.keras.layers.Layer):
         # shape (b, n, u)
         aggregated_response = tf.einsum('bnc,nuc->bnu', aggregated_gates, self.response)
         #tf.print("shape aggregated_response-----------\n", tf.shape(aggregated_response))
+        #tf.print("aggregated_response-----------\n", aggregated_response)
         return aggregated_response
 
     # 
@@ -221,9 +223,8 @@ class NODE(tf.keras.Model):
         self.n_layers = n_layers
         self.n_trees = n_trees
         self.tree_depth = tree_depth
-        self.units = units
         self.threshold_init_beta = threshold_init_beta
-
+        
         self.bn = tf.keras.layers.BatchNormalization()
         self.ensemble = [ObliviousDecisionTree(n_trees=n_trees,
                              depth=tree_depth,
@@ -242,7 +243,9 @@ class NODE(tf.keras.Model):
         x = self.bn(inputs, training=training)
         for tree in self.ensemble:
             h = tree(x)
+            #tf.print("Shape of tree/RF output: ", tf.shape(h))
             x = tf.concat([x, h], axis=1)
+        #tf.print("Final Shape of tree/RF output: ", tf.shape(h))
         return self.link(h)
       
 
