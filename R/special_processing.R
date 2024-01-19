@@ -431,8 +431,8 @@ autogam_processor <- function(term, data, output_dim, param_nr, controls, engine
   term_org <- term
   term <- gsub("auto\\((.*)\\)", "\\1", term)
   # extract mgcv smooth object
-  P <- get_gamdata(term, param_nr, controls$gamdata, what="sp_and_S")[[2]][[1]] *
-    controls$sp_scale(data)
+  Ps <- get_gamdata(term, param_nr, controls$gamdata, what="sp_and_S")[[2]] 
+  P <- lapply(Ps, function(Pmat) Pmat * controls$sp_scale(data))
   
   if(engine == "torch") stop("Not implemented yet.")
   

@@ -251,7 +251,7 @@ class LambdaLayer(tf.keras.layers.Layer):
         super(LambdaLayer, self).__init__(**kwargs)
         self.units = units
         self.loglambda = self.add_weight(name='loglambda',
-                                         shape=(units,),
+                                         shape=(units,len(P)),
                                          initializer=tf.keras.initializers.RandomNormal,
                                          trainable=True)
         self.damping = damping
@@ -260,11 +260,12 @@ class LambdaLayer(tf.keras.layers.Layer):
 
     def call(self, inputs, w):
         # lmbda = tf.reshape(tf.math.exp(self.loglambda), [])
-        lmbda = tf.reshape(self.loglambda, [])
-        inf = 0.5 * tf.reduce_sum(vecmatvec(w, tf.cast(self.P, dtype="float32")))
-        damp_term = self.damping * inf**2 / 2
-        l_term = lmbda * inf
-        self.add_loss(self.scale * (l_term + damp_term))
+        for i in range(len(self.P)):
+            lmbda = tf.reshape(self.loglambda[:,i], [])
+            inf = 0.5 * tf.reduce_sum(vecmatvec(w, tf.cast(self.P[i], dtype="float32")))
+            damp_term = self.damping * inf**2 / 2
+            l_term = lmbda * inf
+            self.add_loss(self.scale * (l_term + damp_term))
         return inputs
 
     def get_config(self):
