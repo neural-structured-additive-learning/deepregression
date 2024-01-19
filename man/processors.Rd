@@ -4,6 +4,7 @@
 \alias{layer_generator}
 \alias{int_processor}
 \alias{lin_processor}
+\alias{ri_processor}
 \alias{gam_processor}
 \title{Function that creates layer for each processor}
 \usage{
@@ -22,29 +23,31 @@ layer_generator(
   ...
 )
 
-int_processor(term, data, output_dim, param_nr, controls, engine)
+int_processor(term, data, output_dim, param_nr, controls, engine = "tf")
 
-lin_processor(term, data, output_dim, param_nr, controls, engine)
+lin_processor(term, data, output_dim, param_nr, controls, engine = "tf")
 
-gam_processor(term, data, output_dim, param_nr, controls, engine)
+ri_processor(term, data, output_dim, param_nr, controls, engine)
+
+gam_processor(term, data, output_dim, param_nr, controls, engine = "tf")
 }
 \arguments{
 \item{term}{character; term in the formula}
 
 \item{output_dim}{integer; number of units in the layer}
 
-\item{param_nr}{integer; identifier for models with more 
+\item{param_nr}{integer; identifier for models with more
 than one additive predictor}
 
 \item{controls}{list; control arguments which allow
 to pass further information}
 
-\item{name}{character; name of layer. 
+\item{name}{character; name of layer.
 if NULL, \code{makelayername} will be used to create layer name}
 
 \item{layer_class}{a tf or keras layer function}
 
-\item{without_layer}{function to be used as 
+\item{without_layer}{function to be used as
 layer if \code{controls$with_layer} is FALSE}
 
 \item{further_layer_args}{named list; further arguments passed to
