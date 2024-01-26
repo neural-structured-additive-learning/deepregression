@@ -1,7 +1,38 @@
+#' NODE/ODTs Layer
+#' 
+#' @param name name of the layer 
+#' @param units number of output dimensions, for regression and binary 
+#' classification: 1, for mc-classification simply the number of classes
+#' @param n_layers number of layers consisting of ODTs in NODE
+#' @param n_trees number of trees per layer
+#' @param tree_depth depth of tree per layer
+#' @param threshold_init_beta ??
+#' @return layer/model object
+#' @export
+#' @examples
+#' n <- 1000
+#' data_regr <- data.frame(matrix(rnorm(4 * n), c(n, 4)))
+#' colnames(data_regr) <- c("x0", "x1", "x2", "x3")
+#' y_regr <- rnorm(n) + data_regr$x0^2 + data_regr$x1 + 
+#'   data_regr$x2*data_regr$x3 + data_regr$x2 + data_regr$x3
+#' 
+#' library(deepregression)
+#' 
+#' formula_node <- ~ node(x1, x2, x3, x0, n_trees = 2, n_layers = 2, tree_depth = 2)
+#' 
+#' mod_node_regr <- deepregression(
+#' list_of_formulas = list(loc = formula_node, scale = ~ 1),
+#' data = data_regr,
+#' y = y_regr
+#' )
+#' 
+#' mod_node_regr %>% fit(epochs = 15, batch_size = 64, verbose = TRUE, 
+#'   validation_split = 0.1, early_stopping = TRUE)
+#' mod_node_regr %>% predict()
+#' 
 layer_node <- function(name,
                        units,
                        n_layers = 1L,
-                       link = tf$identity,
                        n_trees = 1L,
                        tree_depth = 1L,
                        threshold_init_beta = 1) {
@@ -11,7 +42,6 @@ layer_node <- function(name,
     node$layer_node(
       units = units,
       n_layers = n_layers,
-      link = link,
       n_trees = n_trees,
       tree_depth = tree_depth,
       threshold_init_beta = threshold_init_beta
@@ -26,13 +56,10 @@ layer_node <- function(name,
 #' @export
 get_node_term <- function(term)
 {
-  #print("get_node_term----------")
   reduced_term <-  sub("^(.*?),[^,]*=.*", "\\1", term)
-  #print(reduced_term)
   if (!grepl(".*\\)$", reduced_term)) {
     reduced_term <- paste0(reduced_term, ")")
   }
-  #print(reduced_term)
   reduced_term
 }
 
@@ -70,13 +97,6 @@ get_nodedata <- function(term, what) {
         default_for_missing = T,
         default = 1
       )
-    ))
-  else if (what == "link")
-    return(extractval(
-      term,
-      "link",
-      default_for_missing = T,
-      default = tf$identity
     ))
   else if (what == "threshold_init_beta")
     return(as.integer(

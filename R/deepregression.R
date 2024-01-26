@@ -64,7 +64,7 @@
 #' n <- 1000
 #' data = data.frame(matrix(rnorm(4*n), c(n,4)))
 #' colnames(data) <- c("x1","x2","x3","xa")
-#' formula <- ~ 1 + deep_model(x1,x2,x3) + s(xa) + x1
+#' formula <- ~ 1 + deep_model(x1,x2) + s(xa) + x1 + node(x3, n_trees = 2, n_layers = 2, tree_depth = 1)
 #'
 #' deep_model <- function(x) x %>%
 #' layer_dense(units = 32, activation = "relu", use_bias = FALSE) %>%
@@ -116,7 +116,6 @@ deepregression <- function(
   orthog_options = orthog_control(),
   weight_options = weight_control(),
   formula_options = form_control(),
-  # node_options = node_control(),
   output_dim = 1L,
   verbose = FALSE,
   engine = "tf",
@@ -201,9 +200,6 @@ deepregression <- function(
 
   }
   
-  # node_options for further parameters of node_layer
-  # node_options <- do.call(node_control,node_options)
-
   # check if user wants automatic orthogonalization
   if(orthog_options$orthogonalize){
     specials_to_oz <- netnames
@@ -253,9 +249,7 @@ deepregression <- function(
   if(formula_options$precalculate_gamparts)
     so$gamdata <- precalc_gam(list_of_formulas, data, so) else
       so$gamdata <- NULL
-  # print("specials to oz / netnames")
-  # print(specials_to_oz)
-  # print(netnames)
+
   # parse formulas
   if(verbose) cat("Preparing additive formula(s)...")
   parsed_formulas_contents <- lapply(1:length(list_of_formulas),
@@ -280,7 +274,6 @@ deepregression <- function(
                                                            output_dim = od,
                                                            param_nr = i,
                                                            parsing_options = formula_options,
-                                                           # node_options = node_options,
                                                            specials_to_oz =
                                                              specials_to_oz,
                                                            automatic_oz_check =
@@ -365,7 +358,6 @@ deepregression <- function(
                   family = family,
                   penalty_options = penalty_options,
                   orthog_options = orthog_options,
-                  # node_options = node_options, 
                   image_var = image_var,
                   prepare_y_valdata = function(x) as.matrix(x)
                 ),

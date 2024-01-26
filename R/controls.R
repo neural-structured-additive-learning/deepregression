@@ -225,24 +225,3 @@ form_control <- function(
   )
   
 }
-
-
-#' Options for node/odts 
-#' @return Returns a list with options
-#' @export
-#'
-node_control <- function(n_layers = 1,
-                         link = tf$identity,
-                         n_trees = 1,
-                         tree_depth = 1,
-                         threshold_init_beta = 1)
-{
- 
-  return(
-    list(n_layers = n_layers,
-         link = link,
-         n_trees = n_trees,
-         tree_depth = tree_depth,
-         threshold_init_beta = threshold_init_beta)
-  )
-}

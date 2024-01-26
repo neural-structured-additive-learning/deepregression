@@ -106,7 +106,6 @@ separate_define_relation <- function(
   simplify = FALSE
   )
 {
-  #print("-----------------------------seperate define relation")
   if(simplify){
     terms <- trimws(strsplit(as.character(form)[[2]], split = "+", fixed = TRUE)[[1]])
     terms <- terms[terms!=""]
@@ -123,15 +122,11 @@ separate_define_relation <- function(
     return(terms)
     
   }
-  # print("specials")
-  # print(specials)
+
   tf <- terms.formula(form, specials = specials)
-  # print("tf")
-  # print(tf)
   has_intercept <- attr(tf, "intercept")
   trmstrings <- attr(tf, "term.labels")
-  #print("trmstrings")
-  #print(trmstrings)
+
   if(length(trmstrings)==0 & has_intercept)
     return(
       list(list(
@@ -142,16 +137,12 @@ separate_define_relation <- function(
       ))
     )
   variables_per_trmstring <- sapply(trmstrings, function(x) all.vars(as.formula(paste0("~",x))))
-  # print("variables per trmstring")
-  # print(variables_per_trmstring)
-  # 
+ 
   ## check if contains %OZ%
   manual_oz <- grepl("%OZ%", trmstrings)
   # do a check for automatic OZ if defined
   # and add it via the %OZ% operator
-  # print("specials to oz --- should be equal to net-names")
-  # print(specials_to_oz)
-  #check if node in trmstrings and add it to specials to oz
+  
   node_to_oz <- c()
   if (!is.null(attr(tf, "specials")$node)) node_to_oz <- c("node")
   else node_to_oz <- NULL
@@ -165,8 +156,6 @@ separate_define_relation <- function(
     # otherwise start checking
     oz_to_add <- rep(list(NULL), length(trmstrings))
     for(i in 1:length(trmstrings)){
-      #print("sapply(specials_to_oz, function(nn) trmstrings[i]))")
-      #print(sapply(specials_to_oz, function(nn) grepl(paste0(nn,"\\(.*\\)"), trmstrings[i])))
       if(any(sapply(specials_to_oz, function(nn) grepl(paste0(nn,"\\(.*\\)"), trmstrings[i]))) & 
          !manual_oz[i]){
         # term is checked for automatic orthogonalization
@@ -183,18 +172,16 @@ separate_define_relation <- function(
           paste0(" %OZ% (", paste(these_terms, collapse = "+"), ")")
         
       }
+      
       ### similar approach for node
       if(any(sapply(node_to_oz, function(nn) grepl(paste0(nn,"\\(.*\\)"), trmstrings[i]))) & 
          !manual_oz[i]){
-        # term is checked for automatic orthogonalization
-        # find structured term with same variable
         these_vars <- variables_per_trmstring[[i]]
         these_terms <- trmstrings[sapply(1:length(trmstrings), function(j){ 
           !manual_oz[j] & 
             any(sapply(these_vars, function(tv) tv%in%variables_per_trmstring[[j]])) & 
             i != j
         })]
-        # TODO: check if this is actually necessary
         if(has_intercept & identify_intercept) these_terms <- c("1", these_terms)
         if(length(these_terms)>0) {
           warning("Overlap in features used in node and structured parts")
@@ -203,8 +190,8 @@ separate_define_relation <- function(
         }
       }
     }
-    #print("oz to add")
-    #print(oz_to_add)
+
+    
     no_changes <- sapply(oz_to_add,is.null)
     if(any(!no_changes)){
       trmstrings[!no_changes] <- mapply(function(x,y) paste0(x, y), 
@@ -267,55 +254,53 @@ separate_define_relation <- function(
                                               sapply(add_terms, "[[", "term"))
       if(any(is_already_left)){
         for(m in 1:sum(is_already_left)){
-          check_node <- grepl("^node\\(", terms[[which(is_already_left)[m]]]$term)
-          if(check_node) {
-            warning("Overlap in features used in node and deep_model")
-            terms[[which(is_already_left)[m]]] <- list(
-              term = terms[[which(is_already_left)[m]]]$term,
-              nr = terms[[which(is_already_left)[m]]]$nr,
-              left_from_oz = terms[[which(is_already_left)[m]]]$left_from_oz,
-              right_from_oz = NULL
-            )
-          } else terms[[which(is_already_left)[m]]]$right_from_oz <- c(terms[[which(is_already_left)[m]]]$right_from_oz, i)
+          # check_node <- grepl("^node\\(", terms[[which(is_already_left)[m]]]$term)
+          # if(check_node) {
+          #   warning("Overlap in features used in node and deep_model")
+          #   terms[[which(is_already_left)[m]]] <- list(
+          #     term = terms[[which(is_already_left)[m]]]$term,
+          #     nr = terms[[which(is_already_left)[m]]]$nr,
+          #     left_from_oz = terms[[which(is_already_left)[m]]]$left_from_oz,
+          #     right_from_oz = NULL
+          #   )
+          # } else terms[[which(is_already_left)[m]]]$right_from_oz <- c(terms[[which(is_already_left)[m]]]$right_from_oz, i)
           
           # Shorter alternative -- not working properly 
           #terms[[which(is_already_left)[m]]]$right_from_oz =
           #  ifelse(check_node, list(NULL),
           #         c(terms[[which(is_already_left)[m]]]$right_from_oz, i)) 
           
-          # OG code: 
-          # terms[[which(is_already_left)[m]]]$right_from_oz <- 
-          #   c(terms[[which(is_already_left)[m]]]$right_from_oz, temp_i) 
+          terms[[which(is_already_left)[m]]]$right_from_oz <- 
+             c(terms[[which(is_already_left)[m]]]$right_from_oz, i) 
         }
       }else if(any(is_already_right)){
-        check_node <- grepl("^node\\(", add_terms[[which(is_already_right)]]$term)
-        if(check_node) {
-          warning("Overlap in features used in node and deep_model")
-          add_terms[[which(is_already_right)]] <- list(
-            term = add_terms[[which(is_already_right)]]$term,
-            nr = add_terms[[which(is_already_right)]]$nr,
-            left_from_oz = add_terms[[which(is_already_right)]]$left_from_oz,
-            right_from_oz = NULL
-          )
-        } else add_terms[[which(is_already_right)]]$right_from_oz <- c(add_terms[[which(is_already_right)]]$right_from_oz, temp_i)
+        # check_node <- grepl("^node\\(", add_terms[[which(is_already_right)]]$term)
+        # if(check_node) {
+        #   warning("Overlap in features used in node and deep_model")
+        #   add_terms[[which(is_already_right)]] <- list(
+        #     term = add_terms[[which(is_already_right)]]$term,
+        #     nr = add_terms[[which(is_already_right)]]$nr,
+        #     left_from_oz = add_terms[[which(is_already_right)]]$left_from_oz,
+        #     right_from_oz = NULL
+        #   )
+        # } else add_terms[[which(is_already_right)]]$right_from_oz <- c(add_terms[[which(is_already_right)]]$right_from_oz, temp_i)
         
-        # OG code: 
-        # add_terms[[which(is_already_right)]]$right_from_oz <- 
-        #   c(add_terms[[which(is_already_right)]]$right_from_oz, i)
+        add_terms[[which(is_already_right)]]$right_from_oz <- 
+           c(add_terms[[which(is_already_right)]]$right_from_oz, i)
       }else{ # add
-        check_node <- grepl("^node\\(", terms_right[[i]][[k]])
-        
-        if(check_node) {
-          temp_i <- NULL
-          warning("Overlap in features used in node and deep_model")
-        }
-        else temp_i <- i
+        # check_node <- grepl("^node\\(", terms_right[[i]][[k]])
+        # 
+        # if(check_node) {
+        #   temp_i <- NULL
+        #   warning("Overlap in features used in node and deep_model")
+        # }
+        # else temp_i <- i
         
         add_terms[[j]] <- list(
           term = terms_right[[i]][[k]],
           nr = length(terms) + j,
           left_from_oz = FALSE,
-          right_from_oz = temp_i
+          right_from_oz = i
         )
         j <- j + 1
       }
@@ -325,8 +310,6 @@ separate_define_relation <- function(
   }
   
   terms <- c(terms, add_terms)
-  #print("terms after orthogonalization")
-  #print(terms)
   if(has_intercept){
     
     terms[[which(sapply(terms, "[[", "term")=="1")]]$left_from_oz <- TRUE
