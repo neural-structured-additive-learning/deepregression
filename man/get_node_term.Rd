@@ -2,7 +2,7 @@
 % Please edit documentation in R/nodelayer.R
 \name{get_node_term}
 \alias{get_node_term}
-\title{Extract node part from wrapped term}
+\title{Extract variables from wrapped node term}
 \usage{
 get_node_term(term)
 }
@@ -10,8 +10,8 @@ get_node_term(term)
 \item{term}{character; node model term}
 }
 \value{
-reduced node model term
+reduced variable node model term
 }
 \description{
-Extract node part from wrapped term
+Extract variables from wrapped node term
 }

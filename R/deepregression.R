@@ -64,7 +64,8 @@
 #' n <- 1000
 #' data = data.frame(matrix(rnorm(4*n), c(n,4)))
 #' colnames(data) <- c("x1","x2","x3","xa")
-#' formula <- ~ 1 + deep_model(x1,x2) + s(xa) + x1 + node(x3, n_trees = 2, n_layers = 2, tree_depth = 1)
+#' formula <- ~ 1 + deep_model(x1,x2) + s(xa) + x1 + 
+#'   node(x3, n_trees = 2, n_layers = 2, tree_depth = 1)
 #'
 #' deep_model <- function(x) x %>%
 #' layer_dense(units = 32, activation = "relu", use_bias = FALSE) %>%
@@ -199,8 +200,11 @@ deepregression <- function(
     names(list_of_deep_models) <- netnames
 
   }
-  
-  # check if user wants automatic orthogonalization
+
+  # check if user wants automatic orthogonalization (default: T)
+  # currently indirectly includes node-orthogonalization as well (s. separate_define_relation())
+  # NOTE: if node-orthogonalization is to be handled (not just a warning as currently)
+  # then probably define separate orthog_options_node/orthog_control_node()
   if(orthog_options$orthogonalize){
     specials_to_oz <- netnames
     automatic_oz_check <- TRUE

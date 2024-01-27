@@ -94,7 +94,8 @@ library(deepregression)
 n <- 1000
 data = data.frame(matrix(rnorm(4*n), c(n,4)))
 colnames(data) <- c("x1","x2","x3","xa")
-formula <- ~ 1 + deep_model(x1,x2,x3) + s(xa) + x1
+formula <- ~ 1 + deep_model(x1,x2) + s(xa) + x1 + 
+  node(x3, n_trees = 2, n_layers = 2, tree_depth = 1)
 
 deep_model <- function(x) x \%>\%
 layer_dense(units = 32, activation = "relu", use_bias = FALSE) \%>\%

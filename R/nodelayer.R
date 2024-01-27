@@ -6,7 +6,7 @@
 #' @param n_layers number of layers consisting of ODTs in NODE
 #' @param n_trees number of trees per layer
 #' @param tree_depth depth of tree per layer
-#' @param threshold_init_beta ??
+#' @param threshold_init_beta parameter(s) for Beta-distribution used for initializing feature thresholds
 #' @return layer/model object
 #' @export
 #' @examples
@@ -16,6 +16,7 @@
 #' y_regr <- rnorm(n) + data_regr$x0^2 + data_regr$x1 + 
 #'   data_regr$x2*data_regr$x3 + data_regr$x2 + data_regr$x3
 #' 
+#' use_python("C:/Users/laeti/AppData/Local/Programs/Python/Python39/python.exe")
 #' library(deepregression)
 #' 
 #' formula_node <- ~ node(x1, x2, x3, x0, n_trees = 2, n_layers = 2, tree_depth = 2)
@@ -49,10 +50,10 @@ layer_node <- function(name,
   )
 }
 
-#' Extract node part from wrapped term
+#' Extract variables from wrapped node term
 #'
 #' @param term character; node model term
-#' @return reduced node model term
+#' @return reduced variable node model term
 #' @export
 get_node_term <- function(term)
 {
@@ -63,7 +64,7 @@ get_node_term <- function(term)
   reduced_term
 }
 
-#' Extract property of nodedata
+#' Extract attributes/hyper-parameters of the node term
 #' @param term term in formula
 #' @param what string specifying what to return
 #' @return property of the node specification as defined by \code{what}

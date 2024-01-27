@@ -798,7 +798,6 @@ node_processor <-
       output_dim = output_dim,
       further_layer_args = list(
         n_layers = n_layers,
-        # link = link,
         n_trees = n_trees,
         tree_depth = tree_depth,
         threshold_init_beta = threshold_init_beta

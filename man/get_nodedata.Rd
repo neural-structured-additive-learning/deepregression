@@ -2,7 +2,7 @@
 % Please edit documentation in R/nodelayer.R
 \name{get_nodedata}
 \alias{get_nodedata}
-\title{Extract property of nodedata}
+\title{Extract attributes/hyper-parameters of the node term}
 \usage{
 get_nodedata(term, what)
 }
@@ -15,5 +15,5 @@ get_nodedata(term, what)
 property of the node specification as defined by \code{what}
 }
 \description{
-Extract property of nodedata
+Extract attributes/hyper-parameters of the node term
 }

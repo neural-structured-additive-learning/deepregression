@@ -143,7 +143,7 @@ class ObliviousDecisionTree(tf.keras.layers.Layer):
         aggregated_gates = tf.einsum('bnds,dcs->bndc', feature_gates, self.binary_lut)
         aggregated_gates = tf.math.reduce_prod(aggregated_gates, axis=-2)
        
-        # response per batch-DP, tree and unit
+        # response per batch data point, tree and unit
         # weighted linear combination of response tensor entries with weights from the entries of choice tensor C
         # shape (b, n, u)
         aggregated_response = tf.einsum('bnc,nuc->bnu', aggregated_gates, self.response)

@@ -544,10 +544,6 @@ precalc_gam <- function(lof, data, controls)
 
 get_gamdata_nr <- function(term, param_nr, gamdata)
 {
-  print("gamdata$matching_table")
-  print(term)
-  print(gamdata)
-  print(param_nr)
   which(sapply(gamdata$matching_table, "[[", "term") == 
           gsub(" ", "", gsub("\n", "", term, fixed = T), fixed=T) &
           sapply(gamdata$matching_table, "[[", "param_nr") == param_nr
@@ -585,9 +581,7 @@ get_gamdata <- function(term, param_nr, gamdata,
                                  "partial_effect",
                                  "sp_and_S",
                                  "df")){
-  print("get gam data for: ")
-  print(what)
-  print(gamdata$matching_table)
+
   if(what %in% c("sp_and_S", "df"))
     return(gamdata$matching_table[[
       get_gamdata_nr(term, param_nr, gamdata)

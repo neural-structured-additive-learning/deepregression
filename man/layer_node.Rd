@@ -25,7 +25,7 @@ classification: 1, for mc-classification simply the number of classes}
 
 \item{tree_depth}{depth of tree per layer}
 
-\item{threshold_init_beta}{??}
+\item{threshold_init_beta}{parameter(s) for Beta-distribution used for initializing feature thresholds}
 }
 \value{
 layer/model object
