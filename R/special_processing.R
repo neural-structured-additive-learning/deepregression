@@ -721,10 +721,19 @@ rwt_processor <- function(term, data, output_dim, param_nr, controls, engine = "
     layer = tf$identity
   }
 
+  ensure_mat <- function(inp)
+  {
+    
+    if(is.list(inp)) return(do.call("cbind", inp))
+    if(!is.list(inp) & is.null(dim(inp))) matrix(inp)
+    return(inp)
+    
+  }
+  
   list(
-    data_trafo = function() do.call("cbind", lapply(terms, function(x) x$data_trafo())),
+    data_trafo = function() do.call("cbind", lapply(terms, function(x) ensure_mat(x$data_trafo()))),
     predict_trafo = function(newdata)
-      do.call("cbind", lapply(terms, function(x) x$predict_trafo(newdata))),
+      do.call("cbind", lapply(terms, function(x) ensure_mat(x$predict_trafo(newdata)))),
     input_dim = sum(dims),
     layer = layer,
     coef = function(weights) lapply(terms, function(x) x$coef(weights)),
