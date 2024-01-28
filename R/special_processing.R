@@ -36,7 +36,7 @@ process_terms <- function(
          rwt = rwt_processor,
          const = const_broadcasting_processor,
          mult = multiply_processor,
-         node = node_processor
+         node = node_processor,
          ri = ri_processor
     )
 
