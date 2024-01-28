@@ -38,10 +38,10 @@ Imports:
     magrittr,
     tfruns,
     methods,
-    coro (== 1.0.3),
-    torchvision (== 0.5.1),
-    luz (== 0.4.0),
-    torch (== 0.11.0)
+    coro (>= 1.0.3),
+    torchvision (>= 0.5.1),
+    luz (>= 0.4.0),
+    torch
 License: GPL-3
 Encoding: UTF-8
 LazyData: true

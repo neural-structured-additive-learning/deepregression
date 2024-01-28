@@ -389,13 +389,33 @@ create_data_trafos <- function(evaluated_gam_term, controls, xlin)
 #' @export
 create_penalty <- function(evaluated_gam_term, df, controls, Z = NULL)
 {
+  
+  sp_provided <- FALSE
+  
+  # support for custom smoothing parameters
+  if (length(evaluated_gam_term) == 1 && !is.null(evaluated_gam_term[[1]][["sp"]])) {
+    
+    if (length(evaluated_gam_term[[1]][["sp"]]) != length(evaluated_gam_term[[1]]$S)) {
+      
+      stop("Incorrect number of smoothing parameters supplied for smooth term ",
+           evaluated_gam_term[[1]][["label"]])
+      
+    } else {
+      
+      sp <- evaluated_gam_term[[1]][["sp"]]
+      message("Using custom smoothing parameter(s) for smooth term ",
+              evaluated_gam_term[[1]][["label"]])
+      sp_provided <- TRUE
+      
+    }
+  }
 
   # get sp and S
   sp_and_S <- list(
-    sp = controls$defaultSmoothing(evaluated_gam_term, df),
+    sp = if (exists("sp")) sp else controls$defaultSmoothing(evaluated_gam_term, df),
     S = extract_S(evaluated_gam_term)
   )
-
+  
   if(controls$zero_constraint_for_smooths &
      length(evaluated_gam_term)==1 &
      !evaluated_gam_term[[1]]$dim>1 & !is.null(Z)){
@@ -403,11 +423,19 @@ create_penalty <- function(evaluated_gam_term, df, controls, Z = NULL)
     sp_and_S[[2]][[1]] <- orthog_P(sp_and_S[[2]][[1]],Z)
 
   }else if(evaluated_gam_term[[1]]$dim>1 &
-           length(evaluated_gam_term)==1){
+           length(evaluated_gam_term)==1 & !sp_provided){
     # tensor product -> merge and keep dummy
     sp_and_S <- list(sp = 1,
                      S = list(do.call("+", lapply(1:length(sp_and_S[[2]]), function(i)
                        sp_and_S[[1]][i] * sp_and_S[[2]][[i]]))))
+  }else if(evaluated_gam_term[[1]]$dim>1 &
+           length(evaluated_gam_term)==1 & 
+           controls$anisotropic & 
+           sp_provided){
+
+    sp_and_S <- list(sp = 1,
+                     sp_and_S[[2]])
+    
   }
 
   return(list(sp_and_S = sp_and_S))

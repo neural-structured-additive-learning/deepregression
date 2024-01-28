@@ -4,6 +4,7 @@
 \alias{layer_generator}
 \alias{int_processor}
 \alias{lin_processor}
+\alias{ri_processor}
 \alias{gam_processor}
 \alias{node_processor}
 \title{Function that creates layer for each processor}
@@ -27,6 +28,7 @@ int_processor(term, data, output_dim, param_nr, controls, engine = "tf")
 
 lin_processor(term, data, output_dim, param_nr, controls, engine = "tf")
 
+
 gam_processor(term, data, output_dim, param_nr, controls, engine = "tf")
 
 node_processor(
@@ -37,6 +39,11 @@ node_processor(
   controls = NULL,
   engine = "tf"
 )
+
+ri_processor(term, data, output_dim, param_nr, controls, engine)
+
+gam_processor(term, data, output_dim, param_nr, controls, engine = "tf")
+
 }
 \arguments{
 \item{term}{character; term in the formula}

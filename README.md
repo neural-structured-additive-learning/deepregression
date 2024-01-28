@@ -106,7 +106,7 @@ Many thanks to following people for helpful comments, issues, suggestions for im
 * Andreas Bender
 * Christina Bukas
 * Oliver Duerr
-* Marteen Jung
+* Maarten Jung
 * Patrick Kaiser
 * Nadja Klein
 * Philipp Kopper

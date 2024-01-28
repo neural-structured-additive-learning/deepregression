@@ -188,10 +188,13 @@ class PenLinear(tf.keras.layers.Layer):
         return tf.matmul(inputs, self.w)
 
 class TrainableLambdaLayer(tf.keras.layers.Layer):
-    def __init__(self, units, lmbda, P, kernel_initializer=tf.keras.initializers.HeNormal, **kwargs):
+    def __init__(self, units, P, kernel_initializer=tf.keras.initializers.HeNormal, **kwargs):
         super(TrainableLambdaLayer, self).__init__(**kwargs)
         self.units = units
-        self.lmbda = tf.Variable(lmbda, name="lambda")
+        self.loglambda = self.add_weight(name='loglambda',
+                                         shape=(units,),
+                                         initializer=tf.keras.initializers.RandomNormal,
+                                         trainable=True)
         self.P = P
         self.kernel_initializer = kernel_initializer
 
@@ -208,15 +211,81 @@ class TrainableLambdaLayer(tf.keras.layers.Layer):
         config = super().get_config().copy()
         config.update({
             'units': self.units,
-            'lambda': self.lmbda,
+            'lambda': self.loglambda,
             'P': self.P,
             'kernel_initializer': self.kernel_initializer
         })
         return config
 
     def call(self, inputs):
-        self.add_loss = self.lmbda * 0.5 * tf.reduce_sum(vecmatvec(self.w, tf.cast(self.P, dtype="float32")))
+        self.add_loss = tf.math.exp(self.loglambda) * 0.5 * tf.reduce_sum(vecmatvec(self.w, tf.cast(self.P, dtype="float32")))
         return tf.matmul(inputs, self.w)
+
+
+class WeightLayer(tf.keras.layers.Layer):
+    def __init__(self, units, kernel_initializer=tf.keras.initializers.HeNormal, **kwargs):
+        super(WeightLayer, self).__init__(**kwargs)
+        self.units = units
+        self.kernel_initializer = kernel_initializer
+
+    def build(self, input_shape):
+        self.w = self.add_weight(
+            shape=(input_shape[-1], self.units),
+            initializer=self.kernel_initializer,
+            trainable=True
+        )
+
+    def call(self, inputs):
+        return tf.matmul(inputs, self.w), self.w
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'units': self.units,
+            'kernel_initializer': self.kernel_initializer
+        })
+        return config
+
+class LambdaLayer(tf.keras.layers.Layer):
+    def __init__(self, units, P, damping = 1.0, scale = 1.0, **kwargs):
+        super(LambdaLayer, self).__init__(**kwargs)
+        self.units = units
+        self.loglambda = self.add_weight(name='loglambda',
+                                         shape=(units,len(P)),
+                                         initializer=tf.keras.initializers.RandomNormal,
+                                         trainable=True)
+        self.damping = damping
+        self.scale = scale
+        self.P = P
+
+    def call(self, inputs, w):
+        # lmbda = tf.reshape(tf.math.exp(self.loglambda), [])
+        for i in range(len(self.P)):
+            lmbda = tf.reshape(self.loglambda[:,i], [])
+            inf = 0.5 * tf.reduce_sum(vecmatvec(w, tf.cast(self.P[i], dtype="float32")))
+            damp_term = self.damping * inf**2 / 2
+            l_term = lmbda * inf
+            self.add_loss(self.scale * (l_term + damp_term))
+        return inputs
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'units': self.units,
+            'lambda': self.loglambda.numpy(),
+            'P': self.P
+        })
+        return config
+
+class CombinedModel(tf.keras.Model):
+    def __init__(self, units, P, kernel_initializer=tf.keras.initializers.HeNormal, **kwargs):
+        super(CombinedModel, self).__init__(**kwargs)
+        self.weight_layer = WeightLayer(units, kernel_initializer)
+        self.lambda_layer = LambdaLayer(units, P)
+
+    def call(self, inputs):
+        output, weights = self.weight_layer(inputs)
+        return self.lambda_layer(output, weights)
 
 def get_masks(mod):
     masks = []

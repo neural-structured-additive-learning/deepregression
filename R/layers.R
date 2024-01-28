@@ -1,3 +1,29 @@
+#' random effect layer
+#' 
+#' @param units integer; number of units
+#' @param ... arguments passed to TensorFlow layer
+#' @return layer object
+#' @export
+#' @rdname re_layers
+re_layer = function(units, ...) {
+  python_path <- system.file("python", package = "deepregression")
+  layers <- reticulate::import_from_path("layers", path = python_path)
+  layers$RELayer(units = units, ...)
+}
+
+#' trainable penalty layer
+#' 
+#' @param units integer; number of units
+#' @param ... arguments passed to TensorFlow layer
+#' @return layer object
+#' @export
+#' @rdname re_layers
+pen_layer = function(units, P, ...) {
+  python_path <- system.file("python", package = "deepregression")
+  layers <- reticulate::import_from_path("psplines", path = python_path)
+  layers$CombinedModel(units = units, P = P, ...)
+}
+
 #' Hadamard-type layers
 #' 
 #' @param units integer; number of units

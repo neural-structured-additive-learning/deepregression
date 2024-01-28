@@ -37,6 +37,7 @@ process_terms <- function(
          const = const_broadcasting_processor,
          mult = multiply_processor,
          node = node_processor
+         ri = ri_processor
     )
 
   dots <- list(...)
@@ -286,7 +287,7 @@ int_processor <- function(term, data, output_dim, param_nr, controls, engine = "
     },
     input_dim = 1L,
     layer = layer,
-    coef = function(weights)  as.matrix(weights),
+    coef = function(weights) as.matrix(weights[[1]]),
     penalty = NULL
   )
 
@@ -352,6 +353,41 @@ lin_processor <- function(term, data, output_dim, param_nr, controls, engine = "
 
 #' @rdname processors
 #' @export
+ri_processor <- function(term, data, output_dim, param_nr, controls, engine){
+  
+  term <- paste(extractvar(term, allow_ia = TRUE), collapse = " + ")
+  
+  data_trafo <- function(indata = data)
+  {
+    model.matrix(object = as.formula(paste0("~ -1 + ", term)), 
+                 data = indata)
+  }
+  
+  if(engine == "tf"){
+    layer = re_layer(units = ncol(data_trafo()))
+    without_layer = tf$identity
+  }
+  if(engine == "torch"){
+    stop("Not implemented  yet.")
+  }
+  
+  list(
+    data_trafo = function() data_trafo(),
+    predict_trafo = function(newdata){ 
+      return(
+        data_trafo(as.data.frame(newdata))
+      )
+    },
+    input_dim = as.integer(ncol(data_trafo())),
+    layer = layer,
+    coef = function(weights)  as.matrix(weights),
+    penalty = NULL
+  )
+  
+}
+
+#' @rdname processors
+#' @export
 gam_processor <- function(term, data, output_dim, param_nr, controls, engine = "tf") {
   output_dim <- as.integer(output_dim)
   # extract mgcv smooth object
@@ -378,6 +414,43 @@ gam_processor <- function(term, data, output_dim, param_nr, controls, engine = "
     coef = function(weights)  as.matrix(weights),
     partial_effect = get_gamdata(term, param_nr, controls$gamdata, what="partial_effect"),
     plot_fun = function(self, weights, grid_length) gam_plot_data(self, weights, grid_length),
+    get_org_values = function() data[extractvar(term)],
+    penalty = list(type = "spline", values = P, dim = output_dim),
+    gamdata_nr = get_gamdata_reduced_nr(term, param_nr, controls$gamdata),
+    gamdata_combined = FALSE
+  )
+}
+
+#' @rdname processors
+#' @export
+autogam_processor <- function(term, data, output_dim, param_nr, controls, engine = "tf") {
+  
+  output_dim <- as.integer(output_dim)
+  term_org <- term
+  term <- gsub("auto\\((.*)\\)", "\\1", term)
+  # extract mgcv smooth object
+  Ps <- get_gamdata(term, param_nr, controls$gamdata, what="sp_and_S")[[2]] 
+  P <- lapply(Ps, function(Pmat) Pmat * controls$sp_scale(data))
+  
+  if(engine == "torch") stop("Not implemented yet.")
+  
+  layer <- layer_generator(term = term_org,
+                           output_dim = output_dim,
+                           param_nr = param_nr,
+                           controls = controls, engine = engine,
+                           further_layer_args = list(P = P),
+                           layer_args_names = c("units", "P", "name"),
+                           layer_class = pen_layer
+  )
+  
+  list(
+    data_trafo = get_gamdata(term, param_nr, controls$gamdata, what="data_trafo"),
+    predict_trafo = get_gamdata(term, param_nr, controls$gamdata, what="predict_trafo"),
+    input_dim = get_gamdata(term, param_nr, controls$gamdata, what="input_dim"),
+    layer = layer,
+    coef = function(weights)  as.matrix(weights[[1]]),
+    partial_effect = get_gamdata(term, param_nr, controls$gamdata, what="partial_effect"),
+    plot_fun = function(self, weights, grid_length) gam_plot_data(self, as.matrix(weights[[1]]), grid_length),
     get_org_values = function() data[extractvar(term)],
     penalty = list(type = "spline", values = P, dim = output_dim),
     gamdata_nr = get_gamdata_reduced_nr(term, param_nr, controls$gamdata),
