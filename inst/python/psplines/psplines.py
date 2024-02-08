@@ -282,10 +282,15 @@ class CombinedModel(tf.keras.Model):
         super(CombinedModel, self).__init__(**kwargs)
         self.weight_layer = WeightLayer(units, kernel_initializer)
         self.lambda_layer = LambdaLayer(units, P)
+        self.units = units
 
     def call(self, inputs):
         output, weights = self.weight_layer(inputs)
         return self.lambda_layer(output, weights)
+        
+    def compute_output_shape(self, input_shape):
+        output_shape = input_shape[:-1] + (self.units,)
+        return output_shape
 
 def get_masks(mod):
     masks = []
