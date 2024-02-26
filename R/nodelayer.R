@@ -15,7 +15,6 @@
 #' colnames(data_regr) <- c("x0", "x1", "x2", "x3")
 #' y_regr <- rnorm(n) + data_regr$x0^2 + data_regr$x1 + 
 #'   data_regr$x2*data_regr$x3 + data_regr$x2 + data_regr$x3
-#' 
 #' library(deepregression)
 #' 
 #' formula_node <- ~ node(x1, x2, x3, x0, n_trees = 2, n_layers = 2, tree_depth = 2)

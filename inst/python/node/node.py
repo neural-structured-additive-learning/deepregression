@@ -162,8 +162,18 @@ class ObliviousDecisionTree(tf.keras.layers.Layer):
         # shape: (b, u)
         response_averaged_over_trees = tf.reduce_mean(aggregated_response, axis=1)
         return response_averaged_over_trees
-
-
+      
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'n_trees': self.n_trees,
+            'depth': self.depth, 
+            'units': self.units, 
+            'threshold_init_beta': self.threshold_init_beta
+        })
+        return config
+      
+    
 class NODE(tf.keras.Model):
     def __init__(self,
                  units = 1,
@@ -197,6 +207,18 @@ class NODE(tf.keras.Model):
             h = tree(x)
             x = tf.concat([x, h], axis=1)
         return h
+      
+    
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'units': self.units,
+            'n_layers': self.n_layers, 
+            'tree_depth': self.tree_depth, 
+            'threshold_init_beta': self.threshold_init_beta,
+            'n_trees' : self.n_trees
+        })
+        return config
       
 
 def layer_node(units, n_layers, n_trees, tree_depth, threshold_init_beta):
