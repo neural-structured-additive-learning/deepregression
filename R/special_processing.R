@@ -36,6 +36,7 @@ process_terms <- function(
          rwt = rwt_processor,
          const = const_broadcasting_processor,
          mult = multiply_processor,
+         node = node_processor,
          ri = ri_processor
     )
 
@@ -84,7 +85,6 @@ process_terms <- function(
          right_from_oz = NULL)
 
   for(i in 1:length(list_terms)){
-
     args$term = list_terms[[i]]$term
     spec <- get_special(list_terms[[i]]$term, specials = specials,
                         simplify = !parsing_options$check_form)
@@ -217,8 +217,7 @@ layer_generator <- function(term, output_dim, param_nr, controls,
     # has to be added after layer_args[layer_args_names] to work properly with torch
     layer_args$kernel_initializer_value <-
       controls$weight_options$warmstarts[[term]]
-    }
-
+  }
   if(controls$with_layer){
 
     if(!const_broadcasting){
@@ -390,12 +389,11 @@ ri_processor <- function(term, data, output_dim, param_nr, controls, engine){
 #' @rdname processors
 #' @export
 gam_processor <- function(term, data, output_dim, param_nr, controls, engine = "tf") {
-
   output_dim <- as.integer(output_dim)
   # extract mgcv smooth object
   P <- create_P(get_gamdata(term, param_nr, controls$gamdata, what="sp_and_S"),
                 controls$sp_scale(data))
-
+  
   if(engine == "torch") layer_spline <- layer_spline_torch
 
   layer <- layer_generator(term = term,
@@ -860,3 +858,53 @@ dnn_image_placeholder_processor <- function(dnn, size){
     )
   }
 }
+
+
+#' @rdname processors
+#' @export
+node_processor <-
+  function(term,
+           data,
+           output_dim,
+           param_nr,
+           controls = NULL,
+           engine = "tf") {
+    n_layers = get_nodedata(term, "n_layers")
+    n_trees = get_nodedata(term, "n_trees")
+    tree_depth = get_nodedata(term, "tree_depth")
+    threshold_init_beta = get_nodedata(term, "threshold_init_beta")
+    term <- get_nodedata(term, "reduced_term")
+
+    layer <- layer_generator(
+      term = term,
+      output_dim = output_dim,
+      further_layer_args = list(
+        n_layers = n_layers,
+        n_trees = n_trees,
+        tree_depth = tree_depth,
+        threshold_init_beta = threshold_init_beta
+      ),
+      layer_class = layer_node,
+      layer_args_names = c(
+        "name",
+        "units",
+        "n_layers",
+        "n_trees",
+        "tree_depth",
+        "threshold_init_beta"
+      ),
+      controls = controls,
+      param_nr = param_nr
+    )
+    
+    list(
+      data_trafo = function()
+        data[extractvar(term)],
+      predict_trafo = function(newdata)
+        newdata[extractvar(term)],
+      input_dim = as.integer(extractlen(term, data)),
+      layer = layer
+    )
+  }
+
+

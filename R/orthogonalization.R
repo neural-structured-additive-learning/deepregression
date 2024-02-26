@@ -106,7 +106,6 @@ separate_define_relation <- function(
   simplify = FALSE
   )
 {
-  
   if(simplify){
     terms <- trimws(strsplit(as.character(form)[[2]], split = "+", fixed = TRUE)[[1]])
     terms <- terms[terms!=""]
@@ -123,9 +122,11 @@ separate_define_relation <- function(
     return(terms)
     
   }
+
   tf <- terms.formula(form, specials = specials)
   has_intercept <- attr(tf, "intercept")
   trmstrings <- attr(tf, "term.labels")
+
   if(length(trmstrings)==0 & has_intercept)
     return(
       list(list(
@@ -136,36 +137,93 @@ separate_define_relation <- function(
       ))
     )
   variables_per_trmstring <- sapply(trmstrings, function(x) all.vars(as.formula(paste0("~",x))))
+
+  ## check if contains %OZ%
   manual_oz <- grepl("%OZ%", trmstrings)
   # do a check for automatic OZ if defined
   # and add it via the %OZ% operator
-  if(automatic_oz_check){
-    # if no specials_to_oz are present, return function call without automatic oz
-    if(is.null(specials_to_oz) | length(specials_to_oz)==0)
-      return(separate_define_relation(form, specials = specials, 
-                                      specials_to_oz = specials_to_oz,
-                                      automatic_oz_check = FALSE))
+  
+  node_to_oz <- c()
+  # check if node is present
+  if (!is.null(attr(tf, "specials")$node))
+    node_to_oz <- c("node")
+  else
+    node_to_oz <- NULL
+  
+  if (automatic_oz_check) {
+    # if no specials_to_oz AND node_to_oz are present, return function call without automatic oz
+    if (is.null(specials_to_oz) &
+        is.null(node_to_oz) |
+        length(specials_to_oz) == 0 & length(node_to_oz) == 0)
+      return(
+        separate_define_relation(
+          form,
+          specials = specials,
+          specials_to_oz = specials_to_oz,
+          automatic_oz_check = FALSE
+        )
+      )
     # otherwise start checking
-    oz_to_add <- rep(list(NULL), length(trmstrings))
-    for(i in 1:length(trmstrings)){
-      
-      if(any(sapply(specials_to_oz, function(nn) grepl(paste0(nn,"\\(.*\\)"), trmstrings[i]))) & 
-         !manual_oz[i]){
-        # term is checked for automatic orthogonalization
-        # find structured term with same variable
-        these_vars <- variables_per_trmstring[[i]]
-        these_terms <- trmstrings[sapply(1:length(trmstrings), function(j){ 
-          !manual_oz[j] & 
-            any(sapply(these_vars, function(tv) tv%in%variables_per_trmstring[[j]])) & 
-            i != j
-        })]
-        # TODO: check if this is actually necessary
-        if(has_intercept & identify_intercept) these_terms <- c("1", these_terms)
-        if(length(these_terms)>0) oz_to_add[[i]] <- 
-          paste0(" %OZ% (", paste(these_terms, collapse = "+"), ")")
+    if (!is.null(specials_to_oz) | length(specials_to_oz) >= 0) {
+      oz_to_add <- rep(list(NULL), length(trmstrings))
+      for (i in 1:length(trmstrings)) {
+        # if trmstrings[i] is deep model and not yet handled via manual_oz[i]
+        if (any(sapply(specials_to_oz, function(nn)
+          grepl(
+            paste0(nn, "\\(.*\\)"), trmstrings[i]
+          ))) &
+          !manual_oz[i]) {
+          # term is checked for automatic orthogonalization
+          # find structured term with same variable
+          these_vars <- variables_per_trmstring[[i]]
+          these_terms <-
+            trmstrings[sapply(1:length(trmstrings), function(j) {
+              !manual_oz[j] &
+                any(sapply(these_vars, function(tv)
+                  tv %in% variables_per_trmstring[[j]])) &
+                i != j
+            })]
+          # TODO: check if this is actually necessary
+          if (has_intercept &
+              identify_intercept)
+            these_terms <- c("1", these_terms)
+          if (length(these_terms) > 0)
+            oz_to_add[[i]] <-
+            paste0(" %OZ% (", paste(these_terms, collapse = "+"), ")")
+          
+        }
+      }
+    }
+    
+    # check for overlap in node and structured parts  
+    if (!is.null(node_to_oz) | length(node_to_oz) >= 0) {
+      for (i in 1:length(trmstrings)) {
+        # if trmstrings[i] is node
+        if (any(sapply(node_to_oz, function(node)
+          grepl(
+            paste0(node, "\\(.*\\)"), trmstrings[i]
+          ))) &
+          !manual_oz[i]) {
+          these_vars <- variables_per_trmstring[[i]]
+          these_terms <-
+            trmstrings[sapply(1:length(trmstrings), function(j) {
+              !manual_oz[j] &
+                any(sapply(these_vars, function(tv)
+                  tv %in% variables_per_trmstring[[j]])) &
+                i != j
+            })]
+          if (has_intercept &
+              identify_intercept)
+            these_terms <- c("1", these_terms)
+          if (length(these_terms) > 0) {
+            warning("Overlap in features used in node and structured parts")
+          }
+        }
         
       }
     }
+
+    
     no_changes <- sapply(oz_to_add,is.null)
     if(any(!no_changes)){
       trmstrings[!no_changes] <- mapply(function(x,y) paste0(x, y), 
@@ -180,11 +238,15 @@ separate_define_relation <- function(
     }
   }
   # define which terms are related to which other terms due to OZ
+  # per term in formula at least one element (term itself)
+  # if orthoginalization necessary connected terms at pos. 2
   terms <- strsplit(trmstrings, "%OZ%", fixed=TRUE)
   terms_left <- lapply(terms, function(x) trimws(x[[1]]))
   terms_right <- lapply(terms, function(trm){
     if(length(trm)>1) remove_brackets(trimws(trm[[2]])) else return(NULL)
-  }) 
+  })
+  
+  # splits right terms into single elements per connected term 
   terms_right <- lapply(terms_right, function(trm)
   {
     if(is.null(trm)) return(NULL)
@@ -210,25 +272,27 @@ separate_define_relation <- function(
   j <- 1
   
   for(i in 1:length(terms_right)){
-    
     if(is.null(terms_right[[i]])) next
     for(k in 1:length(terms_right[[i]])){
-      
+      # check if terms_right[[i]][[k]] already exists in terms (due to being left)
       is_already_left <- is_equal_not_null(terms_right[[i]][[k]], sapply(terms, "[[", "term"))
       if(terms_right[[i]][[k]]==".")
         is_already_left <- seq_along(terms_right) != i
+      
       is_already_right <- FALSE
       if(length(add_terms)>0)
+        # check if terms_right[[i]][[k]] already exists in add_terms
         is_already_right <- is_equal_not_null(terms_right[[i]][[k]], 
                                               sapply(add_terms, "[[", "term"))
       if(any(is_already_left)){
         for(m in 1:sum(is_already_left)){
           terms[[which(is_already_left)[m]]]$right_from_oz <- 
-            c(terms[[which(is_already_left)[m]]]$right_from_oz, i) 
+             c(terms[[which(is_already_left)[m]]]$right_from_oz, i) 
         }
       }else if(any(is_already_right)){
+        
         add_terms[[which(is_already_right)]]$right_from_oz <- 
-          c(add_terms[[which(is_already_right)]]$right_from_oz, i)
+           c(add_terms[[which(is_already_right)]]$right_from_oz, i)
       }else{ # add
         add_terms[[j]] <- list(
           term = terms_right[[i]][[k]],
@@ -244,13 +308,11 @@ separate_define_relation <- function(
   }
   
   terms <- c(terms, add_terms)
-  
   if(has_intercept){
     
     terms[[which(sapply(terms, "[[", "term")=="1")]]$left_from_oz <- TRUE
     
   }
-  
   return(terms)
   
 }
