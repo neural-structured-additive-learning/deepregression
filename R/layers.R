@@ -24,6 +24,14 @@ pen_layer = function(units, P, ...) {
   layers$CombinedModel(units = units, P = P, ...)
 }
 
+update_factor_callback = function(model, weightnr = -1L, ...) {
+  python_path <- system.file("python", package = "deepregression")
+  layers <- reticulate::import_from_path("psplines", path = python_path)
+  layers$UpdateMultiplicationFactorFromWeight(model = model, 
+                                              weightnr = weightnr, 
+                                              ...)
+}
+
 #' Hadamard-type layers
 #' 
 #' @param units integer; number of units

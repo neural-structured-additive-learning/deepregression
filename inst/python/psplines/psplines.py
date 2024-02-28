@@ -250,20 +250,21 @@ class LambdaLayer(tf.keras.layers.Layer):
     def __init__(self, units, P, damping = 1.0, scale = 1.0, **kwargs):
         super(LambdaLayer, self).__init__(**kwargs)
         self.units = units
-        self.lambdasqrt = self.add_weight(name='lambdasqrt',
+        self.trafolambda = self.add_weight(name='trafolambda',
                                          shape=(units,len(P)),
-                                         initializer=tf.keras.initializers.RandomNormal,
+                                         initializer=tf.keras.initializers.Constant(value=0),
                                          trainable=True)
+        self.phi = tf.Variable(1.0, name = 'phimultiplier', trainable=False, dtype=tf.float32)
         self.damping = damping
         self.scale = scale
         self.P = P
 
     def call(self, inputs, w):
         for i in range(len(self.P)):
-            lmbda = tf.reshape(tf.math.square(self.lambdasqrt[:,i]), [])
+            lmbda = tf.reshape(tf.math.exp(self.trafolambda[:,i]), [])
             inf = 0.5 * tf.reduce_sum(vecmatvec(w, tf.cast(self.P[i], dtype="float32")))
             damp_term = self.damping * inf**2 / 2
-            l_term = lmbda * inf
+            l_term = lmbda * inf / self.phi
             self.add_loss(self.scale * (l_term + damp_term))
         return inputs
 
@@ -271,8 +272,9 @@ class LambdaLayer(tf.keras.layers.Layer):
         config = super().get_config().copy()
         config.update({
             'units': self.units,
-            'lambda': self.lambdasqrt.numpy(),
-            'P': self.P
+            'trafolambda': self.trafolambda.numpy(),
+            'P': self.P,
+            'phi': self.phi
         })
         return config
 
@@ -290,6 +292,27 @@ class CombinedModel(tf.keras.Model):
     def compute_output_shape(self, input_shape):
         output_shape = input_shape[:-1] + (self.units,)
         return output_shape
+        
+class UpdateMultiplicationFactorFromWeight(tf.keras.callbacks.Callback):
+    def __init__(self, model, weightnr = -1, trafo = lambda x: tf.math.square(tf.math.exp(x))):
+        super().__init__()
+        self.model = model
+        self.weightnr = weightnr
+        self.trafo = trafo
+
+    def on_batch_begin(self, epoch, logs=None):
+        # Extract the value of the last weight of the model
+        new_phi_value = self.model.weights[self.weightnr].numpy()
+
+        # Iterate through all layers of the model
+        for layer in self.model.layers:
+            # Check if the layer is an instance of CombinedModel
+            if isinstance(layer, CombinedModel):
+                # Access the LambdaLayer within the CombinedModel
+                lambda_layer = layer.lambda_layer
+                
+                # Update the phi variable within the LambdaLayer
+                tf.keras.backend.set_value(lambda_layer.phi, tf.reshape(self.trafo(new_phi_value), []))
 
 def get_masks(mod):
     masks = []
