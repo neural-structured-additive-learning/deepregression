@@ -218,7 +218,7 @@ class TrainableLambdaLayer(tf.keras.layers.Layer):
         return config
 
     def call(self, inputs):
-        self.add_loss = tf.math.exp(self.loglambda) * 0.5 * tf.reduce_sum(vecmatvec(self.w, tf.cast(self.P, dtype="float32")))
+        self.add_loss(tf.math.exp(self.loglambda) * 0.5 * tf.reduce_sum(vecmatvec(self.w, tf.cast(self.P, dtype="float32"))))
         return tf.matmul(inputs, self.w)
 
 
@@ -252,42 +252,65 @@ class LambdaLayer(tf.keras.layers.Layer):
         self.units = units
         self.trafolambda = self.add_weight(name='trafolambda',
                                          shape=(units,len(P)),
-                                         initializer=tf.keras.initializers.Constant(value=0),
+                                         initializer=tf.keras.initializers.Constant(value=-10),
                                          trainable=True)
-        self.phi = tf.Variable(1.0, name = 'phimultiplier', trainable=False, dtype=tf.float32)
+        # self.phi = tf.Variable(1.0, name = 'phimultiplier', trainable=False, dtype=tf.float32)
         self.damping = damping
         self.scale = scale
         self.P = P
 
-    def call(self, inputs, w):
+    def call(self, inputs, w, scale):
         for i in range(len(self.P)):
             lmbda = tf.reshape(tf.math.exp(self.trafolambda[:,i]), [])
-            inf = 0.5 * tf.reduce_sum(vecmatvec(w, tf.cast(self.P[i], dtype="float32")))
+            if scale is not None:
+                Pscaled = self.P[i] * scale
+            else:
+                nobs = tf.shape(inputs)[0]
+                Pscaled = self.P[i] / nobs
+            inf = 0.5 * tf.reduce_sum(vecmatvec(w, tf.cast(Pscaled, dtype="float32")))
             damp_term = self.damping * inf**2 / 2
-            l_term = lmbda * inf / self.phi
+            l_term = lmbda * inf # / self.phi 
             self.add_loss(self.scale * (l_term + damp_term))
         return inputs
+        
+    def get_Plambda_list(self):
+        return [tf.math.exp(self.trafolambda[:,i]) * tf.cast(self.P[i], dtype="float32") for i in range(len(self.P))]
 
     def get_config(self):
         config = super().get_config().copy()
         config.update({
             'units': self.units,
             'trafolambda': self.trafolambda.numpy(),
-            'P': self.P,
-            'phi': self.phi
+            'P': self.P# ,
+            #'phi': self.phi
         })
         return config
 
 class CombinedModel(tf.keras.Model):
-    def __init__(self, units, P, kernel_initializer=tf.keras.initializers.HeNormal, **kwargs):
+    def __init__(self, units, P, Pscale=None, kernel_initializer=tf.keras.initializers.HeNormal, **kwargs):
         super(CombinedModel, self).__init__(**kwargs)
         self.weight_layer = WeightLayer(units, kernel_initializer)
         self.lambda_layer = LambdaLayer(units, P)
         self.units = units
+        self.Pscale = Pscale
 
     def call(self, inputs):
         output, weights = self.weight_layer(inputs)
-        return self.lambda_layer(output, weights)
+        #if self.Pscale is None: # FIXME: anisotropic smoothing
+        #    nobs = tf.shape(inputs)[0]
+        #    Pscaled = self.lambda_layer.get_Plambda_list()[0] / nobs
+        #else:
+        #    Pscaled = self.lambda_layer.get_Plambda_list()[0] * self.Pscale
+        # lambdaPdiag = Pscaled 
+        # nobs = tf.cast(tf.shape(inputs)[0], dtype="float32")
+        # self.add_loss(0.5 * (tf.linalg.logdet(tf.linalg.matmul(tf.transpose(inputs), inputs)/self.lambda_layer.phi + lambdaPdiag/self.lambda_layer.phi/nobs))) 
+        # if self.Peigen is not None: # FIXME: anisotropic smoothing
+        #    dimP = len(self.Peigen)
+        #    lmbda = tf.reshape(tf.math.exp(self.lambda_layer.trafolambda[:,0]), [])
+        #    self.add_loss(- tf.math.pow(lmbda/self.lambda_layer.phi, dimP) * tf.reduce_prod(self.Peigen) * 0.5)
+        # self.add_loss(0.5 * tf.linalg.trace(tf.linalg.solve(tf.linalg.matmul(tf.transpose(inputs), inputs) + lambdaPdiag + 1e-8 * tf.eye(lambdaPdiag.shape[0]),
+        #                                              tf.linalg.matmul(tf.transpose(inputs), inputs)))) 
+        return self.lambda_layer(output, weights, self.Pscale)
         
     def compute_output_shape(self, input_shape):
         output_shape = input_shape[:-1] + (self.units,)

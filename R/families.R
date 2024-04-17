@@ -543,6 +543,41 @@ tfd_mvr <- function(loc, scale,
   
 }
 
+# Implementation of a distribution-like layer for (Quasi-)Tweedie
+tfd_tweedie <- function(loc, p = 1.5, quasi = FALSE,
+                         validate_args = FALSE,
+                         allow_nan_stats = TRUE,
+                         name = "QuasiTweedie")
+{
+  
+  args <- list(
+    loc = loc,
+    var_power = p,
+    quasi = quasi,
+    validate_args = validate_args,
+    allow_nan_stats = allow_nan_stats,
+    name = name
+  )
+  
+  python_path <- system.file("python", package = "deepregression")
+  distributions <- reticulate::import_from_path("distributions", path = python_path)
+  
+  return(do.call(distributions$Tweedie, args))
+  
+}
+
+# tfd_distfun for (Quasi-)Tweedie to allow for flexible p
+tweedie <- function(p, quasi = FALSE)
+{
+  
+  tfd_dist <- function(l) tfd_tweedie(loc = l, p = p, quasi = quasi)
+  ret_fun <- function(x) tfd_dist(tf$add(1e-8, tfe(x))) 
+  attr(ret_fun, "nrparams_dist") <- 1L
+  
+  return(ret_fun)
+  
+}
+
 #' For using mean squared error via TFP
 #' 
 #' @param mean parameter for the mean

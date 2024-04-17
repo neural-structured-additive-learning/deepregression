@@ -430,7 +430,14 @@ autogam_processor <- function(term, data, output_dim, param_nr, controls, engine
   term <- gsub("auto\\((.*)\\)", "\\1", term)
   # extract mgcv smooth object
   Ps <- get_gamdata(term, param_nr, controls$gamdata, what="sp_and_S")[[2]] 
-  P <- lapply(Ps, function(Pmat) Pmat * controls$sp_scale(data))
+  P <- lapply(Ps, function(Pmat) Pmat)
+
+  # if(length(P)==1){
+  #   evP <- eigen(P[[1]])$values
+  #   Peigen = (evP[evP>0])
+  # }else{
+  #   stop("Not implemented yet.")
+  # }
   
   if(engine == "torch") stop("Not implemented yet.")
   
@@ -438,8 +445,8 @@ autogam_processor <- function(term, data, output_dim, param_nr, controls, engine
                            output_dim = output_dim,
                            param_nr = param_nr,
                            controls = controls, engine = engine,
-                           further_layer_args = list(P = P),
-                           layer_args_names = c("units", "P", "name"),
+                           further_layer_args = list(P = P, Pscale = controls$sp_scale(data)), 
+                           layer_args_names = c("units", "P", "name", "Pscale"),
                            layer_class = pen_layer
   )
   
