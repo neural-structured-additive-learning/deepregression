@@ -102,7 +102,7 @@ class Tweedie(distribution.AutoCompositeTensorDistribution):
       theta = (tf.pow(x1, 1 - self.p) - tf.pow(self.loc, 1 - self.p)) / (1 - self.p)
       kappa = (tf.pow(x, 2 - self.p) - tf.pow(self.loc, 2 - self.p)) / (2 - self.p)
     
-      return - 1 * tf.pow(x * theta - kappa, 2)
+      return - 2 * (x * theta - kappa)
 
 
   def _mean(self):
