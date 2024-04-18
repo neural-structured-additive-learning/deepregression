@@ -97,12 +97,12 @@ class Tweedie(distribution.AutoCompositeTensorDistribution):
       u *= 1 / ((1 - self.p) * (2 - self.p))
       return llf - u
     
-    else: # from https://github.com/cran/statmod/blob/master/R/tweedie.R deviance residuals
+    else: # from https://github.com/cran/statmod/blob/master/R/tweedie.R negative deviance residuals
       x1 = x + 0.1 * tf.cast(tf.equal(x, 0), tf.float32)
       theta = (tf.pow(x1, 1 - self.p) - tf.pow(self.loc, 1 - self.p)) / (1 - self.p)
       kappa = (tf.pow(x, 2 - self.p) - tf.pow(self.loc, 2 - self.p)) / (2 - self.p)
     
-      return 2 * (x * theta - kappa)
+      return - 1 * tf.pow(x * theta - kappa, 2)
 
 
   def _mean(self):
