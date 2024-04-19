@@ -544,14 +544,15 @@ tfd_mvr <- function(loc, scale,
 }
 
 # Implementation of a distribution-like layer for (Quasi-)Tweedie
-tfd_tweedie <- function(loc, p = 1.5, quasi = FALSE,
+tfd_tweedie <- function(loc, phi, p = 1.5, quasi = FALSE,
                          validate_args = FALSE,
                          allow_nan_stats = TRUE,
-                         name = "QuasiTweedie")
+                         name = "Tweedie")
 {
   
   args <- list(
     loc = loc,
+    scale = phi,
     var_power = p,
     quasi = quasi,
     validate_args = validate_args,
@@ -567,12 +568,22 @@ tfd_tweedie <- function(loc, p = 1.5, quasi = FALSE,
 }
 
 # tfd_distfun for (Quasi-)Tweedie to allow for flexible p
-tweedie <- function(p, quasi = FALSE)
+tweedie <- function(p, quasi = FALSE, output_dim = 1L)
 {
   
-  tfd_dist <- function(l) tfd_tweedie(loc = l, p = p, quasi = quasi)
-  ret_fun <- function(x) tfd_dist(tf$add(1e-8, tfe(x))) 
-  attr(ret_fun, "nrparams_dist") <- 1L
+  tfd_dist <- function(l, s) tfd_tweedie(loc = l, phi = s, p = p, quasi = quasi)
+  trafo_list <- list(function(x) tf$add(1e-8, tfe(x)), 
+                     function(x) tf$add(1e-8, tfe(x))) 
+  dist_dim <- 2L
+  ret_fun <- function(x) 
+    do.call(tfd_dist,
+            lapply(1:(x$shape[[2]]/output_dim),
+                   function(i)
+                     trafo_list[[i]](
+                       tf_stride_cols(x,(i-1L)*output_dim+1L,
+                                      (i-1L)*output_dim+output_dim)))
+    )
+  attr(ret_fun, "nrparams_dist") <- 2L
   
   return(ret_fun)
   
