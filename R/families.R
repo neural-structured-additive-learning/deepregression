@@ -567,7 +567,12 @@ tfd_tweedie <- function(loc, phi, p = 1.5, quasi = FALSE,
   
 }
 
-# tfd_distfun for (Quasi-)Tweedie to allow for flexible p
+#' tfd_distfun for (Quasi-)Tweedie to allow for flexible p
+#' @param p integer; defines distribution
+#' @param quasi logical; whether to use quasi-likelihood or deviance resids
+#' @param output_dim integer; currently only univariate responses supported
+#' @export
+#' 
 tweedie <- function(p, quasi = FALSE, output_dim = 1L)
 {
   

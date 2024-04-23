@@ -6,6 +6,7 @@
 \alias{lin_processor}
 \alias{ri_processor}
 \alias{gam_processor}
+\alias{autogam_processor}
 \alias{node_processor}
 \title{Function that creates layer for each processor}
 \usage{
@@ -28,8 +29,11 @@ int_processor(term, data, output_dim, param_nr, controls, engine = "tf")
 
 lin_processor(term, data, output_dim, param_nr, controls, engine = "tf")
 
+ri_processor(term, data, output_dim, param_nr, controls, engine)
 
 gam_processor(term, data, output_dim, param_nr, controls, engine = "tf")
+
+autogam_processor(term, data, output_dim, param_nr, controls, engine = "tf")
 
 node_processor(
   term,
@@ -39,11 +43,6 @@ node_processor(
   controls = NULL,
   engine = "tf"
 )
-
-ri_processor(term, data, output_dim, param_nr, controls, engine)
-
-gam_processor(term, data, output_dim, param_nr, controls, engine = "tf")
-
 }
 \arguments{
 \item{term}{character; term in the formula}
