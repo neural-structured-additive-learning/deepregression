@@ -25,47 +25,47 @@ tfmult <- function(x,y) tf$math$multiply(x,y)
 #' with parameters (and corresponding inverse link function in brackets):
 #'
 #' \itemize{
-#'  \item{"normal": }{normal distribution with location (identity), scale (exp)}
-#'  \item{"bernoulli": }{bernoulli distribution with logits (identity)}
-#'  \item{"bernoulli_prob": }{bernoulli distribution with probabilities (sigmoid)}
-#'  \item{"beta": }{beta with concentration 1 = alpha (exp) and concentration
+#'  \item{\code{"normal": }}{normal distribution with location (identity), scale (exp)}
+#'  \item{\code{"bernoulli": }}{bernoulli distribution with logits (identity)}
+#'  \item{\code{"bernoulli_prob": }}{bernoulli distribution with probabilities (sigmoid)}
+#'  \item{\code{"beta": }}{beta with concentration 1 = alpha (exp) and concentration
 #'  0 = beta (exp)}
-#'  \item{"betar": }{beta with mean (sigmoid) and scale (sigmoid)}
-#'  \item{"cauchy": }{location (identity), scale (exp)}
-#'  \item{"chi2": }{cauchy with df (exp)}
-#'  \item{"chi": }{cauchy with df (exp)}
-#'  \item{"exponential": }{exponential with lambda (exp)}
-#'  \item{"gamma": }{gamma with concentration (exp) and rate (exp)}
-#'  \item{"gammar": }{gamma with location (exp) and scale (exp), following
+#'  \item{\code{"betar": }}{beta with mean (sigmoid) and scale (sigmoid)}
+#'  \item{\code{"cauchy": }}{location (identity), scale (exp)}
+#'  \item{\code{"chi2": }}{cauchy with df (exp)}
+#'  \item{\code{"chi": }}{cauchy with df (exp)}
+#'  \item{\code{"exponential": }}{exponential with lambda (exp)}
+#'  \item{\code{"gamma": }}{gamma with concentration (exp) and rate (exp)}
+#'  \item{\code{"gammar": }}{gamma with location (exp) and scale (exp), following
 #'  \code{gamlss.dist::GA}, which implies that the expectation is the location, 
 #'  and the variance of the distribution is the \code{location^2 scale^2}}
-#'  \item{"gumbel": }{gumbel with location (identity), scale (exp)}
-#'  \item{"half_cauchy": }{half cauchy with location (identity), scale (exp)}
-#'  \item{"half_normal": }{half normal with scale (exp)}
-#'  \item{"horseshoe": }{horseshoe with scale (exp)}
-#'  \item{"inverse_gamma": }{inverse gamma with concentation (exp) and rate (exp)}
-#'  \item{"inverse_gamma_ls": }{inverse gamma with location (exp) and variance (1/exp)}
-#'  \item{"inverse_gaussian": }{inverse Gaussian with location (exp) and concentation
+#'  \item{\code{"gumbel": }}{gumbel with location (identity), scale (exp)}
+#'  \item{\code{"half_cauchy": }}{half cauchy with location (identity), scale (exp)}
+#'  \item{\code{"half_normal": }}{half normal with scale (exp)}
+#'  \item{\code{"horseshoe": }}{horseshoe with scale (exp)}
+#'  \item{\code{"inverse_gamma": }}{inverse gamma with concentation (exp) and rate (exp)}
+#'  \item{\code{"inverse_gamma_ls": }}{inverse gamma with location (exp) and variance (1/exp)}
+#'  \item{\code{"inverse_gaussian": }}{inverse Gaussian with location (exp) and concentation
 #'  (exp)}
-#'  \item{"laplace": }{Laplace with location (identity) and scale (exp)}
-#'  \item{"log_normal": }{Log-normal with location (identity) and scale (exp) of
+#'  \item{\code{"laplace": }}{Laplace with location (identity) and scale (exp)}
+#'  \item{\code{"log_normal": }}{Log-normal with location (identity) and scale (exp) of
 #'  underlying normal distribution}
-#'  \item{"logistic": }{logistic with location (identity) and scale (exp)}
-#'  \item{"negbinom": }{neg. binomial with count (exp) and prob (sigmoid)}
-#'  \item{"negbinom_ls": }{neg. binomail with mean (exp) and clutter factor (exp)}
-#'  \item{"pareto": }{Pareto with concentration (exp) and scale (1/exp)} 
-#'  \item{"pareto_ls": }{Pareto location scale version with mean (exp) 
+#'  \item{\code{"logistic": }}{logistic with location (identity) and scale (exp)}
+#'  \item{\code{"negbinom": }}{neg. binomial with count (exp) and prob (sigmoid)}
+#'  \item{\code{"negbinom_ls": }}{neg. binomail with mean (exp) and clutter factor (exp)}
+#'  \item{\code{"pareto": }}{Pareto with concentration (exp) and scale (1/exp)} 
+#'  \item{\code{"pareto_ls": }}{Pareto location scale version with mean (exp) 
 #'  and scale (exp), which corresponds to a Pareto distribution with parameters scale = mean
 #'  and concentration = 1/sigma, where sigma is the scale in the pareto_ls version}
-#'  \item{"poisson": }{poisson with rate (exp)}
-#'  \item{"poisson_lograte": }{poisson with lograte (identity))}
-#'  \item{"student_t": }{Student's t with df (exp)}
-#'  \item{"student_t_ls": }{Student's t with df (exp), location (identity) and
+#'  \item{\code{"poisson": }}{poisson with rate (exp)}
+#'  \item{\code{"poisson_lograte": }}{poisson with lograte (identity))}
+#'  \item{\code{"student_t": }}{Student's t with df (exp)}
+#'  \item{\code{"student_t_ls": }}{Student's t with df (exp), location (identity) and
 #'  scale (exp)}
-#'  \item{"uniform": }{uniform with upper and lower (both identity)}
-#'  \item{"zinb": }{Zero-inflated negative binomial with mean (exp), 
+#'  \item{\code{"uniform": }}{uniform with upper and lower (both identity)}
+#'  \item{\code{"zinb": }}{Zero-inflated negative binomial with mean (exp), 
 #'  variance (exp) and prob (sigmoid)}
-#'  \item{"zip":  }{Zero-inflated poisson distribution with mean (exp) and prob (sigmoid)}
+#'  \item{\code{"zip":  }}{Zero-inflated poisson distribution with mean (exp) and prob (sigmoid)}
 #' }
 #' @param add_const small positive constant to stabilize calculations
 #' @param trafo_list list of transformations for each distribution parameter.
@@ -281,9 +281,9 @@ family_to_tfd <- function(family)
                      negbinom_ls = tfd_negative_binomial_ls,
                      pareto = tfd_pareto,
                      pareto_ls = tfd_pareto,
-                     poisson = tfd_poisson,
+                     poisson = tfd_poisson_fixed,
                      poisson_lograte = function(log_rate)
-                       tfd_poisson(log_rate = log_rate),
+                       tfd_poisson_fixed(log_rate = log_rate),
                      student_t = function(x)
                        tfd_student_t(df=x,loc=0,scale=1),
                      student_t_ls = tfd_student_t,
@@ -472,6 +472,15 @@ family_trafo_funs_special <- function(family, add_const = 1e-8)
 
 }
 
+tfd_poisson_fixed <- function (rate = NULL, log_rate = NULL, interpolate_nondiscrete = TRUE, 
+          validate_args = FALSE, allow_nan_stats = TRUE, name = "Poisson") 
+{
+  args <- list(rate = rate, log_rate = log_rate, 
+               validate_args = validate_args, allow_nan_stats = allow_nan_stats, 
+               name = name)
+  do.call(tfp$distributions$Poisson, args)
+}
+
 #' Implementation of a zero-inflated poisson distribution for TFP
 #'
 #' @param lambda scalar value for rate of poisson distribution
@@ -483,7 +492,7 @@ tfd_zip <- function(lambda, probs)
   return(
     tfd_mixture(cat = tfd_categorical(probs = probs),
                 components =
-                  list(tfd_poisson(rate = lambda),
+                  list(tfd_poisson_fixed(rate = lambda),
                        tfd_deterministic(loc = lambda * 0L)
                   ),
                 name="zip")
@@ -543,56 +552,60 @@ tfd_mvr <- function(loc, scale,
   
 }
 
-# Implementation of a distribution-like layer for (Quasi-)Tweedie
-tfd_tweedie <- function(loc, phi, p = 1.5, quasi = FALSE,
-                         validate_args = FALSE,
-                         allow_nan_stats = TRUE,
-                         name = "Tweedie")
-{
-  
-  args <- list(
-    loc = loc,
-    scale = phi,
-    var_power = p,
-    quasi = quasi,
-    validate_args = validate_args,
-    allow_nan_stats = allow_nan_stats,
-    name = name
-  )
-  
-  python_path <- system.file("python", package = "deepregression")
-  distributions <- reticulate::import_from_path("distributions", path = python_path)
-  
-  return(do.call(distributions$Tweedie, args))
-  
-}
-
-#' tfd_distfun for (Quasi-)Tweedie to allow for flexible p
-#' @param p integer; defines distribution
-#' @param quasi logical; whether to use quasi-likelihood or deviance resids
-#' @param output_dim integer; currently only univariate responses supported
-#' @export
 #' 
-tweedie <- function(p, quasi = FALSE, output_dim = 1L)
-{
-  
-  tfd_dist <- function(l, s) tfd_tweedie(loc = l, phi = s, p = p, quasi = quasi)
-  trafo_list <- list(function(x) tf$add(1e-8, tfe(x)), 
-                     function(x) tf$add(1e-8, tfe(x))) 
-  dist_dim <- 2L
-  ret_fun <- function(x) 
-    do.call(tfd_dist,
-            lapply(1:(x$shape[[2]]/output_dim),
-                   function(i)
-                     trafo_list[[i]](
-                       tf_stride_cols(x,(i-1L)*output_dim+1L,
-                                      (i-1L)*output_dim+output_dim)))
-    )
-  attr(ret_fun, "nrparams_dist") <- 2L
-  
-  return(ret_fun)
-  
-}
+#' # Implementation of a distribution-like layer for (Quasi-)Tweedie
+#' tfd_tweedie <- function(loc, phi, p = 1.5, quasi = FALSE,
+#'                          validate_args = FALSE,
+#'                          allow_nan_stats = TRUE,
+#'                          name = "Tweedie")
+#' {
+#'   
+#'   args <- list(
+#'     loc = loc,
+#'     scale = phi,
+#'     var_power = p,
+#'     quasi = quasi,
+#'     validate_args = validate_args,
+#'     allow_nan_stats = allow_nan_stats,
+#'     name = name
+#'   )
+#'   
+#'   python_path <- system.file("python", package = "deepregression")
+#'   distributions <- reticulate::import_from_path("distributions", path = python_path)
+#'   
+#'   return(do.call(distributions$Tweedie, args))
+#'   
+#' }
+#' 
+#' #' tfd_distfun for (Quasi-)Tweedie to allow for flexible p
+#' #' @param p integer; defines distribution
+#' #' @param quasi logical; whether to use quasi-likelihood or deviance resids
+#' #' @param output_dim integer; currently only univariate responses supported
+#' #' @export
+#' #' 
+#' tweedie <- function(p, quasi = FALSE, output_dim = 1L,
+#'                     linkfun_mean = function(x) tf$add(1e-8, tf$math$exp(x)),
+#'                     linkfun_phi = function(x) tf$add(1e-8, tf$math$exp(x)))
+#' {
+#'   
+#'   tfd_dist <- function(l, s) tfd_tweedie(loc = l, phi = s, p = p, quasi = quasi)
+#'   trafo_list <- list(linkfun_mean, linkfun_phi) 
+#'   dist_dim <- 2L
+#'   ret_fun <- function(x) 
+#'     do.call(tfd_dist,
+#'             lapply(1:(x$shape[[2]]/output_dim),
+#'                    function(i)
+#'                      trafo_list[[i]](
+#'                        tf_stride_cols(x,(i-1L)*output_dim+1L,
+#'                                       (i-1L)*output_dim+output_dim)))
+#'     )
+#'   attr(ret_fun, "nrparams_dist") <- 2L
+#'   
+#'   return(ret_fun)
+#'   
+#' }
+#' 
+
 
 #' For using mean squared error via TFP
 #' 

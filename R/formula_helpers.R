@@ -112,7 +112,12 @@ extractval <- function(term, name, default_for_missing = FALSE, default = NULL)
 
 }
 
-# multiple value option of extractval
+#' Extractval with multiple options
+#' @param names character vector of names
+#' @export
+#' @rdname formulaHelpers
+#'
+#'
 extractvals <- function(term, names){
   if(is.character(term)) term <- as.formula(paste0("~", term))
   inputs <- as.list(as.list(term)[[2]])[-1]

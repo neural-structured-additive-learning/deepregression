@@ -1,9 +1,9 @@
 #' @importFrom stats na.omit
 
 VERSIONPY = "3.10"
-VERSIONTF = "2.10"
-VERSIONKERAS = "2.10"
-VERSIONTFP = "0.16"
+VERSIONTF = "2.15"
+VERSIONKERAS = "2.15"
+VERSIONTFP = "0.23"
 
 globalVariables("self")
 

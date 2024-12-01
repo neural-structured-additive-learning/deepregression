@@ -9,6 +9,21 @@ from tensorflow_probability.python.internal import samplers
 from tensorflow_probability.python.internal import tensor_util
 from tensorflow.math import exp, log
 from tensorflow.experimental import numpy as tnp
+import numpy as np
+from scipy.special import wright_bessel
+
+
+# Define the TensorFlow wrapper function for scipy's wright_bessel
+def tensorflow_wright_bessel(a, b, x):
+    # The inner function to be applied
+    def wright_bessel_inner(a_np, b_np, x_np):
+        # Use the provided 'out' parameter to store the output directly in a NumPy array
+        result = wright_bessel(a_np, b_np, x_np)
+        return np.array(result, dtype=np.float64)
+
+    # Wrapping the Python function with tf.py_function
+    # It takes the inner function, list of tensor inputs, and the output type as arguments
+    return tf.py_function(wright_bessel_inner, [a, b, x], tf.float64)
 
 class Tweedie(distribution.AutoCompositeTensorDistribution):
   """Tweedie
@@ -113,19 +128,24 @@ class Tweedie(distribution.AutoCompositeTensorDistribution):
       return llf - u
     
     else: 
-      # from https://github.com/cran/statmod/blob/master/R/tweedie.R negative deviance residuals
-      # x1 = x + 0.1 * tf.cast(tf.equal(x, 0), tf.float32)
-      # theta = (tf.pow(x1, 1 - self.p) - tf.pow(self.loc, 1 - self.p)) / (1 - self.p)
-      # kappa = (tf.pow(x, 2 - self.p) - tf.pow(self.loc, 2 - self.p)) / (2 - self.p)
-      # return - 2 * (x * theta - kappa)
-      # from https://github.com/cran/mgcv/blob/aff4560d187dfd7d98c7bd367f5a0076faf129b7/R/gamlss.r#L2474
-      ethi = tf.exp(-self.p) # assuming p > 0
-      p = (self.b + self.a * ethi)/(1+ethi)
-      x1 = x + tf.cast(x == 0, tf.float32)
-      theta = (tf.pow(x1, 1 - p) - tf.pow(self.loc, 1 - p)) / (1 - p)
-      kappa = (tf.pow(x, 2 - p) - tf.pow(self.loc, 2 - p)) / (2 - p)
-      return tf.sign(x - self.loc) * tf.sqrt(tf.nn.relu(2 * (x * theta - kappa) * 1 / self.scale))
+      p = self.p
+      mu = self.loc
+      theta = mu ** (1 - p) / (1 - p)
+      kappa = mu ** (2 - p) / (2 - p)
+      alpha = (2 - p) / (1 - p)
       
+      ll_obs = (endog * theta - kappa) / scale
+      idx = endog > 0
+            if np.any(idx):
+                if not np.isscalar(endog):
+                    endog = endog[idx]
+                if not np.isscalar(scale):
+                    scale = scale[idx]
+                x = ((p - 1) * scale / endog) ** alpha
+                x /= (2 - p) * scale
+                wb = special.wright_bessel(-alpha, 0, x)
+                ll_obs[idx] += np.log(1/endog * wb)
+            return ll_obs
 
 
   def _mean(self):

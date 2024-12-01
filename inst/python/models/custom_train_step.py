@@ -20,12 +20,12 @@ def build_customKeras(custom_update = None):
 					y_pred = self(x, training=True)
 					loss = self.compiled_loss(
 					  y, y_pred, sample_weight, regularization_losses=self.losses)
-			 	# Run backwards pass with custom minimization
-				# grads = tape.gradient(loss, self.trainable_variables)
-				# self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
-				grads_and_vars = self.optimizer._compute_gradients(
-					loss, var_list=self.trainable_variables, grad_loss=None, tape=tape)
-				self.optimizer.apply_gradients(grads_and_vars)
+					  
+                # Compute gradients
+				trainable_vars = self.trainable_variables
+				gradients = tape.gradient(loss, trainable_vars)
+				# Update weights
+				self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 				self.compiled_metrics.update_state(y, y_pred, sample_weight)
 				# Collect metrics to return
 				return_metrics = {}

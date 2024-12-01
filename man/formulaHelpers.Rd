@@ -2,11 +2,14 @@
 % Please edit documentation in R/formula_helpers.R
 \name{extractval}
 \alias{extractval}
+\alias{extractvals}
 \alias{extractlen}
 \alias{form2text}
 \title{Formula helpers}
 \usage{
 extractval(term, name, default_for_missing = FALSE, default = NULL)
+
+extractvals(term, names)
 
 extractlen(term, data)
 
@@ -21,6 +24,8 @@ form2text(form)
 
 \item{default}{value returned when missing}
 
+\item{names}{character vector of names}
+
 \item{data}{a data.frame or list}
 
 \item{form}{formula that is converted to a character string}
@@ -30,6 +35,8 @@ the value used for \code{name}
 }
 \description{
 Formula helpers
+
+Extractval with multiple options
 }
 \examples{
 extractval("s(a, la = 2)", "la")

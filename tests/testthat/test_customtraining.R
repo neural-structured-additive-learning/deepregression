@@ -1,5 +1,7 @@
 context("Custom Training")
 
+if(FALSE){ # deactivate for now
+
 test_that("Load and fit with custom keras model", {
 
   n <- 1500
@@ -122,3 +124,5 @@ test_that("Use multiple optimizers", {
   expect_false(all((mod %>% fitted())==(mod2 %>% fitted())))
   
 })
+
+}

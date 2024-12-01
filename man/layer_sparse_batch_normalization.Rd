@@ -17,29 +17,3 @@ layer object
 \description{
 Sparse Batch Normalization layer
 }
-\examples{
-n <- 1000
-y <- rnorm(n)
-data <- data.frame(x1=rnorm(n), x2=rnorm(n), x3=rnorm(n))
-
-library(deepregression)
-
-mod <- keras_model_sequential()
-mod \%>\% layer_dense(1000) \%>\% 
-    layer_sparse_batch_normalization(lam = 100)() \%>\% 
-    layer_dense(1)
-    
-mod \%>\% compile(optimizer = optimizer_adam(),
-                loss = "mse")
-
-mod \%>\% fit(x = as.matrix(data), y = y, epochs = 1000,
-            validation_split = 0.2, 
-            callbacks = list(callback_early_stopping(patience = 30, 
-                             restore_best_weights = TRUE)),
-            verbose = FALSE)
-
-lapply(mod$weights[3:4], function(x) 
-       summary(c(as.matrix(x))))
-
-
-}

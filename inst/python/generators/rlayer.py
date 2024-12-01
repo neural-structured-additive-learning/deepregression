@@ -1,7 +1,7 @@
 import os
 
 if (os.getenv('KERAS_IMPLEMENTATION', 'tensorflow') == 'keras'):
-  from keras.engine.topology import Layer
+  from keras.layers import Layer
   def shape_filter(shape):
     return shape
 else:
