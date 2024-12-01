@@ -38,47 +38,47 @@ Currently the following distributions are supported
 with parameters (and corresponding inverse link function in brackets):
 
 \itemize{
- \item{\code{"normal": }}{normal distribution with location (identity), scale (exp)}
- \item{\code{"bernoulli": }}{bernoulli distribution with logits (identity)}
- \item{\code{"bernoulli_prob": }}{bernoulli distribution with probabilities (sigmoid)}
- \item{\code{"beta": }}{beta with concentration 1 = alpha (exp) and concentration
- 0 = beta (exp)}
- \item{\code{"betar": }}{beta with mean (sigmoid) and scale (sigmoid)}
- \item{\code{"cauchy": }}{location (identity), scale (exp)}
- \item{\code{"chi2": }}{cauchy with df (exp)}
- \item{\code{"chi": }}{cauchy with df (exp)}
- \item{\code{"exponential": }}{exponential with lambda (exp)}
- \item{\code{"gamma": }}{gamma with concentration (exp) and rate (exp)}
- \item{\code{"gammar": }}{gamma with location (exp) and scale (exp), following
+ \item \code{"normal"} : normal distribution with location (identity), scale (exp)
+ \item \code{"bernoulli"} : bernoulli distribution with logits (identity)
+ \item \code{"bernoulli_prob"} : bernoulli distribution with probabilities (sigmoid)
+ \item \code{"beta"} : beta with concentration 1 = alpha (exp) and concentration
+ 0 = beta (exp)
+ \item \code{"betar"} : beta with mean (sigmoid) and scale (sigmoid)
+ \item \code{"cauchy"} : location (identity), scale (exp)
+ \item \code{"chi2"} : cauchy with df (exp)
+ \item \code{"chi"} : cauchy with df (exp)
+ \item \code{"exponential"} : exponential with lambda (exp)
+ \item \code{"gamma"} : gamma with concentration (exp) and rate (exp)
+ \item \code{"gammar"} : gamma with location (exp) and scale (exp), following
  \code{gamlss.dist::GA}, which implies that the expectation is the location, 
- and the variance of the distribution is the \code{location^2 scale^2}}
- \item{\code{"gumbel": }}{gumbel with location (identity), scale (exp)}
- \item{\code{"half_cauchy": }}{half cauchy with location (identity), scale (exp)}
- \item{\code{"half_normal": }}{half normal with scale (exp)}
- \item{\code{"horseshoe": }}{horseshoe with scale (exp)}
- \item{\code{"inverse_gamma": }}{inverse gamma with concentation (exp) and rate (exp)}
- \item{\code{"inverse_gamma_ls": }}{inverse gamma with location (exp) and variance (1/exp)}
- \item{\code{"inverse_gaussian": }}{inverse Gaussian with location (exp) and concentation
- (exp)}
- \item{\code{"laplace": }}{Laplace with location (identity) and scale (exp)}
- \item{\code{"log_normal": }}{Log-normal with location (identity) and scale (exp) of
- underlying normal distribution}
- \item{\code{"logistic": }}{logistic with location (identity) and scale (exp)}
- \item{\code{"negbinom": }}{neg. binomial with count (exp) and prob (sigmoid)}
- \item{\code{"negbinom_ls": }}{neg. binomail with mean (exp) and clutter factor (exp)}
- \item{\code{"pareto": }}{Pareto with concentration (exp) and scale (1/exp)} 
- \item{\code{"pareto_ls": }}{Pareto location scale version with mean (exp) 
+ and the variance of the distribution is the \code{location^2 scale^2}
+ \item \code{"gumbel"} : gumbel with location (identity), scale (exp)
+ \item \code{"half_cauchy"} : half cauchy with location (identity), scale (exp)
+ \item \code{"half_normal"} : half normal with scale (exp)
+ \item \code{"horseshoe"} : horseshoe with scale (exp)
+ \item \code{"inverse_gamma"} : inverse gamma with concentation (exp) and rate (exp)
+ \item \code{"inverse_gamma_ls"} : inverse gamma with location (exp) and variance (1/exp)
+ \item \code{"inverse_gaussian"} : inverse Gaussian with location (exp) and concentation
+ (exp)
+ \item \code{"laplace"} : Laplace with location (identity) and scale (exp)
+ \item \code{"log_normal"} : Log-normal with location (identity) and scale (exp) of
+ underlying normal distribution
+ \item \code{"logistic"} : logistic with location (identity) and scale (exp)
+ \item \code{"negbinom"} : neg. binomial with count (exp) and prob (sigmoid)
+ \item \code{"negbinom_ls"} : neg. binomail with mean (exp) and clutter factor (exp)
+ \item \code{"pareto"} : Pareto with concentration (exp) and scale (1/exp)
+ \item \code{"pareto_ls"} : Pareto location scale version with mean (exp) 
  and scale (exp), which corresponds to a Pareto distribution with parameters scale = mean
- and concentration = 1/sigma, where sigma is the scale in the pareto_ls version}
- \item{\code{"poisson": }}{poisson with rate (exp)}
- \item{\code{"poisson_lograte": }}{poisson with lograte (identity))}
- \item{\code{"student_t": }}{Student's t with df (exp)}
- \item{\code{"student_t_ls": }}{Student's t with df (exp), location (identity) and
- scale (exp)}
- \item{\code{"uniform": }}{uniform with upper and lower (both identity)}
- \item{\code{"zinb": }}{Zero-inflated negative binomial with mean (exp), 
- variance (exp) and prob (sigmoid)}
- \item{\code{"zip":  }}{Zero-inflated poisson distribution with mean (exp) and prob (sigmoid)}
+ and concentration = 1/sigma, where sigma is the scale in the pareto_ls version
+ \item \code{"poisson"} : poisson with rate (exp)
+ \item \code{"poisson_lograte"} : poisson with lograte (identity))
+ \item \code{"student_t"} : Student's t with df (exp)
+ \item \code{"student_t_ls"} : Student's t with df (exp), location (identity) and
+ scale (exp)
+ \item \code{"uniform"} : uniform with upper and lower (both identity)
+ \item \code{"zinb"} : Zero-inflated negative binomial with mean (exp), 
+ variance (exp) and prob (sigmoid)
+ \item \code{"zip":  } Zero-inflated poisson distribution with mean (exp) and prob (sigmoid)
 }
 
 To specify a custom distribution, define the a function as follows
