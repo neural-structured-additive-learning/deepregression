@@ -11,20 +11,20 @@ create_package_name <- function(package, version)
   paste(package, version, sep="==")
 
 .onLoad <- function(libname, pkgname) { # nocov start
-  if(suppressMessages(!reticulate::py_available() | .Platform$OS.type == "windows"))
-  {
-    res <- suppressMessages(reticulate::configure_environment(pkgname))
-    if(res & requireNamespace("tensorflow", quietly = TRUE) & 
-       requireNamespace("keras", quietly = TRUE)){
-      suppressMessages(try(tf$compat$v1$logging$set_verbosity(
-        tf$compat$v1$logging$ERROR)))
-      suppressMessages(try(tf$get_logger()$setLevel('ERROR')))
-      suppressMessages(try(tf$autograph$set_verbosity(level=0L)))
-      suppressMessages(try(keras::use_implementation("tensorflow"), silent = TRUE))
-      # catch TFP error
-      suppressMessages(try(invisible(tfprobability::tfd_normal(0,1)), silent = TRUE))
-      suppressMessages(try(invisible(tfprobability::tfd_normal(0,1)), silent = TRUE))
-    }else{
+  # if(suppressMessages(!reticulate::py_available() | .Platform$OS.type == "windows"))
+  # {
+  #   res <- suppressMessages(reticulate::configure_environment(pkgname))
+  #   if(res & requireNamespace("tensorflow", quietly = TRUE) & 
+  #      requireNamespace("keras", quietly = TRUE)){
+  #     suppressMessages(try(tf$compat$v1$logging$set_verbosity(
+  #       tf$compat$v1$logging$ERROR)))
+  #     suppressMessages(try(tf$get_logger()$setLevel('ERROR')))
+  #     suppressMessages(try(tf$autograph$set_verbosity(level=0L)))
+  #     suppressMessages(try(keras::use_implementation("tensorflow"), silent = TRUE))
+  #     # catch TFP error
+  #     suppressMessages(try(invisible(tfprobability::tfd_normal(0,1)), silent = TRUE))
+  #     suppressMessages(try(invisible(tfprobability::tfd_normal(0,1)), silent = TRUE))
+  #   }else{
       tf <<- reticulate::import("tensorflow", delay_load = list(
         on_load = function(){
           tape <<- tf$GradientTape
@@ -33,12 +33,12 @@ create_package_name <- function(package, version)
       )
       keras <<- reticulate::import("keras", delay_load = TRUE)
       tfp <<- reticulate::import("tensorflow_probability", delay_load = TRUE)
-    }
-    
-  }else{
-    tf <- reticulate::import("tensorflow")
-    tape <- tf$GradientTape
-  } # nocov end
+  #   }
+  #   
+  # }else{
+  #   tf <- reticulate::import("tensorflow")
+  #   tape <- tf$GradientTape
+  # } # nocov end
   # options
   options(orthogonalize = TRUE,
           identify_intercept = FALSE,

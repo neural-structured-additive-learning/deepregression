@@ -26,9 +26,11 @@
 #' y = y_regr
 #' )
 #' 
+#' if(!is.null(mod_node_regr)){
 #' mod_node_regr %>% fit(epochs = 15, batch_size = 64, verbose = TRUE, 
 #'   validation_split = 0.1, early_stopping = TRUE)
 #' mod_node_regr %>% predict()
+#' }
 #' 
 layer_node <- function(name,
                        units,
