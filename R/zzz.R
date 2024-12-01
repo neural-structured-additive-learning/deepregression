@@ -11,7 +11,7 @@ create_package_name <- function(package, version)
   paste(package, version, sep="==")
 
 .onLoad <- function(libname, pkgname) { # nocov start
-  if(suppressMessages(!reticulate::py_available()))
+  if(suppressMessages(!reticulate::py_available() | .Platform$OS.type == "windows"))
   {
     res <- suppressMessages(reticulate::configure_environment(pkgname))
     if(res & requireNamespace("tensorflow", quietly = TRUE) & 
