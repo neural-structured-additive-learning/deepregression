@@ -124,15 +124,7 @@ deepregression <- function(
 )
 {
 
-  if(!is.null(seed)){
-    if(engine == "tf"){
-      try(tensorflow::set_random_seed(seed), silent = TRUE)
-    } else {
-      try(torch::torch_manual_seed(seed), silent = TRUE)
-      }
-    }
 
-  
   if(engine == "tf"){
     if(!reticulate::py_available())
     {
@@ -145,6 +137,14 @@ deepregression <- function(
       message("Tensorflow not available. Use install_tensorflow().")
       invisible(return(NULL))
     }}
+  
+  if(!is.null(seed)){
+    if(engine == "tf"){
+      try(tensorflow::set_random_seed(seed), silent = TRUE)
+    } else {
+      try(torch::torch_manual_seed(seed), silent = TRUE)
+    }
+  }
   
   if(engine == "tf"){
     if(is.null(subnetwork_builder)) subnetwork_builder = subnetwork_init

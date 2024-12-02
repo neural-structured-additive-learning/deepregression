@@ -2,29 +2,7 @@
 % Please edit documentation in R/families.R
 \name{tfd_mse}
 \alias{tfd_mse}
-\title{# Implementation of a distribution-like layer for (Quasi-)Tweedie
-tfd_tweedie <- function(loc, phi, p = 1.5, quasi = FALSE,
-                         validate_args = FALSE,
-                         allow_nan_stats = TRUE,
-                         name = "Tweedie")
-{
-  
-  args <- list(
-    loc = loc,
-    scale = phi,
-    var_power = p,
-    quasi = quasi,
-    validate_args = validate_args,
-    allow_nan_stats = allow_nan_stats,
-    name = name
-  )
-  
-  python_path <- system.file("python", package = "deepregression")
-  distributions <- reticulate::import_from_path("distributions", path = python_path)
-  
-  return(do.call(distributions$Tweedie, args))
-  
-}}
+\title{For using mean squared error via TFP}
 \usage{
 tfd_mse(mean)
 }
@@ -35,37 +13,9 @@ tfd_mse(mean)
 a TFP distribution
 }
 \description{
-#' tfd_distfun for (Quasi-)Tweedie to allow for flexible p
-#' @param p integer; defines distribution
-#' @param quasi logical; whether to use quasi-likelihood or deviance resids
-#' @param output_dim integer; currently only univariate responses supported
-#' @export
-#' 
-tweedie <- function(p, quasi = FALSE, output_dim = 1L,
-                    linkfun_mean = function(x) tf$add(1e-8, tf$math$exp(x)),
-                    linkfun_phi = function(x) tf$add(1e-8, tf$math$exp(x)))
-{
-  
-  tfd_dist <- function(l, s) tfd_tweedie(loc = l, phi = s, p = p, quasi = quasi)
-  trafo_list <- list(linkfun_mean, linkfun_phi) 
-  dist_dim <- 2L
-  ret_fun <- function(x) 
-    do.call(tfd_dist,
-            lapply(1:(x$shape[[2]]/output_dim),
-                   function(i)
-                     trafo_list[[i]](
-                       tf_stride_cols(x,(i-1L)*output_dim+1L,
-                                      (i-1L)*output_dim+output_dim)))
-    )
-  attr(ret_fun, "nrparams_dist") <- 2L
-  
-  return(ret_fun)
-  
-}
+For using mean squared error via TFP
 }
 \details{
-For using mean squared error via TFP
-
 \code{deepregression} allows to train based on the
 MSE by using \code{loss = "mse"} as argument to \code{deepregression}.
 This tfd function just provides a dummy \code{family}

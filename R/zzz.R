@@ -15,7 +15,7 @@ create_package_name <- function(package, version)
   {
     res <- suppressMessages(reticulate::configure_environment(pkgname))
     if(res & requireNamespace("tensorflow", quietly = TRUE) & 
-       requireNamespace("keras", quietly = TRUE)){
+       requireNamespace("keras", quietly = TRUE) & .Platform$OS.type != "windows"){
       suppressMessages(try(tf$compat$v1$logging$set_verbosity(
         tf$compat$v1$logging$ERROR)))
       suppressMessages(try(tf$get_logger()$setLevel('ERROR')))

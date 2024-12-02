@@ -93,10 +93,10 @@ Currently the following distributions are supported
 with parameters (and corresponding inverse link function in brackets):
 
 \itemize{
- \item{"normal": }{normal distribution with location (identity), scale (exp)}
- \item{"bernoulli": }{bernoulli distribution with logits (identity)}
- \item{"exponential": }{exponential with lambda (exp)}
- \item{"gamma": }{gamma with concentration (exp) and rate (exp)}
- \item{"poisson": }{poisson with rate (exp)}
+ \item \code{"normal"} : normal distribution with location (identity), scale (exp)
+ \item \code{"bernoulli"} : bernoulli distribution with logits (identity)
+ \item \code{"exponential"} : exponential with lambda (exp)
+ \item \code{"gamma"} : gamma with concentration (exp) and rate (exp)
+ \item \code{"poisson"} : poisson with rate (exp)
  }
 }
