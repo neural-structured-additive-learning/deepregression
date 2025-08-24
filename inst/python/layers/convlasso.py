@@ -1,230 +1,227 @@
-from keras import activations
-from keras import backend
-from keras import constraints
-from keras import initializers
-from keras import regularizers
-from keras import utils
-from keras import layers
-import functools
-from tensorflow.python.ops import nn_ops
-import tensorflow as tf
-import keras
-try:
-    from keras.src.layers.convolutional import Conv                     
-except ImportError:
-    from keras.src.layers.convolutional.base_conv import Conv      
+# convlasso.py — Keras 3 public-API version 
 
-class SparseConv(Conv):
-    def __init__(self,
-                 rank,
-                filters,
-                kernel_size,
-                lam=None,
-                position_sparsity=-1, # use slide(start,end-1) for multiple indices,
-                depth=2,
-                strides=1,
-                padding='valid',
-                data_format=None,
-                dilation_rate=1,
-                groups=1,
-                activation=None,
-                use_bias=True,
-                multfac_initiliazer=initializers.Ones(),
-                kernel_initializer='glorot_uniform',
-                bias_initializer='zeros',
-                multfac_regularizer=None,
-                kernel_regularizer=None,
-                bias_regularizer=None,
-                activity_regularizer=None,
-                kernel_constraint=None,
-                bias_constraint=None,
-                trainable=True,
-                name=None,
-                conv_op=None,
-                **kwargs):
-        super(SparseConv, self).__init__(
-            rank = rank,
-            filters = filters,
-            kernel_size = kernel_size,
-            strides=strides,
-            padding=padding,
-            data_format=data_format,
-            dilation_rate=dilation_rate,
-            groups=groups,
-            activation=activation,
-            use_bias=use_bias,
-            kernel_initializer=kernel_initializer,
-            bias_initializer=bias_initializer,
-            kernel_regularizer=kernel_regularizer,
-            bias_regularizer=bias_regularizer,
-            activity_regularizer=activity_regularizer,
-            kernel_constraint=kernel_constraint,
-            bias_constraint=bias_constraint,
-            trainable=trainable,
-            name=name,
-            conv_op=conv_op,
-            **kwargs
-    )
+from keras import activations, constraints, initializers, regularizers, utils, layers
+import tensorflow as tf
+
+
+def _to_tuple(x, rank, name):
+    if isinstance(x, int):
+        return (x,) * rank
+    if isinstance(x, (list, tuple)) and len(x) == rank:
+        return tuple(int(v) for v in x)
+    raise ValueError(f"`{name}` must be int or tuple/list of length {rank}. Got: {x}")
+
+
+def _tf_data_format(rank, data_format):
+    """Return TF data_format expected by tf.nn.convolution and tf.nn.bias_add."""
+    if data_format not in {None, "channels_last", "channels_first"}:
+        raise ValueError(f"data_format must be None, 'channels_last', or 'channels_first'. Got: {data_format}")
+    channels_last = (data_format in (None, "channels_last"))
+    if rank == 1:
+        return "NWC" if channels_last else "NCW"
+    if rank == 2:
+        return "NHWC" if channels_last else "NCHW"
+    if rank == 3:
+        return "NDHWC" if channels_last else "NCDHW"
+    raise ValueError(f"Unsupported rank: {rank}")
+
+
+class SparseConv(layers.Layer):
+    """
+    Factorized sparse convolution with multiplicative factor `multfac` applied to the kernel.
+    Uses public Keras 3 API and tf.nn.convolution.
+    """
+
+    def __init__(
+        self,
+        rank,
+        filters,
+        kernel_size,
+        lam=None,
+        position_sparsity=-1,   # index in kernel shape to over-parameterize
+        depth=2,
+        strides=1,
+        padding="valid",
+        data_format=None,
+        dilation_rate=1,
+        groups=1,
+        activation=None,
+        use_bias=True,
+        multfac_initiliazer=initializers.Ones(),
+        kernel_initializer="glorot_uniform",
+        bias_initializer="zeros",
+        multfac_regularizer=None,
+        kernel_regularizer=None,
+        bias_regularizer=None,
+        activity_regularizer=None,
+        kernel_constraint=None,
+        bias_constraint=None,
+        trainable=True,
+        name=None,
+        **kwargs,
+    ):
+        super().__init__(trainable=trainable, name=name, activity_regularizer=activity_regularizer, **kwargs)
+        self.rank = int(rank)
+        self.filters = int(filters) if filters is not None else None
+        self.kernel_size = _to_tuple(kernel_size, self.rank, "kernel_size")
+        self.strides = _to_tuple(strides, self.rank, "strides")
+        self.dilation_rate = _to_tuple(dilation_rate, self.rank, "dilation_rate")
+        self.padding = padding
+        self.data_format = data_format
+        self.groups = int(groups)
+        self.activation = activations.get(activation)
+        self.use_bias = bool(use_bias)
+
+        # regularization and init
+        self.kernel_initializer = initializers.get(kernel_initializer)
+        self.bias_initializer = initializers.get(bias_initializer)
+        self.kernel_regularizer = regularizers.get(kernel_regularizer)
+        self.bias_regularizer = regularizers.get(bias_regularizer)
+        self.kernel_constraint = constraints.get(kernel_constraint)
+        self.bias_constraint = constraints.get(bias_constraint)
+
+        self.multfac_initializer = initializers.get(multfac_initiliazer)
+        self.multfac_regularizer = regularizers.get(multfac_regularizer)
 
         self.lam = lam
-        self.multfac_initializer = multfac_initiliazer
-        self.position_sparsity = position_sparsity 
-        self.depth = depth
+        self.position_sparsity = int(position_sparsity)
+        self.depth = int(depth)
 
-        if multfac_regularizer is None and kernel_regularizer is None and lam is not None:
-            # blow up penalty corresponding to depth of factorization (AM-GM)
-            self.multfac_regularizer = tf.keras.regularizers.L2((self.depth-1)*self.lam)
+        # If explicit regularizers are not provided, derive from lam.
+        if self.multfac_regularizer is None and self.kernel_regularizer is None and self.lam is not None:
+            # AM-GM style split: multfac gets (depth-1)*lam, kernel gets lam
+            self.multfac_regularizer = tf.keras.regularizers.L2((self.depth - 1) * self.lam)
             self.kernel_regularizer = tf.keras.regularizers.L2(self.lam)
-        else:
-            self.multfac_regularizer = multfac_regularizer
-            
-    def _validate_init(self):
+
+        # simple validation
         if self.filters is not None and self.filters % self.groups != 0:
-            raise ValueError(
-              'The number of filters must be evenly divisible by the number of '
-              'groups. Received: groups={}, filters={}'.format(
-              self.groups, self.filters))
-
+            raise ValueError(f"`filters` must be divisible by `groups`. Got filters={self.filters}, groups={self.groups}")
         if not all(self.kernel_size):
-            raise ValueError('The argument `kernel_size` cannot contain 0(s). '
-                       'Received: %s' % (self.kernel_size,))
-
+            raise ValueError(f"`kernel_size` cannot contain 0. Got {self.kernel_size}")
         if not all(self.strides):
-            raise ValueError('The argument `strides` cannot contains 0(s). '
-                       'Received: %s' % (self.strides,))
+            raise ValueError(f"`strides` cannot contain 0. Got {self.strides}")
+        if self.padding == "causal" and self.rank != 1:
+            raise ValueError("Causal padding is only supported for rank==1.")
 
-        if (self.padding == 'causal' and not isinstance(self,
-                                                    (Conv1D, SeparableConv1D))):
-            raise ValueError('Causal padding is only supported for `Conv1D`'
-                       'and `SeparableConv1D`.')
-    
+        self._built_dynamic = False
+        self.input_spec = None
+        self.kernel = None
+        self.multfac = None
+        self.bias = None
+
+    # Convenience flags
+    @property
+    def _is_causal(self):
+        return self.rank == 1 and self.padding == "causal"
+
+    @property
+    def _channels_first(self):
+        return self.data_format == "channels_first"
+
     def build(self, input_shape):
         input_shape = tf.TensorShape(input_shape)
-        input_channel = self._get_input_channel(input_shape)
-        if input_channel % self.groups != 0:
+        channel_axis = -1 - self.rank if self._channels_first else -1
+        in_ch = input_shape[channel_axis]
+        if in_ch is None:
+            raise ValueError("The channel dimension of the inputs must be defined.")
+        in_ch = int(in_ch)
+        if in_ch % self.groups != 0:
             raise ValueError(
-              'The number of input channels must be evenly divisible by the number '
-              'of groups. Received groups={}, but the input has {} channels '
-              '(full input shape is {}).'.format(self.groups, input_channel,
-                                                 input_shape))
-        kernel_shape = self.kernel_size + (input_channel // self.groups,
-                                           self.filters)
-        
-        # create 1s with same length as kernel_shape tuple                                   
-        multfac_shape = [1]*len(kernel_shape)
-        # overwrite those that should be overparameterized
-        multfac_shape[self.position_sparsity] = kernel_shape[self.position_sparsity]
+                f"Input channels must be divisible by groups. Got in_ch={in_ch}, groups={self.groups}"
+            )
+
+        # Kernel shape: spatial dims + (in_ch/groups, filters)
+        kernel_shape = tuple(self.kernel_size) + (in_ch // self.groups, self.filters)
+
+        # multfac shape: broadcast across all dims except one sparsified index
+        multfac_shape = [1] * len(kernel_shape)
+        ps = self.position_sparsity
+        if ps < 0:
+            ps = len(kernel_shape) + ps
+        if ps < 0 or ps >= len(kernel_shape):
+            raise ValueError(f"position_sparsity out of range for kernel_shape {kernel_shape}. Got {self.position_sparsity}")
+        multfac_shape[ps] = kernel_shape[ps]
 
         self.kernel = self.add_weight(
-            name='kernel',
+            name="kernel",
             shape=kernel_shape,
             initializer=self.kernel_initializer,
             regularizer=self.kernel_regularizer,
             constraint=self.kernel_constraint,
             trainable=True,
-            dtype=self.dtype)
-    
+        )
         self.multfac = self.add_weight(
-            name='multfac',
-            shape=tuple(multfac_shape), 
+            name="multfac",
+            shape=tuple(multfac_shape),
             initializer=self.multfac_initializer,
             regularizer=self.multfac_regularizer,
-            constraint=None,
             trainable=True,
-            dtype=self.dtype
         )
-    
         if self.use_bias:
             self.bias = self.add_weight(
-              name='bias',
-              shape=(self.filters,),
-              initializer=self.bias_initializer,
-              regularizer=self.bias_regularizer,
-              constraint=self.bias_constraint,
-              trainable=True,
-              dtype=self.dtype)
-        else:
-            self.bias = None
-        channel_axis = self._get_channel_axis()
-        self.input_spec = keras.layers.InputSpec(min_ndim=self.rank + 2,
-                                    axes={channel_axis: input_channel})
-        # Convert Keras formats to TF native formats.
-        if self.padding == 'causal':
-            tf_padding = 'VALID'  # Causal padding handled in `call`.
-        elif isinstance(self.padding, str):
-            tf_padding = self.padding.upper()
-        else:
-            tf_padding = self.padding
-        tf_dilations = list(self.dilation_rate)
-        tf_strides = list(self.strides)
+                name="bias",
+                shape=(self.filters,),
+                initializer=self.bias_initializer,
+                regularizer=self.bias_regularizer,
+                constraint=self.bias_constraint,
+                trainable=True,
+            )
 
-        tf_op_name = self.__class__.__name__
-        if tf_op_name == 'Conv1D':
-            tf_op_name = 'conv1d'  # Backwards compat.
+        # Keras InputSpec for channel count
+        self.input_spec = layers.InputSpec(
+            min_ndim=self.rank + 2,
+            axes={channel_axis: in_ch},
+        )
 
-        self._convolution_op = functools.partial(
-            nn_ops.convolution_v2,
-            strides=tf_strides,
-            padding=tf_padding,
-            dilations=tf_dilations,
-            data_format=self._tf_data_format,
-            name=tf_op_name)
-        self.built = True
+        self._tf_data_format = _tf_data_format(self.rank, self.data_format)
+        self._built_dynamic = True
+        super().build(input_shape)
 
-#     def convolution_op(self, inputs, kernel, multfac):
-#         if self.padding == 'causal':
-#             tf_padding = 'VALID'  # Causal padding handled in `call`.
-#         elif isinstance(self.padding, str):
-#             tf_padding = self.padding.upper()
-#         else:
-#             tf_padding = self.padding
+    def _compute_causal_padding(self, inputs):
+        # Only rank==1
+        left_pad = self.dilation_rate[0] * (self.kernel_size[0] - 1)
+        batch_rank = len(inputs.shape) - 2 if getattr(inputs.shape, "ndims", None) is not None else 1
+        if self.data_format in (None, "channels_last"):
+            return [[0, 0]] * batch_rank + [[left_pad, 0], [0, 0]]
+        return [[0, 0]] * batch_rank + [[0, 0], [left_pad, 0]]
 
-#         return tf.nn.convolution(
-#             inputs,
-#             self.multiply(kernel, multfac),
-#             strides=list(self.strides),
-#             padding=tf_padding,
-#             dilations=list(self.dilation_rate),
-#             data_format=self._tf_data_format,
-#             name=self.__class__.__name__)
+    def _op_padding(self):
+        # tf.nn.convolution expects "VALID" or "SAME" or explicit paddings
+        if self.padding == "causal":
+            return "VALID"
+        if not isinstance(self.padding, (list, tuple)):
+            return str(self.padding).upper()
+        # explicit paddings are not used here
+        return self.padding
 
     def call(self, inputs):
-        input_shape = inputs.shape
+        x = inputs
+        if self._is_causal:
+            x = tf.pad(x, self._compute_causal_padding(x))
 
-        if self._is_causal:  # Apply causal padding to inputs for Conv1D.
-            inputs = tf.pad(inputs, self._compute_causal_padding(inputs))
+        # effective kernel
+        eff_kernel = self.kernel * tf.pow(tf.abs(self.multfac), self.depth - 1)
 
-        outputs = self._convolution_op(inputs, tf.multiply(self.kernel, 
-                tf.pow(x = tf.abs(self.multfac), y = (self.depth-1))
-                ))
+        y = tf.nn.convolution(
+            x,
+            eff_kernel,
+            strides=list(self.strides),
+            padding=self._op_padding(),
+            dilations=list(self.dilation_rate),
+            data_format=self._tf_data_format,
+            feature_group_count=self.groups,
+        )
 
         if self.use_bias:
-            output_rank = outputs.shape.rank
-            if self.rank == 1 and self._channels_first:
-                # nn.bias_add does not accept a 1D input tensor.
-                bias = tf.reshape(self.bias, (1, self.filters, 1))
-                outputs += bias
-            else:
-                # Handle multiple batch dimensions.
-                if output_rank is not None and output_rank > 2 + self.rank:
-
-                    def _apply_fn(o):
-                        return tf.nn.bias_add(o, self.bias, data_format=self._tf_data_format)
-
-                    outputs = utils.conv_utils.squeeze_batch_dims(
-                          outputs, _apply_fn, inner_rank=self.rank + 1)
-                else:
-                    outputs = tf.nn.bias_add(
-                      outputs, self.bias, data_format=self._tf_data_format)
+            # tf.nn.bias_add expects "N..C" or "NC.."
+            y = tf.nn.bias_add(y, self.bias, data_format=self._tf_data_format)
 
         if not tf.executing_eagerly():
-          # Infer the static output shape:
-            out_shape = self.compute_output_shape(input_shape)
-            outputs.set_shape(out_shape)
+            y.set_shape(self.compute_output_shape(tf.TensorShape(inputs.shape)))
 
         if self.activation is not None:
-            return self.activation(outputs)
-        return outputs
+            y = self.activation(y)
+        return y
 
     def _spatial_output_shape(self, spatial_input_shape):
         return [
@@ -233,7 +230,8 @@ class SparseConv(Conv):
                 self.kernel_size[i],
                 padding=self.padding,
                 stride=self.strides[i],
-                dilation=self.dilation_rate[i])
+                dilation=self.dilation_rate[i],
+            )
             for i, length in enumerate(spatial_input_shape)
         ]
 
@@ -241,140 +239,81 @@ class SparseConv(Conv):
         input_shape = tf.TensorShape(input_shape).as_list()
         batch_rank = len(input_shape) - self.rank - 1
         try:
-            if self.data_format == 'channels_last':
+            if self.data_format in (None, "channels_last"):
                 return tf.TensorShape(
-                    input_shape[:batch_rank] +
-                    self._spatial_output_shape(input_shape[batch_rank:-1]) +
-                    [self.filters])
+                    input_shape[:batch_rank]
+                    + self._spatial_output_shape(input_shape[batch_rank:-1])
+                    + [self.filters]
+                )
             else:
                 return tf.TensorShape(
-                    input_shape[:batch_rank] + [self.filters] +
-                    self._spatial_output_shape(input_shape[batch_rank + 1:]))
-
+                    input_shape[:batch_rank]
+                    + [self.filters]
+                    + self._spatial_output_shape(input_shape[batch_rank + 1 :])
+                )
         except ValueError:
             raise ValueError(
-              f'One of the dimensions in the output is <= 0 '
-              f'due to downsampling in {self.name}. Consider '
-              f'increasing the input size. '
-              f'Received input shape {input_shape} which would produce '
-              f'output shape with a zero or negative value in a '
-              f'dimension.')
-
-    def _recreate_conv_op(self, inputs):  # pylint: disable=unused-argument
-        return False
+                f"Invalid output dimensions due to downsampling in {self.name}. "
+                f"Input shape {input_shape} would produce a nonpositive dimension."
+            )
 
     def get_config(self):
         config = {
-            'filters':
-                self.filters,
-            'kernel_size':
-                self.kernel_size,
-            'strides':
-                self.strides,
-            'padding':
-                self.padding,
-            'data_format':
-                self.data_format,
-            'dilation_rate':
-                self.dilation_rate,
-            'groups':
-                self.groups,
-            'activation':
-                activations.serialize(self.activation),
-            'use_bias':
-                self.use_bias,
-            'kernel_initializer':
-                initializers.serialize(self.kernel_initializer),
-            'bias_initializer':
-                initializers.serialize(self.bias_initializer),
-            'kernel_regularizer':
-                regularizers.serialize(self.kernel_regularizer),
-            'bias_regularizer':
-                regularizers.serialize(self.bias_regularizer),
-            'activity_regularizer':
-                regularizers.serialize(self.activity_regularizer),
-            'kernel_constraint':
-                constraints.serialize(self.kernel_constraint),
-            'bias_constraint':
-                constraints.serialize(self.bias_constraint),
-            'lam':
-                self.lam,
-            'position_sparsity':
-                self.position_sparsity,
-            'depth':
-                self.depth,
-            'multfac_initializer':
-                self.multfac_initializer,
-            'multfac_regularizer':
-                self.multfac_regularizer
+            "rank": self.rank,
+            "filters": self.filters,
+            "kernel_size": self.kernel_size,
+            "strides": self.strides,
+            "padding": self.padding,
+            "data_format": self.data_format,
+            "dilation_rate": self.dilation_rate,
+            "groups": self.groups,
+            "activation": activations.serialize(self.activation),
+            "use_bias": self.use_bias,
+            "kernel_initializer": initializers.serialize(self.kernel_initializer),
+            "bias_initializer": initializers.serialize(self.bias_initializer),
+            "kernel_regularizer": regularizers.serialize(self.kernel_regularizer),
+            "bias_regularizer": regularizers.serialize(self.bias_regularizer),
+            "activity_regularizer": regularizers.serialize(self.activity_regularizer),
+            "kernel_constraint": constraints.serialize(self.kernel_constraint),
+            "bias_constraint": constraints.serialize(self.bias_constraint),
+            "lam": self.lam,
+            "position_sparsity": self.position_sparsity,
+            "depth": self.depth,
+            "multfac_initializer": initializers.serialize(self.multfac_initializer),
+            "multfac_regularizer": regularizers.serialize(self.multfac_regularizer),
         }
-        base_config = super(layers.convolutional.Conv, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))
-
-    def _compute_causal_padding(self, inputs):
-        """Calculates padding for 'causal' option for 1-d conv layers."""
-        left_pad = self.dilation_rate[0] * (self.kernel_size[0] - 1)
-        if getattr(inputs.shape, 'ndims', None) is None:
-            batch_rank = 1
-        else:
-            batch_rank = len(inputs.shape) - 2
-        if self.data_format == 'channels_last':
-            causal_padding = [[0, 0]] * batch_rank + [[left_pad, 0], [0, 0]]
-        else:
-            causal_padding = [[0, 0]] * batch_rank + [[0, 0], [left_pad, 0]]
-        return causal_padding
-
-    def _get_channel_axis(self):
-        if self.data_format == 'channels_first':
-            return -1 - self.rank
-        else:
-            return -1
-
-    def _get_input_channel(self, input_shape):
-        channel_axis = self._get_channel_axis()
-        if input_shape.dims[channel_axis].value is None:
-            raise ValueError('The channel dimension of the inputs should be defined. '
-                           f'The input_shape received is {input_shape}, '
-                           f'where axis {channel_axis} (0-based) '
-                           'is the channel dimension, which found to be `None`.')
-        return int(input_shape[channel_axis])
-
-    def _get_padding_op(self):
-        if self.padding == 'causal':
-            op_padding = 'valid'
-        else:
-            op_padding = self.padding
-        if not isinstance(op_padding, (list, tuple)):
-            op_padding = op_padding.upper()
-        return op_padding
+        base = super().get_config()
+        base.update(config)
+        return base
 
 
 class SparseConv2D(SparseConv):
-
-    def __init__(self,
-               filters,
-               kernel_size,
-               lam=None,
-               position_sparsity=-1,
-               depth = 2,
-               strides=(1, 1),
-               padding='valid',
-               data_format=None,
-               dilation_rate=(1, 1),
-               groups=1,
-               activation=None,
-               use_bias=True,
-               kernel_initializer='glorot_uniform',
-               multfac_initiliazer=initializers.Ones(),
-               bias_initializer='zeros',
-               kernel_regularizer=None,
-               multfac_regularizer=None,
-               bias_regularizer=None,
-               activity_regularizer=None,
-               kernel_constraint=None,
-               bias_constraint=None,
-               **kwargs):
-        super(SparseConv2D, self).__init__(
+    def __init__(
+        self,
+        filters,
+        kernel_size,
+        lam=None,
+        position_sparsity=-1,
+        depth=2,
+        strides=(1, 1),
+        padding="valid",
+        data_format=None,
+        dilation_rate=(1, 1),
+        groups=1,
+        activation=None,
+        use_bias=True,
+        kernel_initializer="glorot_uniform",
+        multfac_initiliazer=initializers.Ones(),
+        bias_initializer="zeros",
+        kernel_regularizer=None,
+        multfac_regularizer=None,
+        bias_regularizer=None,
+        activity_regularizer=None,
+        kernel_constraint=None,
+        bias_constraint=None,
+        **kwargs,
+    ):
+        super().__init__(
             rank=2,
             filters=filters,
             kernel_size=kernel_size,
@@ -397,4 +336,5 @@ class SparseConv2D(SparseConv):
             activity_regularizer=regularizers.get(activity_regularizer),
             kernel_constraint=constraints.get(kernel_constraint),
             bias_constraint=constraints.get(bias_constraint),
-            **kwargs)
+            **kwargs,
+        )
