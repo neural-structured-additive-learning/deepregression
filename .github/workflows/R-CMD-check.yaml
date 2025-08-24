@@ -1,88 +1,105 @@
-name: R-CMD-check
-
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
 
+name: R-CMD-check
+
 jobs:
   R-CMD-check:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
 
       - uses: r-lib/actions/setup-r@v2
         with:
           Ncpus: 4
+
       - uses: r-lib/actions/setup-tinytex@v2
       - uses: r-lib/actions/setup-pandoc@v2
 
-      - name: Prepare month stamp for caches
-        id: stamp
+      # Cache keys rotate monthly to keep size under control
+      - name: "[Custom block] [Cache] Prepare monthly timestamp"
+        id: date
         run: echo "datem=$(date '+%Y-%m')" >> "$GITHUB_OUTPUT"
 
       - name: Cache R packages
         uses: pat-s/always-upload-cache@v2
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: rcache-${{ steps.stamp.outputs.datem }}
+          key: rcache-${{ steps.date.outputs.datem }}
           restore-keys: rcache-
 
       - name: Cache pip
         uses: pat-s/always-upload-cache@v2
         with:
           path: ~/.cache/pip
-          key: pycache-${{ steps.stamp.outputs.datem }}
+          key: pycache-${{ steps.date.outputs.datem }}
           restore-keys: pycache-
 
-      - name: Install system libs (image + common)
+      - name: Install Linux prerequisites
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            libpng-dev libjpeg-turbo8-dev libtiff5-dev \
-            libxml2-dev libcurl4-openssl-dev libssl-dev
+            libxml2-dev libcurl4-openssl-dev \
+            libpng-dev libtiff-dev libjpeg-dev \
+            tidy
 
-      - name: Install base R deps (reticulate, rcmdcheck)
+      - name: Install R package dependencies
         run: |
-          install.packages(c("remotes","reticulate","rcmdcheck"))
+          install.packages(c("remotes","rcmdcheck"))
+          remotes::install_deps(dependencies = TRUE)
         shell: Rscript {0}
 
-      - name: Create Miniconda env and install TF/Keras 2.10 stack
+      # --- Pin old TF/Keras in a Python 3.8 conda env and expose to reticulate ---
+      - name: Install Miniconda + Python 3.8 + TF/Keras 2.10
         run: |
           reticulate::install_miniconda(update = TRUE)
           reticulate::conda_create('r-reticulate', packages = c('python==3.8'))
-          reticulate::conda_install('r-reticulate', pip = TRUE, packages = c(
-            'numpy<2.0',
-            'tensorflow==2.10.*',
-            'keras==2.10.*',
-            'tensorflow_probability==0.16.*'
-          ))
-          cat(sprintf("RETICULATE_PYTHON=%s\n",
-            file.path(reticulate::miniconda_path(), "envs","r-reticulate","bin","python")),
-            file = Sys.getenv("GITHUB_ENV"), append = TRUE)
+          py <- reticulate::conda_python('r-reticulate')
+          # Make the env visible to later steps
+          cat(sprintf("RETICULATE_PYTHON=%s\n", py), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
+          reticulate::use_python(py, required = TRUE)
+          keras::install_keras(
+            version = "2.10.0",
+            tensorflow = "2.10.0",
+            extra_packages = c(
+              'IPython','requests','certifi','urllib3','six',
+              'tensorflow_probability==0.16.0'
+            )
+          )
         shell: Rscript {0}
 
-      - uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          sysreqs: true
-          extra-packages: >
-            any::png
-            any::jpeg
-            any::tiff
-            any::tensorflow
-            any::keras
-            any::tfprobability
-          needs: check
+      # --- Torch runtime (Lantern) so torch tests can run ---
+      - name: Install torch runtime (Lantern, CPU)
+        run: |
+          if (!requireNamespace("torch", quietly = TRUE)) install.packages("torch")
+          if (!requireNamespace("luz", quietly = TRUE)) install.packages("luz")
+          torch::install_torch()        # downloads Lantern CPU libs matching installed {torch}
+        shell: Rscript {0}
 
-      - name: Install vignette extras
+      # (Optional) Verify torch loads — helps catch Lantern issues early
+      - name: Torch preflight
+        run: |
+          library(torch)
+          torch_manual_seed(1)
+          print(torch_randn(c(1)))
+        shell: Rscript {0}
+
+      - name: Install dependencies - Tutorial (Vignette)
         run: |
           install.packages(c("ggplot2","reshape2","MASS","gamlss.data","distr"))
         shell: Rscript {0}
 
       - name: Check
-        run: rcmdcheck::rcmdcheck(args = c("--as-cran","--no-build-vignettes"),
-                                  build_args = c("--no-build-vignettes"),
-                                  error_on = "error")
+        env:
+          RETICULATE_PYTHON: ${{ env.RETICULATE_PYTHON }}
+        run: |
+          rcmdcheck::rcmdcheck(
+            args = c("--as-cran","--no-build-vignettes"),
+            build_args = c("--no-build-vignettes"),
+            error_on = "error"
+          )
         shell: Rscript {0}
