@@ -1,60 +1,88 @@
-# For help debugging build failures open an issue on the RStudio community with the 'github-actions' tag.
-# https://community.rstudio.com/new-topic?category=Package%20development&tags=github-actions
+name: R-CMD-check
+
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
-
-name: R-CMD-check
+    branches: [main]
 
 jobs:
   R-CMD-check:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
-      - uses: r-lib/actions/setup-r@v2-branch
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
         with:
           Ncpus: 4
-      - uses: r-lib/actions/setup-tinytex@v2-branch
-      - uses: r-lib/actions/setup-pandoc@v2-branch
+      - uses: r-lib/actions/setup-tinytex@v2
+      - uses: r-lib/actions/setup-pandoc@v2
 
-      - name: "[Custom block] [Cache] Prepare weekly timestamp for cache"
-        id: date
-        run: echo "::set-output name=datem::$(date '+%Y-%m')"
-        
+      - name: Prepare month stamp for caches
+        id: stamp
+        run: echo "datem=$(date '+%Y-%m')" >> "$GITHUB_OUTPUT"
+
       - name: Cache R packages
         uses: pat-s/always-upload-cache@v2
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: rcache-${{steps.date.outputs.datem}}
-          restore-keys: ${{steps.date.outputs.datem}}
+          key: rcache-${{ steps.stamp.outputs.datem }}
+          restore-keys: rcache-
 
-      - name: Cache python
+      - name: Cache pip
         uses: pat-s/always-upload-cache@v2
         with:
           path: ~/.cache/pip
-          key: pycache-${{steps.date.outputs.datem}}
-          restore-keys: pycache-${{steps.date.outputs.datem}}
-          
-      - name: Install linux prerequesites
+          key: pycache-${{ steps.stamp.outputs.datem }}
+          restore-keys: pycache-
+
+      - name: Install system libs (image + common)
         run: |
-          sudo apt-get install libxml2-dev libcurl4-openssl-dev
-      - name: Install dependencies - Keras & TF
+          sudo apt-get update
+          sudo apt-get install -y \
+            libpng-dev libjpeg-turbo8-dev libtiff5-dev \
+            libxml2-dev libcurl4-openssl-dev libssl-dev
+
+      - name: Install base R deps (reticulate, rcmdcheck)
         run: |
-          install.packages(c("remotes", "rcmdcheck"))
-          remotes::install_deps(dependencies = TRUE)
+          install.packages(c("remotes","reticulate","rcmdcheck"))
+        shell: Rscript {0}
+
+      - name: Create Miniconda env and install TF/Keras 2.10 stack
+        run: |
           reticulate::install_miniconda(update = TRUE)
           reticulate::conda_create('r-reticulate', packages = c('python==3.8'))
-          keras::install_keras(version = "2.10.0", tensorflow = "2.10.0", extra_packages = c('IPython', 'requests', 'certifi', 'urllib3', 'six', 'tensorflow_probability==0.16.0'))
-          torch::install_torch()
+          reticulate::conda_install('r-reticulate', pip = TRUE, packages = c(
+            'numpy<2.0',
+            'tensorflow==2.10.*',
+            'keras==2.10.*',
+            'tensorflow_probability==0.16.*'
+          ))
+          cat(sprintf("RETICULATE_PYTHON=%s\n",
+            file.path(reticulate::miniconda_path(), "envs","r-reticulate","bin","python")),
+            file = Sys.getenv("GITHUB_ENV"), append = TRUE)
         shell: Rscript {0}
-      - name: Install dependencies - Tutorial (Vignette)
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          sysreqs: true
+          extra-packages: >
+            any::png
+            any::jpeg
+            any::tiff
+            any::tensorflow
+            any::keras
+            any::tfprobability
+          needs: check
+
+      - name: Install vignette extras
         run: |
-          install.packages(c("ggplot2", "reshape2", "MASS", "gamlss.data", "distr"))
+          install.packages(c("ggplot2","reshape2","MASS","gamlss.data","distr"))
         shell: Rscript {0}
+
       - name: Check
-        run: rcmdcheck::rcmdcheck(args=c("--as-cran", "--no-build-vignettes"), build_args=c("--no-build-vignettes"), error_on="error")
+        run: rcmdcheck::rcmdcheck(args = c("--as-cran","--no-build-vignettes"),
+                                  build_args = c("--no-build-vignettes"),
+                                  error_on = "error")
         shell: Rscript {0}
